@@ -1,0 +1,36 @@
+{
+  "admin_ids": [
+    8459937324
+  ],
+  "users": {
+    "8459937324": {
+      "nome": "Paulo Lôbo (Admin Master)",
+      "username": "@paulolobo",
+      "pin": "8459",
+      "role": "admin",
+      "data_autorizacao": "28/08/2026 20:00:00"
+    },
+    "1001": {
+      "nome": "Carlos Eduardo",
+      "username": "@carlos_eng",
+      "pin": "1001",
+      "role": "engenharia",
+      "data_autorizacao": "28/08/2026 20:10:00"
+    },
+    "1002": {
+      "nome": "Roberto Silva",
+      "username": "@roberto_almx",
+      "pin": "1002",
+      "role": "administracao",
+      "data_autorizacao": "28/08/2026 20:15:00"
+    },
+    "1003": {
+      "nome": "Marcos Souza (Mestre de Obras)",
+      "username": "@marcos_mestre",
+      "pin": "1003",
+      "role": "campo",
+      "data_autorizacao": "28/08/2026 20:20:00"
+    }
+  },
+  "pending_requests": {}
+}

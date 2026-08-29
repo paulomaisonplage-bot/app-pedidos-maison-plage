@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: app-pedidos-maison-plage
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: EXCEL_PATH
+        value: data/pedidos_compra_consolidado.xlsx

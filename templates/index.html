@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Maison Plage • App Oficial</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Maison Plage">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- TELA DE LOGIN POR PIN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">🏗️</div>
+      <h1 class="login-title">Maison Plage</h1>
+      <p class="login-sub">Digite seu PIN de 4 dígitos para acessar:</p>
+
+      <div class="pin-display">
+        <span class="pin-dot" id="dot1"></span>
+        <span class="pin-dot" id="dot2"></span>
+        <span class="pin-dot" id="dot3"></span>
+        <span class="pin-dot" id="dot4"></span>
+      </div>
+
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="app.pressPin('1')">1</button>
+        <button class="pin-btn" onclick="app.pressPin('2')">2</button>
+        <button class="pin-btn" onclick="app.pressPin('3')">3</button>
+        <button class="pin-btn" onclick="app.pressPin('4')">4</button>
+        <button class="pin-btn" onclick="app.pressPin('5')">5</button>
+        <button class="pin-btn" onclick="app.pressPin('6')">6</button>
+        <button class="pin-btn" onclick="app.pressPin('7')">7</button>
+        <button class="pin-btn" onclick="app.pressPin('8')">8</button>
+        <button class="pin-btn" onclick="app.pressPin('9')">9</button>
+        <button class="pin-btn pin-action" onclick="app.clearPin()">✕</button>
+        <button class="pin-btn" onclick="app.pressPin('0')">0</button>
+        <button class="pin-btn pin-action" onclick="app.submitPin()">➔</button>
+      </div>
+
+      <div class="login-hint">
+        👑 <b>Admin Master:</b> PIN 8459 | 👷 <b>Campo:</b> PIN 1003
+      </div>
+    </div>
+  </div>
+
+  <!-- APLICAÇÃO PRINCIPAL (EXIBIDA APÓS O LOGIN) -->
+  <div id="appContainer" class="app-container" style="display:none;">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="logo-area">
+          <span class="logo-icon">🏗️</span>
+          <div>
+            <h1 class="logo-title">Maison Plage</h1>
+            <p class="user-greeting" id="userGreeting">Olá, Paulo</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="role-tag" id="roleTag">👑 Admin</div>
+          <button class="logout-btn" onclick="app.logout()" title="Sair">🚪</button>
+        </div>
+      </div>
+
+      <!-- BUSCA RÁPIDA -->
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar material, insumo ou nº do PC..." oninput="app.handleSearch(this.value)">
+        <button class="clear-search" id="clearSearchBtn" onclick="app.clearSearch()" style="display:none;">✕</button>
+      </div>
+
+      <!-- CARROSSEL DE 8 MÓDULOS -->
+      <nav class="nav-modules">
+        <button class="module-tab active" onclick="app.setModule('week')">🚚 Semana</button>
+        <button class="module-tab" onclick="app.setModule('month')">🗓️ Mês</button>
+        <button class="module-tab" onclick="app.setModule('search')">🔍 Insumos</button>
+        <button class="module-tab" onclick="app.setModule('groups')">🏢 Grupos</button>
+        <button class="module-tab" onclick="app.setModule('recent')">🛒 Compras</button>
+        <button class="module-tab" id="tabSuppliers" onclick="app.setModule('suppliers')">📞 Fornecedores</button>
+        <button class="module-tab" id="tabFinancial" onclick="app.setModule('financial')">💰 Financeiro</button>
+        <button class="module-tab" id="tabTeam" onclick="app.setModule('team')" style="display:none;">👥 Equipe</button>
+        <a href="/api/export/excel?role=admin" class="module-tab" id="tabExport" download>📥 Excel</a>
+      </nav>
+    </header>
+
+    <!-- ÁREA DE CONTEÚDO DINÂMICO -->
+    <main class="app-body">
+
+      <!-- MÓDULO 1: ENTREGAS DA SEMANA -->
+      <section id="modWeek" class="module-section active">
+        <div class="section-toolbar">
+          <button class="nav-arrow" onclick="app.shiftWeek(-1)">◀ Anterior</button>
+          <span class="toolbar-title" id="weekTitle">Esta Semana</span>
+          <button class="nav-arrow" onclick="app.shiftWeek(1)">Próxima ▶</button>
+        </div>
+        <div class="cards-list" id="weekCards"></div>
+      </section>
+
+      <!-- MÓDULO 2: ENTREGAS DO MÊS -->
+      <section id="modMonth" class="module-section">
+                <div class="months-bar">
+          <button class="month-pill" onclick="app.selectMonth(1)">Jan (0)</button>
+          <button class="month-pill" onclick="app.selectMonth(2)">Fev (0)</button>
+          <button class="month-pill" onclick="app.selectMonth(3)">Mar (25)</button>
+          <button class="month-pill" onclick="app.selectMonth(4)">Abr (48)</button>
+          <button class="month-pill" onclick="app.selectMonth(5)">Mai (77)</button>
+          <button class="month-pill" onclick="app.selectMonth(6)">Jun (66)</button>
+          <button class="month-pill" onclick="app.selectMonth(7)">Jul (61)</button>
+          <button class="month-pill active" onclick="app.selectMonth(8)">Ago (34)</button>
+          <button class="month-pill" onclick="app.selectMonth(9)">Set (1)</button>
+          <button class="month-pill" onclick="app.selectMonth(10)">Out (0)</button>
+          <button class="month-pill" onclick="app.selectMonth(11)">Nov (0)</button>
+          <button class="month-pill" onclick="app.selectMonth(12)">Dez (1)</button>
+        </div>
+        <div class="cards-list" id="monthCards"></div>
+      </section>
+
+      <!-- MÓDULO 3: BUSCA DE INSUMOS -->
+      <section id="modSearch" class="module-section">
+        <div class="quick-tags-grid">
+          <button class="quick-tag" onclick="app.quickSearch('Cimento')">🧱 Cimento</button>
+          <button class="quick-tag" onclick="app.quickSearch('Tijolo')">🧱 Tijolo</button>
+          <button class="quick-tag" onclick="app.quickSearch('Tubo PVC')">💧 Tubo PVC</button>
+          <button class="quick-tag" onclick="app.quickSearch('Cabo')">⚡ Cabos</button>
+          <button class="quick-tag" onclick="app.quickSearch('Aço')">🔩 Aço</button>
+          <button class="quick-tag" onclick="app.quickSearch('Tinta')">🎨 Tintas</button>
+        </div>
+        <div class="cards-list" id="searchResults"></div>
+      </section>
+
+      <!-- MÓDULO 4: GRUPOS DA OBRA -->
+      <section id="modGroups" class="module-section">
+        <div class="groups-grid" id="groupsGrid"></div>
+      </section>
+
+      <!-- MÓDULO 5: COMPRAS RECENTES -->
+      <section id="modRecent" class="module-section">
+        <div class="cards-list" id="recentCards"></div>
+      </section>
+
+      <!-- MÓDULO 6: FORNECEDORES -->
+      <section id="modSuppliers" class="module-section">
+        <div class="cards-list" id="suppliersCards"></div>
+      </section>
+
+      <!-- MÓDULO 7: FLUXO FINANCEIRO -->
+      <section id="modFinancial" class="module-section">
+        <div class="financial-box" id="financialBox"></div>
+      </section>
+
+      <!-- MÓDULO 8: GESTÃO DE EQUIPE (ADMIN MASTER) -->
+      <section id="modTeam" class="module-section">
+        <div class="team-header">
+          <h2>👥 Membros & Permissões</h2>
+          <button class="btn-add-user" onclick="app.openAddUserModal()">+ Novo Membro</button>
+        </div>
+        <div class="cards-list" id="teamCards"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL DE DETALHES DO PEDIDO -->
+  <div class="modal-backdrop" id="orderModal" onclick="app.closeModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="modal-head">
+        <div>
+          <h2 class="order-number" id="mOrderNum">PC 00000</h2>
+          <p class="order-fornec" id="mFornec">Fornecedor</p>
+        </div>
+        <button class="btn-close" onclick="app.closeModal()">✕</button>
+      </div>
+
+      <div class="order-meta-card" id="mOrderMeta"></div>
+
+      <h3 class="items-head">📦 Itens Solicitados:</h3>
+      <div class="items-list-box" id="mItemsList"></div>
+
+      <div class="modal-actions" id="mModalActions"></div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ADICIONAR NOVO USUÁRIO -->
+  <div class="modal-backdrop" id="addUserModal" onclick="app.closeAddUserModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="modal-head">
+        <h2>Adicionar Novo Membro</h2>
+        <button class="btn-close" onclick="app.closeAddUserModal()">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Nome Completo:</label>
+        <input type="text" id="newUserName" placeholder="Ex: Lucas Ferreira">
+      </div>
+      <div class="form-group">
+        <label>PIN de Acesso (4 dígitos):</label>
+        <input type="number" id="newUserPin" placeholder="Ex: 5544" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label>Perfil de Acesso:</label>
+        <select id="newUserRole">
+          <option value="campo">👷 Campo (Sem Valores R$ / Sem Fornec)</option>
+          <option value="administracao">📦 Administração (Com Valores R$ / Fornec)</option>
+          <option value="engenharia">🏗️ Engenharia (Acesso Técnico e Financeiro)</option>
+          <option value="admin">👑 Administrador Master</option>
+        </select>
+      </div>
+      <button class="btn-save-user" onclick="app.saveNewUser()">Salvar e Conceder Acesso</button>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

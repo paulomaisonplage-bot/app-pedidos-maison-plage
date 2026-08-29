@@ -1,0 +1,882 @@
+[
+  {
+    "nome": "ABREU & SILVA DISTRIBUIDOR LTDA",
+    "cnpj": "04.790.656/0001-06",
+    "vendedor": "MARCOS BIANA 82 996002588",
+    "fone_empresa": "(82) 3623 1822",
+    "email": "marcosbiana10@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "AM COMERCIAL E DISTRIBUIDORA LTDA",
+    "cnpj": "02.581.010/0001-93",
+    "vendedor": "JONATHAN (82) 99107 6423",
+    "fone_empresa": "(82) 2121 1552",
+    "email": "Vendas12@amcomercial.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "APLICSIL COMÉRCIO E SILICONES",
+    "cnpj": "19.451.173/0001-54",
+    "vendedor": "ROBERTA FRANCO 82 9334 5285",
+    "fone_empresa": "(19) 3886 6642",
+    "email": "roberta@rfsantana.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "ARACAJU LTDA",
+    "cnpj": "32.732.679/0001-08",
+    "vendedor": "FALCONIERE tel.98102 5920",
+    "fone_empresa": "(79)99979 8948",
+    "email": "atendimento@disgal.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "ARMACELL BRASIL LTDA",
+    "cnpj": "04.425.862/0003-89",
+    "vendedor": "Ledjane Silva 81 9949 5538",
+    "fone_empresa": "(48)32114034",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "BELGO BEKAERT ARAMES LTDA",
+    "cnpj": "61.074.506/0025-07",
+    "vendedor": "MONCLAR 82 9983 2159",
+    "fone_empresa": "(82)99983 2159",
+    "email": "Monclarnc@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "BF DISTRIBUIDORA EM MADEIRAS LTDA",
+    "cnpj": "53.383.206/0001-04",
+    "vendedor": "BEATRIZ (82) 99999 9663",
+    "fone_empresa": "(82) 3320 4514",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "BR PARAFUSOS IMPORTADORA COMERCIAL",
+    "cnpj": "02.556.423/0002-07",
+    "vendedor": "ROSE",
+    "fone_empresa": "(82) 3311 5444",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "BRASIL PRODUTOS PRODUTOS INDUSTRIAIS E PARA CONSTRUCAO LTDA",
+    "cnpj": "61.064.838/0102-87",
+    "vendedor": "wellington TEL. 79 99946 5478",
+    "fone_empresa": "(11)22467655",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CARAJÁS MATERIAL DE CONSTRUÇÃO LTDA",
+    "cnpj": "03.656.804/0007-27",
+    "vendedor": "MARCOS CARAJAS 9387 3413",
+    "fone_empresa": "(82) 4009 2292",
+    "email": "june.melo@carajas.net.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CARAJÁS MATERIAL DE CONSTRUÇÃO LTDA",
+    "cnpj": "03.656.804/0001-31",
+    "vendedor": "MARCOS CARAJAS 9387 3413",
+    "fone_empresa": "(82) 4009 2292",
+    "email": "celiavendas@carajas.net.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CENTER FRIOS MÁQUINAS E EQUIPAMENTOS",
+    "cnpj": "06.698.222/0003-78",
+    "vendedor": "RICARDO 99682 0108",
+    "fone_empresa": "(82) 3223 2497",
+    "email": "vendas02@centerfrios.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CERÂMICA COUTINHO LTDA",
+    "cnpj": "00.918.005/0001-06",
+    "vendedor": "AGRIPINO NETO 98142 2141",
+    "fone_empresa": "(81)36220126",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CERÂMICA SOLEDADE LTDA",
+    "cnpj": "06.372.238/0001-24",
+    "vendedor": "ARTHUR 82 9904 9836",
+    "fone_empresa": "(82)99904 9836",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CODAÇO DOBRA DE FERRO E AÇO LTDA",
+    "cnpj": "11.483.295/0001-10",
+    "vendedor": "FLAVIO",
+    "fone_empresa": "(82) 3354 3311",
+    "email": "codaco@codaco.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIAL DE PARAFUSOS E FERRAGENS LTDA",
+    "cnpj": "69.179.448/0001-10",
+    "vendedor": "ROBERTO GUSTAVO 98802 8764",
+    "fone_empresa": "(11) 2134 0002",
+    "email": "roberto@francosantana.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIAL M B LTDA",
+    "cnpj": "09.619.157/0001-74",
+    "vendedor": "EDIVALDO 82 99999 1543",
+    "fone_empresa": "(82) 2123 9999",
+    "email": "edivaldombcomercial@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIO DE CONDUTORES COMERCIO DE CONDUTORES ELETRICOS LTDA",
+    "cnpj": "02.544.042/0002-08",
+    "vendedor": "ADILTON TEL. 71 9963 0742",
+    "fone_empresa": "(11) 2118 3200",
+    "email": "adilton_telecentro@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIO DE PRODUTOS COMERCIO DE PRODUTOS ELETRICOS E METALICOS",
+    "cnpj": "08.972.212/0001-42",
+    "vendedor": "SAULO 81 8190 9310",
+    "fone_empresa": "(47)34523003",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIO DE PRODUTOS COMERCIO DE PRODUTOS METALURGICOS LTDA",
+    "cnpj": "05.896.435/0005-03",
+    "vendedor": "LUIZ GONZADA 82 98834 5998",
+    "fone_empresa": "(19) 3948 5230",
+    "email": "luizgonzagacosta@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIO DE TECIDOS COMERCIO DE TECIDOS TECNICOS LTDA",
+    "cnpj": "76.533.074/0009-02",
+    "vendedor": "MATHEUS TEGAP 81 9471 0606",
+    "fone_empresa": "(41) 2105 9900",
+    "email": "ere1@tegape.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIO DE TECIDOS LTDA",
+    "cnpj": "37.800.122/0001-72",
+    "vendedor": "THABATA",
+    "fone_empresa": "(82) 3432 9530",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMERCIO LTDA.",
+    "cnpj": "00.808.396/0005-21",
+    "vendedor": "ERICK CORTAG 1999922 1246",
+    "fone_empresa": "(19)38627700",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COMFERRAL COMÉRCIO DE FERRAGENS LTDA",
+    "cnpj": "07.431.747/0001-43",
+    "vendedor": "JOÃO",
+    "fone_empresa": "(82) 3328 4441",
+    "email": "vendas9@comferral.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CONSTRUCAO LTDA",
+    "cnpj": "31.492.318/0001-60",
+    "vendedor": "DIONE 9626 0227",
+    "fone_empresa": "(82) 3185 6126",
+    "email": "litoralmadeirasal@outlook.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CONSTRUCAO LTDA",
+    "cnpj": "05.965.861/0001-28",
+    "vendedor": "Elvio Evhex tel. 88 9914 6991",
+    "fone_empresa": "(41) 3133 3000",
+    "email": "thaysi@evehx.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "COREMAL QUÍMICA E POLÍMEROS",
+    "cnpj": "08.510.885/0001-80",
+    "vendedor": "DALBTON TEL.99602 7935",
+    "fone_empresa": "(82)30330036",
+    "email": "gerencia.dvsrepresentacoes@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "CSN CIMENTOS BRASIL S.A.",
+    "cnpj": "60.869.336/0268-50",
+    "vendedor": "JOÃO NETO TEL.71 9 9605 5535",
+    "fone_empresa": "(21)38043100",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "DOM METAL COMÉRCIO EIRELI",
+    "cnpj": "55.118.359/0001-50",
+    "vendedor": "WELITON 81 9605 0887",
+    "fone_empresa": "(81) 2011 4432",
+    "email": "DOMMETALIND@GMAIL.COM",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "E COMERCIO LTDA COMERCIO LTDA",
+    "cnpj": "00.992.742/0001-40",
+    "vendedor": "FERNANDO (11) 98337 3415",
+    "fone_empresa": "(11)98337 3415",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "E DE CONSTRUCAO LTDA CONSTRUCAO LTDA",
+    "cnpj": "35.725.449/0001-00",
+    "vendedor": "EDIVALDO 82 99999 1543",
+    "fone_empresa": "(82) 2123 9999",
+    "email": "edivaldombcomercial@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "ECOLIT COMERCIAL DE ILUMINAÇÃO",
+    "cnpj": "18.254.062/0001-95",
+    "vendedor": "EDMUNDO JR. TEL.9 8107 9114",
+    "fone_empresa": "(81)32676250",
+    "email": "junior.vendas.al@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "ELETROLUZ MATERIAIS ELÉTRICOS LTDA",
+    "cnpj": "08.441.081/0001-77",
+    "vendedor": "EDVAN 98217 5680",
+    "fone_empresa": "(82) 3036 1330",
+    "email": "edvanluz1@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "EMBALAR DISTRIBUIDORA DE EMBALAGENS",
+    "cnpj": "10.347.424/0001-80",
+    "vendedor": "GRACIELLE (82) 98701 5713",
+    "fone_empresa": "(82) 3359 6241",
+    "email": "vendas5@embalardistribuidora.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "ESTRIBOPEÇAS INDÚSTRIA E COMÉRCIO",
+    "cnpj": "49.284.722/0001-04",
+    "vendedor": "Washington tel. 11 95368 4951",
+    "fone_empresa": "(11) 2438 1509",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "33.388.369/0001-72",
+    "vendedor": "EDSON TEL. 98840 4754",
+    "fone_empresa": "(82) 3376 2254",
+    "email": "isonor@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "39.546.844/0001-78",
+    "vendedor": "AFRANIO TEL. 89971 4507",
+    "fone_empresa": "(82)99113 8461",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "52.571.738/0001-02",
+    "vendedor": "RICARDO (82) 99639 4555",
+    "fone_empresa": "(82)98272744",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "32.973.339/0001-60",
+    "vendedor": "EVERALDO 9113 4849",
+    "fone_empresa": "(82)99113 4849",
+    "email": "lok_mais_equipamentos@outlook.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "08.369.725/0001-63",
+    "vendedor": "ALDENER 30229622",
+    "fone_empresa": "(82) 3336 5602",
+    "email": "quiteria@refricomrefrigeracao.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "19.877.263/0001-01",
+    "vendedor": "VALDIANE (82) 98755 4108",
+    "fone_empresa": "(82) 3328 3241",
+    "email": "valmaq@valmaq.net.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "19.466.716/0001-07",
+    "vendedor": "FLUVYO 9922 9254",
+    "fone_empresa": "(82)99922 9254",
+    "email": "fluvyo@graficaboaarte.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "03.499.243/0001-04",
+    "vendedor": "INTERNET",
+    "fone_empresa": "(82) 3435 0517",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "92.660.406/0040-25",
+    "vendedor": "RODRIGO FRIGELAR 81 9852 7782",
+    "fone_empresa": "(51) 3058 8869",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "08.285.106/0001-90",
+    "vendedor": "RITA",
+    "fone_empresa": "(82) 3035 3425",
+    "email": "gesso.rodrigues@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "35.616.280/0001-41",
+    "vendedor": "ADELANIA (82) 99974 4817",
+    "fone_empresa": "(82)33371706",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "34.997.730/0001-20",
+    "vendedor": "JAILTO CARIBE 9153 1970",
+    "fone_empresa": "(82)99957 0922",
+    "email": "jailton@caribesuprimentos.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FORNECEDOR DIVERSOS",
+    "cnpj": "09.369.085/0001-54",
+    "vendedor": "LUCIANA 81 9836 3179",
+    "fone_empresa": "(81)99729 5566",
+    "email": "ceramicaportonassau@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
+    "cnpj": "92.660.406/0006-23",
+    "vendedor": "RODRIGO FRIGELAR 81 9852 7782",
+    "fone_empresa": "(81) 2102 8909",
+    "email": "VERACOUTINHO@REFRIGELAR.COM.BR",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
+    "cnpj": "92.660.406/0009-76",
+    "vendedor": "RODRIGO (82) 99852 7782",
+    "fone_empresa": "(82)99179 2520",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
+    "cnpj": "92.660.406/0002-08",
+    "vendedor": "RODRIGO FRIGELAR 81 9852 7782",
+    "fone_empresa": "(51)30588869",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
+    "cnpj": "92.660.406/0035-68",
+    "vendedor": "BETO WAGNER 81 9795 2626",
+    "fone_empresa": "(71)30255700",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FRIOVIX REFRIGERAÇÃO LTDA",
+    "cnpj": "09.316.105/0002-00",
+    "vendedor": "BRUNO FRIOPEÇA 99943 0469",
+    "fone_empresa": "(82) 3026 8351",
+    "email": "bruno.costa@friopecas.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "FRIOVIX REFRIGERAÇÃO LTDA",
+    "cnpj": "09.316.105/0011-09",
+    "vendedor": "BRUNO (82) 99943 0469",
+    "fone_empresa": "(82) 3334 3606",
+    "email": "glauciene.cavalcante@friopecas.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "GEOSSINTETICOS BAHIA GEOSSINTETICOS BAHIA COMERCIO E SERVICOS",
+    "cnpj": "08.656.922/0001-63",
+    "vendedor": "JAELSON 81 8792 4916",
+    "fone_empresa": "(82) 3435 0517",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "GEOSSINTETICOS GEOSSINTETICOS PERNAMBUCO COMERCIO LTDA",
+    "cnpj": "10.669.116/0001-71",
+    "vendedor": "JAELSON 81 8792 4916",
+    "fone_empresa": "(81) 3251 2273",
+    "email": "vendas3@santamartageo.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "GERDAU AÇOS LONGOS S.A.",
+    "cnpj": "07.358.761/0222-19",
+    "vendedor": "LUCAS",
+    "fone_empresa": "(82) 3214 5000",
+    "email": "lucas.lima1@gerdau.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "GLOBAL COMÉRCIO DE MATERIAIS",
+    "cnpj": "24.995.898/0001-43",
+    "vendedor": "SIDLEY TEL. 99931 9041",
+    "fone_empresa": "(82)33333333",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "GRAMFIX COMÉRCIO EIRELI",
+    "cnpj": "01.315.754/0002-84",
+    "vendedor": "RAFAELE (82) 99621 2669",
+    "fone_empresa": "(82) 3432 5874",
+    "email": "vendas5@gramfix.net.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "IMPERMEABILIZANTES LTDA",
+    "cnpj": "05.501.897/0001-50",
+    "vendedor": "JOELLITON TEL. 98864 8697",
+    "fone_empresa": "(82) 3436 7330",
+    "email": "protfercomercial@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "IMPORTADORA COMERCIAL IMPORTADORA COMERCIAL LTDA - ME",
+    "cnpj": "02.556.423/0001-18",
+    "vendedor": "ROSE (82) 98769 0081",
+    "fone_empresa": "(82) 3311 5444",
+    "email": "vendas06@brparafusos.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INDUSTRIA E COMERCIO DE INDUSTRIA E COMERCIO DE MATERIAIS ELETRICOS",
+    "cnpj": "61.310.256/0001-90",
+    "vendedor": "EMERSON SIL 9335 4109",
+    "fone_empresa": "(82) 3313 5263",
+    "email": "escritoriocej@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INDUSTRIA E COMERCIO LTDA",
+    "cnpj": "08.357.463/0001-17",
+    "vendedor": "ANDRE JERUEL TEL.99329 6815",
+    "fone_empresa": "(11) 4584 9922",
+    "email": "orcamento@jeruelplast.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INFRANET DISTRIBUIDORA DE REDES",
+    "cnpj": "12.257.462/0001-78",
+    "vendedor": "JOSIVALDO Tel (82) 98154 8851",
+    "fone_empresa": "(82) 3326 8298",
+    "email": "vanuzia@r2distribuicao.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INNOVA SAFETY EQUIPAMENTOS LTDA",
+    "cnpj": "44.870.081/0001-56",
+    "vendedor": "DANIEL (11) 93930 4448",
+    "fone_empresa": "(11)29629279",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INPLAST INDUSTRIAL DE PLÁSTICOS",
+    "cnpj": "07.236.671/0001-03",
+    "vendedor": "LAVINIA TEL. 9101 3902",
+    "fone_empresa": "(79) 3024 9200",
+    "email": "lalamcz@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INSDUSTRIA E COMERCIO E COMERCIO",
+    "cnpj": "09.327.149/0002-35",
+    "vendedor": "YASMIM 82 3324 6923",
+    "fone_empresa": "(82) 3324 1633",
+    "email": "vendas@industriasucroquimica.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INSTITUICAO DE PAGAMENTO",
+    "cnpj": "10.573.521/0001-91",
+    "vendedor": "INTERNET",
+    "fone_empresa": "(82) 3435 0517",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "INTERCEMENT BRASIL S.A.",
+    "cnpj": "62.258.884/0141-96",
+    "vendedor": "Janayna TEL 98170 9116",
+    "fone_empresa": "(82)98170 9116",
+    "email": "jbezerra@intercement.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "JL CONFECÇÕES DE UNIFORMES LTDA",
+    "cnpj": "50.592.851/0001-49",
+    "vendedor": "DALBTON",
+    "fone_empresa": "(61)98138 9348",
+    "email": "gerencia.dvsrepresentacoes@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "JUNIOR CONSTRUCAO LTDA",
+    "cnpj": "52.212.142/0001-16",
+    "vendedor": "JÚNIOR P. Rachão 9973 0571",
+    "fone_empresa": "(82)99730571",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "KRONA TUBOS E CONEXÕES DO NORDESTE",
+    "cnpj": "11.907.140/0001-64",
+    "vendedor": "VERUSKA 99392 4848",
+    "fone_empresa": "(82)98101 0017",
+    "email": "Mettrus.krona@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "LACA COMÉRCIO E TINTAS LTDA",
+    "cnpj": "10.789.980/0001-07",
+    "vendedor": "RODRIGUES",
+    "fone_empresa": "(82) 3436 1681",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "LOJÃO DUFERRO FERRAGENS LTDA",
+    "cnpj": "02.019.761/0007-06",
+    "vendedor": "WILSON (82) 99674 6640",
+    "fone_empresa": "(83)32446484",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "LTDA LTDA",
+    "cnpj": "10.572.515/0001-10",
+    "vendedor": "ANDRE JERUEL TEL.99329 6815",
+    "fone_empresa": "(79) 3114 4000",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "MINERAÇÃO LTDA LTDA",
+    "cnpj": "36.125.685/0001-40",
+    "vendedor": "KÉTSIA FREIRE",
+    "fone_empresa": "(82)96244695",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "MIXPEL COMÉRCIO E DISTRIBUIÇÃO",
+    "cnpj": "11.050.845/0003-70",
+    "vendedor": "PHILLIPE (82) 987097204",
+    "fone_empresa": "(82)91324749",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "MIXPEL COMÉRCIO E DISTRIBUIÇÃO",
+    "cnpj": "11.050.845/0001-08",
+    "vendedor": "PHILLIPE",
+    "fone_empresa": "(82) 2122 4750",
+    "email": "vendas9@mixpelinfo.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "MIXPEL DISTRIBUIDORA LTDA",
+    "cnpj": "06.864.595/0001-00",
+    "vendedor": "PHILLIPE (82) 98709 7204",
+    "fone_empresa": "(82) 2122 4750",
+    "email": "vendas9@mixpelinfo.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "O BORRACHÃO COMERCIAL LTDA",
+    "cnpj": "01.285.165/0001-10",
+    "vendedor": "SIDLEY (82) 99931 9041",
+    "fone_empresa": "(82) 3304 1423",
+    "email": "cotacao@oborrachao.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PARA CONSTRUÇÃO CIVIL CONSTRUÇÃO CIVIL LTDA",
+    "cnpj": "18.029.831/0001-51",
+    "vendedor": "JULIANA (54) 99138 7668",
+    "fone_empresa": "(54) 3211 8700",
+    "email": "comercial1@c3equipamentos.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PARAFUSOS LTDA - ME LTDA - ME",
+    "cnpj": "40.927.550/0001-75",
+    "vendedor": "EDSON central paraf 98815 2206",
+    "fone_empresa": "(82) 3231 2281",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PARAGOMINAS HOME CENTER LTDA",
+    "cnpj": "03.555.402/0005-74",
+    "vendedor": "PEDRO",
+    "fone_empresa": "(82)33111838",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PBG S/A 2412 - PBG S/A",
+    "cnpj": "83.475.913/0002-72",
+    "vendedor": "CLAUDIA 9164 4976 POINT",
+    "fone_empresa": "(48)32792236",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PBS S/A 592 - PBS S/A",
+    "cnpj": "83.475.913/0040-06",
+    "vendedor": "CLÁUDIA PORTOBELO 9164 4976",
+    "fone_empresa": "(82) 3325 5041",
+    "email": "portobelloengenhariamcz@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PERFIL LÍDER METALÚRGICA LTDA",
+    "cnpj": "18.787.482/0001-37",
+    "vendedor": "MARCIO LEAL 81 9586 1424",
+    "fone_empresa": "(11)24127787",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PLASTECH INDÚSTRIA E COMÉRCIO",
+    "cnpj": "03.145.291/0001-02",
+    "vendedor": "MÔNICA CAMPOS71 3394.1459",
+    "fone_empresa": "(71)33941459",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PLASTPUPIN COMÉRCIO DE PLÁSTICOS",
+    "cnpj": "10.535.799/0001-74",
+    "vendedor": "SAMUEL PUPIMN16 99742 0445",
+    "fone_empresa": "(16)36269846",
+    "email": "metalplastcompras@terra.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "POLIMIX CONCRETO 1800 - POLIMIX CONCRETO LTDA",
+    "cnpj": "29.067.113/0375-10",
+    "vendedor": "BRUCE ANTONIO TEL 99412 6506",
+    "fone_empresa": "(82) 3142 0736",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PROT-SEG COMÉRCIO ATACADISTA LTDA",
+    "cnpj": "39.560.006/0001-59",
+    "vendedor": "CARLA 82 9665 0010",
+    "fone_empresa": "(82)99970 2271",
+    "email": "carla@protsegdistribuidora.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PROTFER COMÉRCIO E FERRAGENS",
+    "cnpj": "01.450.431/0001-12",
+    "vendedor": "JOELLITON 82 98864 8697",
+    "fone_empresa": "(82) 3221 0522",
+    "email": "joelliton_protfer@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PROTFER TELAS LTDA 74 - PROTFER TELAS LTDA",
+    "cnpj": "08.765.904/0001-10",
+    "vendedor": "JOELLITON TEL. 98864 8697",
+    "fone_empresa": "(82) 3326 4606",
+    "email": "joelliton_protfer@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "PS COMÉRCIO DE FERRO E AÇO",
+    "cnpj": "07.122.759/0001-96",
+    "vendedor": "WAGNER MAIA 98186 4466",
+    "fone_empresa": "(82) 4009 2324",
+    "email": "robertojunior@aconordeste.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "RESSEG DISTRIBUIDORA DE EPIs LTDA",
+    "cnpj": "13.596.165/0001-10",
+    "vendedor": "CAROLINE (82) 98829 0309",
+    "fone_empresa": "(81) 3311 3060",
+    "email": "vendas15@ressegdistribuidora.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SANEANTES LTDA",
+    "cnpj": "42.238.639/0001-50",
+    "vendedor": "JOSEANE (82) 98852 9650",
+    "fone_empresa": "(82) 3221 8286",
+    "email": "comercial2@higicleanmaceio.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SANITARIOS LTDA LTDA",
+    "cnpj": "75.339.051/0001-41",
+    "vendedor": "TARCISIO 99670 9444",
+    "fone_empresa": "(82)99670 9444",
+    "email": "tf.representacoes_al@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SANTIAGO EQUIPAMENTOS DE INCÊNDIO",
+    "cnpj": "17.104.438/0001-12",
+    "vendedor": "Washington 11 95368 4951",
+    "fone_empresa": "(11)24381509",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SERVICOS LTDA",
+    "cnpj": "10.228.231/0001-00",
+    "vendedor": "LUIS LMV MAQUINAS 99943 0888",
+    "fone_empresa": "(82)35211456",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SMART CENTER COMÉRCIO DE MATERIAIS",
+    "cnpj": "19.051.774/0041-67",
+    "vendedor": "CHARLES MELO 981869547",
+    "fone_empresa": "(42)31225050",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SOLUCOES EM GEOTECNIA",
+    "cnpj": "41.002.117/0001-91",
+    "vendedor": "LUANE TOT SOLO 11978112445",
+    "fone_empresa": "(11)35008080",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SOPREMA IMPERMEABILIZANTES LTDA",
+    "cnpj": "04.064.707/0002-01",
+    "vendedor": "Anderson Denver 9979 9339",
+    "fone_empresa": "(82) 3338 8662",
+    "email": "andersonrepal@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "STECK DISTRIBUIDORA ELÉTRICA LTDA",
+    "cnpj": "44.415.136/0001-38",
+    "vendedor": "ROBERTO GUSTAVO",
+    "fone_empresa": "(11) 2248 7000",
+    "email": "",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "SUPRIFITAS COMERCIAL LTDA",
+    "cnpj": "35.722.974/0001-63",
+    "vendedor": "PATRICIA",
+    "fone_empresa": "(82) 3216 0333",
+    "email": "patmcz@hotmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "TOKEDIGITAL COMÉRCIO EIRELI",
+    "cnpj": "29.387.686/0001-05",
+    "vendedor": "YARA (82) 99946 0627",
+    "fone_empresa": "(82) 3371 6155",
+    "email": "toke_digital@outlook.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "UNICONEX CONEXÕES LTDA",
+    "cnpj": "36.399.841/0001-60",
+    "vendedor": "Washington tel. 11 95368 4951",
+    "fone_empresa": "(11) 2438 1509",
+    "email": "contato@equipamentosparaincendio.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "VEDACIT DO NORDESTE S.A.",
+    "cnpj": "14.680.219/0001-93",
+    "vendedor": "JANE REP. VEDACIT 98833 6104",
+    "fone_empresa": "(82) 3338 1933",
+    "email": "vendas@britorepresentacoes.com.br",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "VELÉTRICA DISTRIBUIDORA ELÉTRICA",
+    "cnpj": "29.398.209/0001-37",
+    "vendedor": "EBERTON TEL. 3522 5770",
+    "fone_empresa": "(82)99321 1557",
+    "email": "ebertonsantos7391@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "VIAPOL LTDA",
+    "cnpj": "58.681.867/0005-63",
+    "vendedor": "EDMUNDO JR. TEL.9 8107 9114",
+    "fone_empresa": "(71) 3507 9900",
+    "email": "junior.vendas.al@gmail.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "VOTORANTIM CIMENTOS N/NE S.A.",
+    "cnpj": "10.656.452/0018-28",
+    "vendedor": "Everson TEL 81 9601 9867",
+    "fone_empresa": "(81)99601 9867",
+    "email": "everson.bezerra@vcimentos.com",
+    "qtd_pedidos": 1
+  },
+  {
+    "nome": "W D B COMÉRCIO EIRELI",
+    "cnpj": "21.678.658/0001-27",
+    "vendedor": "PATRICIA (82) 98862 2294",
+    "fone_empresa": "(82) 3025 2838",
+    "email": "patmcz@hotmail.com",
+    "qtd_pedidos": 1
+  }
+]
