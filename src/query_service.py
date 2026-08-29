@@ -188,6 +188,17 @@ def load_all_suppliers_contacts() -> List[Dict[str, Any]]:
     return []
 
 
+GLOBAL_CUTOFF_DATE = date(2026, 6, 1)
+
+def is_record_within_cutoff(r: Dict[str, Any]) -> bool:
+    dt_emiss = parse_date_obj(r.get("data_pedido"))
+    if dt_emiss and dt_emiss >= GLOBAL_CUTOFF_DATE:
+        return True
+    dts_ent = parse_all_dates(r.get("data_entrega_prevista"))
+    if any(d >= GLOBAL_CUTOFF_DATE for d in dts_ent):
+        return True
+    return False
+
 class OrderQueryService:
 
     _cached_records: Optional[List[Dict[str, Any]]] = None
@@ -206,7 +217,7 @@ class OrderQueryService:
         # Só recarrega o Excel se o arquivo foi modificado no disco ou se o cache estiver vazio
         if OrderQueryService._cached_records is None or current_mtime > OrderQueryService._last_mtime:
             records_dict = self.manager.load_existing_records()
-            OrderQueryService._cached_records = list(records_dict.values())
+            OrderQueryService._cached_records = [r for r in records_dict.values() if is_record_within_cutoff(r)]
             OrderQueryService._last_mtime = current_mtime
             
         return OrderQueryService._cached_records
