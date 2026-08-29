@@ -587,7 +587,6 @@ const app = {
 
   loadExcelViewer() {
     // Aba agora exibe os Cards Especializados de Planilhas
-  }, 300);
   },
 
   currentCallTarget: "",
