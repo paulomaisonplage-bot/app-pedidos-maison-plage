@@ -373,13 +373,86 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
 
     return {"suppliers": fornecs}
 
-# 7. FLUXO FINANCEIRO
+# 7. FLUXO FINANCEIRO INTELIGENTE
 @app.get("/api/financial/summary")
 async def api_financial_summary(role: str = "campo"):
     if role not in ["admin", "engenharia"]:
-        raise HTTPException(status_code=403, detail="Acesso exclusivo para Engenharia")
-    resumo = query_service.get_financial_schedule_summary()
-    return {"summary_text": resumo}
+        raise HTTPException(status_code=403, detail="Acesso exclusivo para Engenharia e Administração.")
+    
+    records = query_service._get_all_records()
+    total_contratado = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records)
+    
+    # 1. Desembolso por Mês via Parcelas
+    all_insts = []
+    for r in records:
+        all_insts.extend(calculate_installments_for_item(r))
+        
+    monthly_vals = {6: 0.0, 7: 0.0, 8: 0.0, 9: 0.0, 10: 0.0, 11: 0.0, 12: 0.0}
+    month_names = {6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
+    
+    for i in all_insts:
+        dt_venc = i.get("_venc_dt")
+        val = float(i.get("valor_parcela", 0.0) or 0.0)
+        if dt_venc and dt_venc.year == 2026 and dt_venc.month in monthly_vals:
+            monthly_vals[dt_venc.month] += val
+
+    val_ago = monthly_vals[8]
+    val_futuro = sum(v for m, v in monthly_vals.items() if m >= 9)
+    max_month_val = max(monthly_vals.values()) or 1.0
+
+    bars = []
+    for m in range(6, 13):
+        v = monthly_vals[m]
+        pct = (v / max_month_val) * 100
+        bars.append({
+            "mes_num": m,
+            "mes_nome": month_names[m],
+            "valor_fmt": f"R${v:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "pct": round(pct, 1),
+            "is_current": (m == 8)
+        })
+
+    # 2. Distribuição por Macro-Grupos
+    MACRO_GROUPS = [
+        {"name": "Obra Grossa & Estrutura", "icon": "🏗️", "sub": ["01 AGREGADOS", "02 ARTEFATOS", "03 BLOCOS", "15 MADEIRA", "18 MISTURAS", "20 PAVIMENTA", "23 PRODUTOS METALICOS", "34 ARGAMASSAS", "36 TELHAS", "39 VEDA"], "total": 0.0, "color": "#3b82f6"},
+        {"name": "Instalações Prediais", "icon": "⚡", "sub": ["07 ENERGIA", "12 INSTAL.HIDRAULICA", "13 INSTALA", "14 LOU", "24 PVC", "28 INST. DE INCENDIO", "42 INST. DE REFRIGERA", "43 INST. DE G"], "total": 0.0, "color": "#10b981"},
+        {"name": "Acabamentos & Pintura", "icon": "🛡️", "sub": ["11 IMPERMEABILIZANTE", "16 MATERIAL BETUMINOSO", "25 REVESTIMENTO", "29 FERRAGENS", "30 MOVEIS", "37 TINTAS", "19 PAISAGISMO", "38 URBANISMO"], "total": 0.0, "color": "#f59e0b"},
+        {"name": "Segurança, EPIs & Apoio", "icon": "🦺", "sub": ["10 EPI", "33 MATERIAL DE LIMPEZA", "35 SINALIZA", "44 FERRAMENTAS", "45 COMBUSTIVEIS", "47 MATERIAL DE EXPEDIENTE", "04 DIVERSOS", "05 ALIMENTACAO", "21 PRODUTOS INDUSTRIALIZADOS"], "total": 0.0, "color": "#8b5cf6"},
+        {"name": "Serviços & Equipamentos", "icon": "🚜", "sub": ["06 ALUGUEL", "08 ESQUADRIAS METALICAS", "26 SERVI", "31 ESQUADRIAS DE MADEIRA", "01 Equipamentos Aluguel", "02 Equipamentos", "01 Verbas", "02 Servi"], "total": 0.0, "color": "#ec4899"}
+    ]
+
+    for r in records:
+        fam_raw = str(r.get("familia_insumo", "") or "").upper()
+        val = float(r.get("preco_total_item", 0.0) or 0.0)
+        alloc = False
+        for g in MACRO_GROUPS:
+            if any(t in fam_raw for t in g["sub"]):
+                g["total"] += val
+                alloc = True
+                break
+        if not alloc:
+            MACRO_GROUPS[0]["total"] += val
+
+    groups_res = []
+    for g in MACRO_GROUPS:
+        pct = (g["total"] / total_contratado * 100) if total_contratado > 0 else 0
+        groups_res.append({
+            "name": g["name"],
+            "icon": g["icon"],
+            "color": g["color"],
+            "valor_fmt": f"R${g['total']:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "pct": round(pct, 1)
+        })
+
+    return {
+        "kpis": {
+            "total_contratado": f"R${total_contratado:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "mes_atual": f"R${val_ago:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "futuro": f"R${val_futuro:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        },
+        "monthly_bars": bars,
+        "macro_groups": groups_res
+    }
 
 # 8. EXPORTAR PLANILHAS EM EXCEL (.xlsx)
 @app.get("/api/export/excel")
