@@ -102,12 +102,17 @@ const app = {
     }
   },
 
-  async submitPin() {
+  async submitNativePin() {
+    const pin = document.getElementById("nativePinInput").value.trim();
+    if (pin.length !== 4) {
+      alert("Por favor, digite seu PIN de 4 dígitos.");
+      return;
+    }
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: this.currentPin })
+        body: JSON.stringify({ pin: pin })
       });
       const data = await res.json();
       if (data.success) {
@@ -116,12 +121,21 @@ const app = {
         this.showApp();
       } else {
         alert(data.detail || "PIN incorreto.");
-        this.clearPin();
+        document.getElementById("nativePinInput").value = "";
       }
     } catch(e) {
       alert("Erro ao validar PIN.");
-      this.clearPin();
     }
+  },
+
+  async submitPin() {
+    await this.submitNativePin();
+  },
+
+  pressPin(n) {},
+  clearPin() {
+    const el = document.getElementById("nativePinInput");
+    if (el) el.value = "";
   },
 
   logout() {
@@ -871,19 +885,26 @@ const app = {
       const res = await fetch(`/api/users/check_status?req_id=${reqId}`);
       const data = await res.json();
       if (data.status === "approved") {
-        alert(`🎉 Parabéns! Seu acesso foi aprovado pelo Administrador.
-
-Seu PIN de entrada é: ${data.pin}
-
-Faça login agora!`);
+        // Autentica e entra direto sem pedir senha
+        const userObj = {
+          id: reqId,
+          nome: "Membro Autorizado",
+          role: data.role || "engenharia",
+          pin: data.pin
+        };
+        localStorage.setItem("mp_auth_user", JSON.stringify(userObj));
         localStorage.removeItem("mp_pending_req_id");
-        window.location.href = "/";
+        this.currentUser = userObj;
+        alert("🎉 Acesso Aprovado pelo Administrador Paulo!
+
+Entrando diretamente no App da Obra...");
+        this.showApp();
       } else if (data.status === "rejected") {
         alert("Sua solicitação de acesso não foi aprovada pelo Administrador.");
         localStorage.removeItem("mp_pending_req_id");
         window.location.href = "/";
       } else {
-        alert("Sua solicitação ainda está em análise pelo Administrador Paulo. Aguarde.");
+        alert("Sua solicitação ainda está em análise pelo Administrador Paulo. Aguarde a aprovação.");
       }
     } catch(e) {
       alert("Erro ao verificar status.");
