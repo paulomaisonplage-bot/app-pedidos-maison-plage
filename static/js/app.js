@@ -184,9 +184,13 @@ const app = {
 
   selectMonth(m) {
     this.currentMonth = m;
-    document.querySelectorAll(".month-pill").forEach((p, idx) => {
-      if (idx + 1 === m) p.classList.add("active");
-      else p.classList.remove("active");
+    document.querySelectorAll(".month-pill").forEach(p => {
+      const oc = p.getAttribute("onclick") || "";
+      if (oc.includes(`selectMonth(${m})`)) {
+        p.classList.add("active");
+      } else {
+        p.classList.remove("active");
+      }
     });
     this.loadMonth();
   },
