@@ -62,7 +62,7 @@
     <div class="login-box">
       <div class="login-logo">🏗️</div>
       <h1 class="login-title">Maison Plage</h1>
-      <p class="login-sub">Acesse via PIN ou Código enviado por E-mail:</p>
+      <p class="login-sub">Digite seu PIN de 4 dígitos para entrar:</p>
 
       <div class="pin-display">
         <span class="pin-dot" id="dot1"></span>
@@ -86,17 +86,12 @@
         <button class="pin-btn pin-action" onclick="app.submitPin()">➔</button>
       </div>
 
-      <!-- SIMULADOR DE TESTES DOS 4 PERFIS -->
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
-        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center;">🧪 Simulador de Perfis (Testes Rápidos):</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <button class="btn-profile-test" onclick="app.quickLogin('admin')">👑 Admin Master</button>
-          <button class="btn-profile-test" onclick="app.quickLogin('engenharia')">🏗️ Engenharia</button>
-          <button class="btn-profile-test" onclick="app.quickLogin('administracao')">📦 Administração</button>
-          <button class="btn-profile-test" onclick="app.quickLogin('campo')">👷 Campo</button>
+      <!-- AVISO DE SEGURANÇA E CONVITE EXCLUSIVO -->
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;">
+        <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
+          🔒 <b>Acesso Exclusivo à Obra Maison Plage</b><br>
+          Novo na equipe? Solicite um link de convite ao Administrador Paulo.
         </div>
-      </div>
-
       </div>
     </div>
   </div>
