@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from src.query_service import OrderQueryService, load_all_suppliers_contacts
 from src.auth_service import AuthService
 
-app = FastAPI(title="Maison Plage • App de Pedidos", version="2.1.0")
+app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.0")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -68,6 +68,7 @@ async def get_manifest():
 async def get_service_worker():
     return FileResponse("static/sw.js", media_type="application/javascript")
 
+# AUTENTICAÇÃO
 @app.post("/api/auth/login")
 async def api_login(req: LoginRequest):
     users = auth_service._data.get("users", {})
@@ -84,6 +85,7 @@ async def api_login(req: LoginRequest):
             }
     raise HTTPException(status_code=401, detail="PIN de acesso incorreto.")
 
+# GESTÃO DE EQUIPE
 @app.get("/api/users")
 async def api_get_users(role: str = "campo"):
     if role != "admin":
@@ -139,6 +141,7 @@ async def api_delete_user(user_id: str, role: str = "campo"):
         return {"success": True}
     raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
+# 1. ENTREGAS DA SEMANA
 @app.get("/api/deliveries/week")
 async def api_deliveries_week(offset: int = 0, role: str = "campo"):
     hide_fin = (role == "campo")
@@ -155,17 +158,20 @@ async def api_deliveries_week(offset: int = 0, role: str = "campo"):
         if items:
             it0 = items[0]
             total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+            desc = str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")).strip()
             cards.append({
                 "pc": str(pc),
-                "fornecedor": it0.get("fornecedor", "Não Informado"),
+                "fornecedor": fornec,
                 "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
                 "total_itens": len(items),
-                "descricao_resumo": str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")),
+                "descricao_resumo": desc,
                 "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
                 "can_pdf": (role in ["admin", "engenharia", "administracao"])
             })
     return {"offset": offset, "periodo": periodo_str, "cards": cards}
 
+# 2. ENTREGAS DO MÊS
 @app.get("/api/deliveries/month")
 async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo"):
     hide_fin = (role == "campo")
@@ -176,16 +182,19 @@ async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo
         if items:
             it0 = items[0]
             total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+            desc = str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")).strip()
             cards.append({
                 "pc": str(pc),
-                "fornecedor": it0.get("fornecedor", "Não Informado"),
+                "fornecedor": fornec,
                 "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
                 "total_itens": len(items),
-                "descricao_resumo": str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")),
+                "descricao_resumo": desc,
                 "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None
             })
     return {"mes": mes, "ano": ano, "cards": cards}
 
+# 3. BUSCA DE INSUMOS
 @app.get("/api/materials/search")
 async def api_search_materials(q: str, role: str = "campo"):
     hide_fin = (role == "campo")
@@ -195,20 +204,23 @@ async def api_search_materials(q: str, role: str = "campo"):
         items = query_service.get_order_by_number(pc)
         if items:
             it0 = items[0]
+            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
             matched = [x for x in items if q.lower() in str(x.get("descricao_material", "")).lower() or q.lower() in str(x.get("descricao_completa", "")).lower()]
             cards.append({
                 "pc": str(pc),
-                "fornecedor": it0.get("fornecedor", "Não Informado"),
+                "fornecedor": fornec,
                 "data_entrega": it0.get("data_entrega_prevista", "-"),
                 "matched_items": [f"{m.get('quantidade')} {m.get('unidade', 'UN')} - {m.get('descricao_material', '') or m.get('descricao_completa', '')}" for m in matched[:3]]
             })
     return {"query": q, "results": cards}
 
+# 4. GRUPOS DA OBRA
 @app.get("/api/groups")
 async def api_get_groups():
     families = query_service.get_all_families_summary()
     return {"groups": families}
 
+# 5. COMPRAS RECENTES
 @app.get("/api/orders/recent")
 async def api_recent_orders(role: str = "campo"):
     hide_fin = (role == "campo")
@@ -219,17 +231,20 @@ async def api_recent_orders(role: str = "campo"):
         if items:
             it0 = items[0]
             total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+            desc = str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")).strip()
             cards.append({
                 "pc": str(pc),
-                "fornecedor": it0.get("fornecedor", "Não Informado"),
-                "data_emissao": it0.get("data_emissao", "-"),
+                "fornecedor": fornec,
+                "data_emissao": it0.get("data_pedido", "-"),
                 "data_entrega": it0.get("data_entrega_prevista", "-"),
                 "total_itens": len(items),
-                "descricao_resumo": str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")),
+                "descricao_resumo": desc,
                 "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None
             })
     return {"cards": cards}
 
+# 6. FORNECEDORES
 @app.get("/api/suppliers")
 async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
     if role == "campo":
@@ -258,6 +273,7 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
 
     return {"suppliers": fornecs}
 
+# 7. FLUXO FINANCEIRO
 @app.get("/api/financial/summary")
 async def api_financial_summary(role: str = "campo"):
     if role not in ["admin", "engenharia"]:
@@ -265,6 +281,7 @@ async def api_financial_summary(role: str = "campo"):
     resumo = query_service.get_financial_schedule_summary()
     return {"summary_text": resumo}
 
+# 8. EXPORTAR PLANILHA EXCEL
 @app.get("/api/export/excel")
 async def api_export_excel(role: str = "campo"):
     if role not in ["admin", "engenharia"]:
@@ -278,6 +295,7 @@ async def api_export_excel(role: str = "campo"):
         )
     raise HTTPException(status_code=404, detail="Planilha não encontrada.")
 
+# DETALHES DO PEDIDO
 @app.get("/api/order/{pc_num}")
 async def api_order_detail(pc_num: str, role: str = "campo"):
     hide_fin = (role == "campo")
@@ -287,11 +305,12 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     
     it0 = items[0]
     total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+    fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
     
     itens_formatados = []
     for it in items:
         itens_formatados.append({
-            "item_num": it.get("item_num", "-"),
+            "item_num": it.get("codigo_insumo", "-"),
             "descricao": str(it.get("descricao_material", "") or it.get("descricao_completa", "")),
             "quantidade": it.get("quantidade", 0),
             "unidade": str(it.get("unidade", "UN")).strip(),
@@ -301,8 +320,8 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
 
     return {
         "pc": str(pc_num),
-        "fornecedor": it0.get("fornecedor", "Não Informado"),
-        "data_emissao": it0.get("data_emissao", "-"),
+        "fornecedor": fornec,
+        "data_emissao": it0.get("data_pedido", "-"),
         "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
         "condicao_pagamento": it0.get("condicao_pagamento", "Conforme Pedido") if not hide_fin else None,
         "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
@@ -310,6 +329,7 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
         "can_pdf": (role in ["admin", "engenharia", "administracao"])
     }
 
+# VISUALIZADOR E DOWNLOAD DE PDF ORIGINAL
 @app.get("/api/order/{pc_num}/pdf")
 async def api_order_pdf(pc_num: str, role: str = "campo"):
     if role == "campo":
