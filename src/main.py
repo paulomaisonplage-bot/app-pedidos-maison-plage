@@ -11,7 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from src.query_service import OrderQueryService, load_all_suppliers_contacts
+from src.excel_manager import calculate_installments_for_item
 from src.auth_service import AuthService
+
 
 app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.20260829172549")
 
