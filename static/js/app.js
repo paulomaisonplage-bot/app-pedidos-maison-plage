@@ -196,13 +196,31 @@ const app = {
       document.getElementById("mFornec").innerText = data.fornecedor;
       
       let contactHtml = "";
-      if (data.fornecedor_contato) {
-        const fc = data.fornecedor_contato;
+      if (data.contatos) {
+        const v = data.contatos.vendedor || {};
+        const emp = data.contatos.empresa || {};
         contactHtml = `
-          <div class="modal-fornec-actions">
-            ${fc.telefone_clean ? `<a href="tel:${fc.telefone_clean}" class="btn-call">📞 Ligar</a>` : ''}
-            ${fc.email ? `<a href="mailto:${fc.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
-            ${fc.telefone_clean ? `<a href="https://wa.me/55${fc.telefone_clean}?text=Ol%C3%A1%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+            <div class="contact-sub-box">
+              <div class="contact-box-header">👤 <b>Vendedor da Obra:</b> ${v.nome}</div>
+              ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+              <div class="sup-actions">
+                ${v.telefone_clean ? `<a href="tel:${v.telefone_clean}" class="btn-call">📞 Ligar Vendedor</a>` : ''}
+                ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome)}%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+              </div>
+            </div>
+
+            ${(emp.telefone || emp.email) ? `
+              <div class="contact-sub-box" style="background:rgba(255,255,255,0.02);">
+                <div class="contact-box-header">🏢 <b>Central da Empresa</b></div>
+                ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
+                ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
+                <div class="sup-actions">
+                  ${emp.telefone_clean ? `<a href="tel:${emp.telefone_clean}" class="btn-call" style="background:#475569;">☎️ Ligar Loja</a>` : ''}
+                  ${emp.email ? `<a href="mailto:${emp.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
+                </div>
+              </div>
+            ` : ''}
           </div>
         `;
       }
@@ -374,24 +392,41 @@ const app = {
 
   async loadSuppliers() {
     const list = document.getElementById("suppliersCards");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando contatos de fornecedores...</div>';
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando contatos estruturados...</div>';
     try {
       const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
       const data = await res.json();
       list.innerHTML = data.suppliers.map(s => {
-        const telClean = s.telefone_clean || '';
-        const email = s.email || '';
+        const v = s.vendedor || {};
+        const emp = s.empresa || {};
+        
         return `
           <div class="supplier-card">
             <div class="sup-name">${s.razao_social}</div>
-            <div class="sup-info">📞 <b>Contato / Tel:</b> ${s.telefone}</div>
-            ${email ? `<div class="sup-info">✉️ <b>E-mail:</b> ${email}</div>` : ''}
-            <div class="sup-info">👤 <b>Vendedor:</b> ${s.contato_vendedor}</div>
-            <div class="sup-actions">
-              ${telClean ? `<a href="tel:${telClean}" class="btn-call" onclick="event.stopPropagation();">📞 Ligar</a>` : ''}
-              ${email ? `<a href="mailto:${email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail" onclick="event.stopPropagation();">✉️ Enviar E-mail</a>` : ''}
-              ${telClean ? `<a href="https://wa.me/55${telClean}?text=Ol%C3%A1%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp" onclick="event.stopPropagation();">💬 WhatsApp</a>` : ''}
+            
+            <!-- BLOCO 1: VENDEDOR DIRETO -->
+            <div class="contact-sub-box">
+              <div class="contact-box-header">👤 <b>Vendedor Responsável:</b> ${v.nome}</div>
+              ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+              <div class="sup-actions">
+                ${v.telefone_clean ? `<a href="tel:${v.telefone_clean}" class="btn-call">📞 Ligar Vendedor</a>` : ''}
+                ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome)}%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+              </div>
             </div>
+
+            <!-- BLOCO 2: CENTRAL DA EMPRESA -->
+            ${(emp.telefone || emp.email) ? `
+              <div class="contact-sub-box" style="margin-top:8px;background:rgba(255,255,255,0.02);">
+                <div class="contact-box-header">🏢 <b>Central da Empresa / Loja</b></div>
+                ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
+                ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
+                <div class="sup-actions">
+                  ${emp.telefone_clean ? `<a href="tel:${emp.telefone_clean}" class="btn-call" style="background:#475569;">☎️ Ligar Loja</a>` : ''}
+                  ${emp.email ? `<a href="mailto:${emp.email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
+                </div>
+              </div>
+            ` : ''}
+
           </div>
         `;
       }).join("");

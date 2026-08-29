@@ -24,6 +24,50 @@ if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_con
 
 USERS_FILE = "data/usuarios_autorizados.json"
 query_service = OrderQueryService(EXCEL_PATH)
+
+def parse_supplier_dual_contacts(supplier_item: dict) -> dict:
+    vend_raw = str(supplier_item.get("vendedor", "") or "").strip()
+    tel_raw = str(supplier_item.get("telefone", "") or "").strip()
+    email_raw = str(supplier_item.get("email", "") or "").strip()
+    
+    # 1. Extrai dados do vendedor
+    # Ex: "MARCOS BIANA 82 996002588" -> nome: "MARCOS BIANA", tel: "82996002588"
+    v_nome = vend_raw
+    v_tel = ""
+    v_tel_clean = ""
+    
+    m_tel = re.search(r'(?:(?:\+|00)?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:9\s*)?(\d{4,5})[\s\.\-]?(\d{4})', vend_raw)
+    if m_tel:
+        ddd = m_tel.group(1) or "82"
+        p1 = m_tel.group(2).replace(" ", "")
+        p2 = m_tel.group(3).replace(" ", "")
+        v_tel_clean = f"{ddd}{p1}{p2}"
+        v_tel = f"({ddd}) {p1}-{p2}" if len(p1) == 5 else f"({ddd}) {p1[:4]}-{p1[4:]}{p2}"
+        # Remove telefone do nome do vendedor
+        v_nome = vend_raw[:m_tel.start()].strip(" -:–tel.TEL.")
+        if not v_nome:
+            v_nome = "Vendedor Comercial"
+    elif not v_nome or v_nome == "-":
+        v_nome = "Atendimento Comercial"
+
+    # 2. Extrai dados da empresa (fixo / central / email)
+    emp_tel = tel_raw if tel_raw and tel_raw != v_tel_clean else ""
+    emp_tel_clean = re.sub(r'[^0-9]', '', emp_tel) if emp_tel else ""
+    emp_email = email_raw if email_raw and email_raw != "Não Informado" else ""
+    
+    return {
+        "vendedor": {
+            "nome": v_nome,
+            "telefone": v_tel if v_tel else None,
+            "telefone_clean": v_tel_clean if v_tel_clean else None
+        },
+        "empresa": {
+            "telefone": emp_tel if emp_tel else None,
+            "telefone_clean": emp_tel_clean if emp_tel_clean else None,
+            "email": emp_email if emp_email else None
+        }
+    }
+
 auth_service = AuthService(USERS_FILE)
 
 def find_file_id_for_order(pc_num: str) -> Optional[str]:
@@ -261,15 +305,11 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
     
     fornecs = []
     for f in catalog:
-        tel = str(f.get("telefone", "") or "").strip()
-        clean_tel = str(f.get("telefone_clean", "") or re.sub(r'[^0-9]', '', tel)).strip()
-        email = str(f.get("email", "") or "").strip()
+        contacts = parse_supplier_dual_contacts(f)
         fornecs.append({
             "razao_social": f.get("nome", "Não Informado"),
-            "telefone": tel if tel else (f.get("vendedor") if f.get("vendedor") else "Não Informado"),
-            "telefone_clean": clean_tel if clean_tel else None,
-            "email": email if email and email != "Não Informado" else None,
-            "contato_vendedor": f.get("vendedor", "-")
+            "vendedor": contacts["vendedor"],
+            "empresa": contacts["empresa"]
         })
 
     return {"suppliers": fornecs}
@@ -351,18 +391,12 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
     fornec_nome = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
     
-    # Busca contato do fornecedor
+    # Busca contato do fornecedor estruturado
     catalog = load_all_suppliers_contacts()
     fornec_contato = None
     for f in catalog:
         if f["nome"].strip().upper() in fornec_nome.upper() or fornec_nome.upper() in f["nome"].strip().upper():
-            tel = str(f.get("telefone", "") or "").strip()
-            fornec_contato = {
-                "telefone": tel if tel else None,
-                "telefone_clean": re.sub(r'[^0-9]', '', tel) if tel else None,
-                "email": f.get("email") if f.get("email") != "Não Informado" else None,
-                "vendedor": f.get("vendedor", "-")
-            }
+            fornec_contato = parse_supplier_dual_contacts(f)
             break
 
     itens_formatados = []
@@ -379,7 +413,7 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     return {
         "pc": str(pc_num),
         "fornecedor": fornec_nome,
-        "fornecedor_contato": fornec_contato if not hide_fin else None,
+        "contatos": fornec_contato if not hide_fin else None,
         "data_emissao": it0.get("data_pedido", "-"),
         "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
         "condicao_pagamento": it0.get("condicao_pagamento", "Conforme Pedido") if not hide_fin else None,
@@ -387,6 +421,7 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
         "itens": itens_formatados,
         "can_pdf": (role in ["admin", "engenharia", "administracao"])
     }
+
 
 @app.get("/api/order/{pc_num}/pdf")
 async def api_order_pdf(pc_num: str, role: str = "campo"):
