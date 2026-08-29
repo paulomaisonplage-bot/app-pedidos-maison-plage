@@ -341,13 +341,15 @@ async def api_get_groups():
 @app.get("/api/recent_purchases")
 async def api_recent_purchases(role: str = "campo"):
     hide_fin = (role == "campo")
-    msg, pcs = query_service.get_recent_purchases_summary(limit=40, hide_financials=hide_fin)
+    msg, pcs = query_service.get_recent_orders_summary(max_orders=40, hide_financials=hide_fin, item_offset=0, page_size=40)
     cards = []
     for pc in pcs:
         c = build_order_card_data(pc, role)
         if c:
             cards.append(c)
     return {"cards": cards}
+
+
 
 # 6. FORNECEDORES
 @app.get("/api/suppliers")
