@@ -359,7 +359,7 @@ async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] =
         sorted_items = [i for i in sorted_items if q_l in i["nome"].lower() or q_l in i["codigo"].lower() or q_l in i["familia"].lower()]
 
     result = []
-    for it in sorted_items[:300]: # Até 300 itens por página para renderização ultra rápida
+    for it in sorted_items[:300]:
         qtd_fmt = f"{it['qtd_total']:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".").rstrip('0').rstrip(',')
         result.append({
             "nome": it["nome"],
@@ -381,22 +381,51 @@ async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] =
 async def api_material_orders(nome: str, role: str = "campo"):
     hide_fin = (role == "campo")
     raw_dict = query_service.manager.load_existing_records()
+    mat_upper = nome.upper().strip()
     
-    nome_u = nome.upper().strip()
-    matched_pcs = set()
+    # 1. Agrupa itens por PC na base inteira
+    pc_items_map = {}
     for r in raw_dict.values():
-        desc = str(r.get("descricao_material", "") or "").strip().upper()
-        if nome_u == desc:
-            pc = str(r.get("numero_pedido", "")).strip()
-            if pc:
-                matched_pcs.add(pc)
-                
-    cards = []
-    for pc in sorted(list(matched_pcs), reverse=True):
-        c = build_order_card_data(pc, role)
-        if c:
-            cards.append(c)
+        pc = str(r.get("numero_pedido", "")).strip()
+        if not pc:
+            continue
+        if pc not in pc_items_map:
+            pc_items_map[pc] = []
+        pc_items_map[pc].append(r)
+        
+    matching_pcs = []
+    for pc, items in pc_items_map.items():
+        if any(mat_upper == str(i.get("descricao_material", "") or "").strip().upper() for i in items):
+            matching_pcs.append(pc)
             
+    cards = []
+    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
+        items = pc_items_map[pc]
+        it0 = items[0]
+        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+        
+        top_3 = []
+        for it in items[:3]:
+            desc = str(it.get("descricao_material", "") or "").strip()
+            qtd = it.get("quantidade", 0)
+            un = str(it.get("unidade", "UN")).strip()
+            top_3.append(f"• {qtd} {un} - {desc}")
+            
+        extra_count = len(items) - 3 if len(items) > 3 else 0
+        
+        cards.append({
+            "pc": pc,
+            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
+            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
+            "data_emissao": it0.get("data_pedido", "-"),
+            "total_itens": len(items),
+            "itens_resumo": top_3,
+            "extra_itens_count": extra_count,
+            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+            "can_pdf": (role in ["admin", "engenharia", "administracao"])
+        })
+        
     return {"material": nome, "total_pedidos": len(cards), "cards": cards}
 
 # 4. GRUPOS DA OBRA
