@@ -17,6 +17,47 @@
 <body>
 
   <!-- TELA DE LOGIN COM PIN, OTP E SIMULADOR DE PERFIS -->
+  
+  <!-- TELA DE CONVITE E CADASTRO DE NOVO MEMBRO -->
+  <div id="inviteScreen" class="login-screen" style="display:none;">
+    <div class="login-box" style="max-width:380px;">
+      <div class="login-logo">🏗️</div>
+      <h1 class="login-title">Maison Plage</h1>
+      <p class="login-sub" id="inviteSubTitle">Você foi convidado para acessar o App da Obra!</p>
+
+      <div id="inviteValidBox" style="margin-top:16px;">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;text-align:left;">Preencha seus dados para solicitar liberação ao Administrador:</div>
+        <input type="text" id="invNomeInput" class="search-input" placeholder="Seu Nome Completo (ex: Carlos Silva)" style="margin-bottom:10px;text-align:left;">
+        <input type="tel" id="invContatoInput" class="search-input" placeholder="Celular / WhatsApp com DDD" style="margin-bottom:16px;text-align:left;">
+        <button class="btn-pdf-action" onclick="app.submitInviteRegistration()" style="width:100%;padding:14px;font-size:14px;border:none;cursor:pointer;">
+          📲 Solicitar Acesso à Obra
+        </button>
+      </div>
+
+      <div id="invitePendingBox" style="display:none;margin-top:16px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:10px;">⏳</div>
+        <div style="font-size:15px;font-weight:800;color:#fbbf24;margin-bottom:6px;">Solicitação em Análise!</div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:16px;">
+          Seus dados foram enviados com sucesso. Assim que o <b>Administrador Paulo</b> aprovar seu acesso, você receberá seu PIN de entrada.
+        </div>
+        <button class="btn-profile-test" onclick="app.checkPendingStatus()" style="width:100%;padding:10px;">
+          🔄 Verificar se já fui Aprovado
+        </button>
+      </div>
+
+      <div id="inviteExpiredBox" style="display:none;margin-top:16px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:10px;">⚠️</div>
+        <div style="font-size:14px;font-weight:800;color:#ef4444;margin-bottom:8px;">Link de Convite Já Utilizado</div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.5;">
+          Este link de uso único já foi utilizado para outro cadastro. Por favor, solicite um novo link ao Administrador.
+        </div>
+        <button class="btn-profile-test" onclick="window.location.href='/'" style="margin-top:16px;width:100%;">
+          Ir para Tela de Entrada
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
       <div class="login-logo">🏗️</div>
@@ -56,9 +97,6 @@
         </div>
       </div>
 
-      <!-- ACESSO POR CÓDIGO VIA E-MAIL -->
-      <div style="margin-top:16px;text-align:center;">
-        <button class="btn-email-otp" onclick="app.promptEmailLogin()">✉️ Entrar com Código por E-mail</button>
       </div>
     </div>
   </div>
@@ -161,14 +199,32 @@
         <div class="financial-box" id="financialBox"></div>
       </section>
 
-      <!-- MÓDULO 8: GESTÃO DE EQUIPE (ADMIN MASTER) -->
+      <!-- MÓDULO 8: USUÁRIOS & CONVITES -->
       <section id="modTeam" class="module-section">
-        <div class="team-header">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <h2>👥 Gestão de Usuários</h2>
-          <button class="btn-add-user" onclick="app.openAddUserModal()">+ Novo Membro</button>
+          <button class="btn-pdf-action" onclick="app.openGenerateInviteModal()" style="margin-top:0;padding:8px 12px;font-size:11px;border:none;cursor:pointer;background:linear-gradient(135deg, #2563eb, #1d4ed8);">
+            🔗 Gerar Link de Convite
+          </button>
         </div>
-        <div class="cards-list" id="teamCards"></div>
+
+        <!-- SEÇÃO DE SOLICITAÇÕES PENDENTES -->
+        <div id="pendingRequestsContainer" style="display:none;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:800;color:#fbbf24;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+            🔔 Solicitações Pendentes de Aprovação:
+          </div>
+          <div id="pendingRequestsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+        <!-- LISTA DE USUÁRIOS ATIVOS -->
+        <div style="font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+          👥 Membros com Acesso Autorizado:
+        </div>
+        <div class="team-list" id="teamList">
+          <div style="padding:20px;text-align:center;color:#94a3b8">Carregando usuários...</div>
+        </div>
       </section>
+
 
     
       <!-- MODULO: VISUALIZADOR DE EXCEL INTEGRADO -->
@@ -323,6 +379,35 @@
         <button class="btn-close" onclick="app.closeMatOrdersModal()">✕</button>
       </div>
       <div class="cards-list" id="matOrdersCards" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+
+  <!-- MODAL DE LINK DE CONVITE GERADO -->
+  <div class="modal-backdrop" id="inviteGeneratedModal" onclick="app.closeInviteModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:85vh;">
+      <div class="sheet-handle"></div>
+      <div class="modal-head">
+        <div>
+          <h2 class="order-number" style="font-size:16px;">🔗 Link de Convite Único</h2>
+          <p class="order-fornec">Válido para 1 único cadastro de novo membro</p>
+        </div>
+        <button class="btn-close" onclick="app.closeInviteModal()">✕</button>
+      </div>
+      
+      <div style="padding:14px 0;">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">Envie este link para o novo usuário instalar e solicitar acesso:</div>
+        <input type="text" id="generatedInviteLinkInput" class="search-input" readonly style="color:#60a5fa;font-weight:700;font-size:12px;background:rgba(0,0,0,0.3);margin-bottom:12px;" onclick="this.select()">
+        
+        <div style="display:flex;gap:8px;">
+          <button class="btn-pdf-action" onclick="app.copyInviteLink()" style="flex:1;border:none;cursor:pointer;">
+            📋 Copiar Link
+          </button>
+          <button class="btn-pdf-action" onclick="app.shareInviteLink()" style="flex:1;background:linear-gradient(135deg, #10b981, #059669);border:none;cursor:pointer;">
+            💬 Enviar WhatsApp
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

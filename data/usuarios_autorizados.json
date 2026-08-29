@@ -32,5 +32,32 @@
       "data_autorizacao": "28/08/2026 20:20:00"
     }
   },
-  "pending_requests": {}
+  "pending_requests": {},
+  "invites": {
+    "mp_inv_38d35e80cad8": {
+      "created_at": "29/08/2026 19:48",
+      "role_sugerido": "engenharia",
+      "status": "active"
+    },
+    "mp_inv_a41b12586223": {
+      "created_at": "29/08/2026 19:48",
+      "role_sugerido": "engenharia",
+      "status": "active"
+    },
+    "mp_inv_2f2d122bd2e1": {
+      "created_at": "29/08/2026 19:48",
+      "role_sugerido": "engenharia",
+      "status": "active"
+    },
+    "mp_inv_fdd6e344f79f": {
+      "created_at": "29/08/2026 19:50",
+      "role_sugerido": "engenharia",
+      "status": "active"
+    },
+    "mp_inv_e5280d448577": {
+      "created_at": "29/08/2026 19:50",
+      "role_sugerido": "engenharia",
+      "status": "active"
+    }
+  }
 }

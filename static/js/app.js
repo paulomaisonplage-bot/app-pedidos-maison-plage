@@ -7,6 +7,19 @@ const app = {
   currentMonth: 8,
 
   init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteToken = urlParams.get('convite') || urlParams.get('invite');
+    if (inviteToken) {
+      this.handleInviteEntry(inviteToken);
+      return;
+    }
+    
+    const savedReq = localStorage.getItem("mp_pending_req_id");
+    if (savedReq && !saved) {
+      this.showPendingInviteScreen(savedReq);
+      return;
+    }
+
     const saved = localStorage.getItem("mp_auth_user");
     if (saved) {
       this.currentUser = JSON.parse(saved);
@@ -384,6 +397,7 @@ const app = {
   },
 
   async loadCatalogAZ() {
+
     this.renderLettersBar();
     const list = document.getElementById("materialsLeanList");
     list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando insumos...</div>';
@@ -768,6 +782,133 @@ const app = {
     }
   },
 
+  currentInviteToken: "",
+
+  async handleInviteEntry(token) {
+    this.currentInviteToken = token;
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContainer").style.display = "none";
+    document.getElementById("inviteScreen").style.display = "flex";
+
+    try {
+      const res = await fetch(`/api/invites/validate?token=${token}`);
+      const data = await res.json();
+      if (data.valid) {
+        document.getElementById("inviteValidBox").style.display = "block";
+        document.getElementById("inviteExpiredBox").style.display = "none";
+        document.getElementById("invitePendingBox").style.display = "none";
+      } else {
+        document.getElementById("inviteValidBox").style.display = "none";
+        document.getElementById("inviteExpiredBox").style.display = "block";
+        document.getElementById("invitePendingBox").style.display = "none";
+      }
+    } catch(e) {
+      alert("Erro ao validar link de convite.");
+    }
+  },
+
+  async submitInviteRegistration() {
+    const nome = document.getElementById("invNomeInput").value.trim();
+    const contato = document.getElementById("invContatoInput").value.trim();
+
+    if (!nome || !contato) {
+      alert("Por favor, preencha seu Nome Completo e Contato.");
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/invites/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: this.currentInviteToken, nome: nome, contato: contato })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem("mp_pending_req_id", data.req_id);
+        document.getElementById("inviteValidBox").style.display = "none";
+        document.getElementById("invitePendingBox").style.display = "block";
+      } else {
+        alert(data.detail || "Erro ao enviar solicitação.");
+      }
+    } catch(e) {
+      alert("Falha ao registrar convite.");
+    }
+  },
+
+  showPendingInviteScreen(reqId) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContainer").style.display = "none";
+    document.getElementById("inviteScreen").style.display = "flex";
+    document.getElementById("inviteValidBox").style.display = "none";
+    document.getElementById("inviteExpiredBox").style.display = "none";
+    document.getElementById("invitePendingBox").style.display = "block";
+  },
+
+  async checkPendingStatus() {
+    const reqId = localStorage.getItem("mp_pending_req_id");
+    if (!reqId) {
+      window.location.href = "/";
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/check_status?req_id=${reqId}`);
+      const data = await res.json();
+      if (data.status === "approved") {
+        alert(`🎉 Parabéns! Seu acesso foi aprovado pelo Administrador.
+
+Seu PIN de entrada é: ${data.pin}
+
+Faça login agora!`);
+        localStorage.removeItem("mp_pending_req_id");
+        window.location.href = "/";
+      } else if (data.status === "rejected") {
+        alert("Sua solicitação de acesso não foi aprovada pelo Administrador.");
+        localStorage.removeItem("mp_pending_req_id");
+        window.location.href = "/";
+      } else {
+        alert("Sua solicitação ainda está em análise pelo Administrador Paulo. Aguarde.");
+      }
+    } catch(e) {
+      alert("Erro ao verificar status.");
+    }
+  },
+
+  async openGenerateInviteModal() {
+    try {
+      const res = await fetch(`/api/invites/generate?role=${this.currentUser.role}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role_sugerido: "engenharia" })
+      });
+      const data = await res.json();
+      document.getElementById("generatedInviteLinkInput").value = data.link;
+      document.getElementById("inviteGeneratedModal").classList.add("show");
+    } catch(e) {
+      alert("Erro ao gerar link de convite.");
+    }
+  },
+
+  closeInviteModal(e) {
+    if (e && e.target && e.target.id !== "inviteGeneratedModal" && !e.target.classList.contains("btn-close")) return;
+    document.getElementById("inviteGeneratedModal").classList.remove("show");
+  },
+
+  copyInviteLink() {
+    const input = document.getElementById("generatedInviteLinkInput");
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value);
+    alert("✅ Link copiado para a área de transferência!");
+  },
+
+  shareInviteLink() {
+    const link = document.getElementById("generatedInviteLinkInput").value;
+    const txt = `Olá! Segue o link de acesso exclusivo para instalar e entrar no App de Pedidos da obra Residencial Maison Plage:
+
+${link}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+  },
+
   async loadTeam() {
     const list = document.getElementById("teamCards");
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando membros da equipe...</div>';
@@ -795,64 +936,6 @@ const app = {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar equipe.</div>';
     }
   },
-
-  async updateUserRole(uid, r) {
-    try {
-      await fetch('/api/users/update_role?role=admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: uid, role: r })
-      });
-      alert("Perfil do membro atualizado com sucesso!");
-    } catch(e) {
-      alert("Erro ao atualizar perfil.");
-    }
-  },
-
-  async deleteUser(uid) {
-    if (!confirm("Deseja realmente remover o acesso deste membro?")) return;
-    try {
-      await fetch(`/api/users/${uid}?role=admin`, { method: 'DELETE' });
-      this.loadTeam();
-    } catch(e) {
-      alert("Erro ao remover usuário.");
-    }
-  },
-
-  openAddUserModal() {
-    document.getElementById("addUserModal").classList.add("show");
-  },
-
-  closeAddUserModal() {
-    document.getElementById("addUserModal").classList.remove("show");
-  },
-
-  async saveNewUser() {
-    const nome = document.getElementById("newUserName").value.trim();
-    const pin = document.getElementById("newUserPin").value.trim();
-    const role = document.getElementById("newUserRole").value;
-
-    if (!nome || pin.length !== 4) {
-      alert("Preencha o nome e um PIN de exatamente 4 dígitos.");
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/users/add?role=admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, pin, role })
-      });
-      const data = await res.json();
-      if (data.success) {
-        this.closeAddUserModal();
-        this.loadTeam();
-        alert("Novo membro cadastrado com sucesso!");
-      }
-    } catch(e) {
-      alert("Erro ao salvar novo membro.");
-    }
-  }
 };
 
 window.onload = () => app.init();

@@ -1,9 +1,11 @@
 import os
+import sys
 import re
 import json
 import requests
 import time
 import random
+import secrets
 from datetime import datetime, date, timedelta
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
@@ -292,6 +294,158 @@ async def api_delete_user(user_id: str, role: str = "campo"):
         auth_service._save_data()
         return {"success": True}
     raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+# ==========================================
+# GESTÃO DE CONVITES DE USO ÚNICO E APROVAÇÃO
+# ==========================================
+
+class GenerateInviteRequest(BaseModel):
+    role_sugerido: Optional[str] = "engenharia"
+
+class RegisterInviteRequest(BaseModel):
+    token: str
+    nome: str
+    contato: str
+
+class ApproveUserRequest(BaseModel):
+    req_id: str
+    role: str
+    pin: str
+
+class RejectUserRequest(BaseModel):
+    req_id: str
+
+@app.post("/api/invites/generate")
+async def api_generate_invite(req: GenerateInviteRequest, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Apenas o Administrador pode gerar links de convite.")
+    
+    token = f"mp_inv_{secrets.token_hex(6)}"
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    if "invites" not in data:
+        data["invites"] = {}
+        
+    data["invites"][token] = {
+        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "role_sugerido": req.role_sugerido,
+        "status": "active" # "active" ou "used"
+    }
+    
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        
+    return {"token": token, "link": f"https://app-pedidos-maison-plage.onrender.com/?convite={token}"}
+
+@app.get("/api/invites/validate")
+async def api_validate_invite(token: str):
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    inv = data.get("invites", {}).get(token)
+    if not inv:
+        return {"valid": False, "reason": "Link de convite inexistente."}
+    if inv.get("status") != "active":
+        return {"valid": False, "reason": "Este link de convite já foi utilizado e expirou."}
+    return {"valid": True, "role_sugerido": inv.get("role_sugerido", "engenharia")}
+
+@app.post("/api/invites/register")
+async def api_register_invite(req: RegisterInviteRequest):
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    inv = data.get("invites", {}).get(req.token)
+    if not inv or inv.get("status") != "active":
+        raise HTTPException(status_code=400, detail="Este link de convite já foi utilizado ou é inválido.")
+    
+    # Queima o token imediatamente para torná-lo de uso estritamente único
+    inv["status"] = "used"
+    inv["used_at"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    inv["used_by_nome"] = req.nome.strip()
+    
+    req_id = f"req_{int(time.time())}"
+    if "pending_requests" not in data:
+        data["pending_requests"] = {}
+        
+    data["pending_requests"][req_id] = {
+        "id": req_id,
+        "nome": req.nome.strip(),
+        "contato": req.contato.strip(),
+        "role_sugerido": inv.get("role_sugerido", "engenharia"),
+        "requested_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "token_used": req.token,
+        "status": "pending"
+    }
+    
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        
+    return {"success": True, "req_id": req_id, "message": "Solicitação enviada com sucesso!"}
+
+@app.get("/api/users/pending")
+async def api_get_pending_requests(role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito ao Administrador.")
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    reqs = list(data.get("pending_requests", {}).values())
+    pending_only = [r for r in reqs if r.get("status") == "pending"]
+    return {"pending": pending_only}
+
+@app.post("/api/users/approve")
+async def api_approve_user(req: ApproveUserRequest, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito ao Administrador.")
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    p_req = data.get("pending_requests", {}).get(req.req_id)
+    if not p_req:
+        raise HTTPException(status_code=404, detail="Solicitação não encontrada.")
+        
+    uid = re.sub(r'[^a-zA-Z0-9]', '_', p_req["nome"].lower().strip())[:20]
+    data["users"][uid] = {
+        "id": uid,
+        "nome": p_req["nome"],
+        "contato": p_req["contato"],
+        "role": req.role,
+        "pin": req.pin.strip(),
+        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M")
+    }
+    p_req["status"] = "approved"
+    p_req["approved_at"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    p_req["approved_user_id"] = uid
+    p_req["approved_pin"] = req.pin.strip()
+    
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        
+    return {"success": True, "message": f"Usuário {p_req['nome']} aprovado como {req.role} com PIN {req.pin}!"}
+
+@app.post("/api/users/reject")
+async def api_reject_user(req: RejectUserRequest, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito ao Administrador.")
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if req.req_id in data.get("pending_requests", {}):
+        data["pending_requests"][req.req_id]["status"] = "rejected"
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    return {"success": True}
+
+@app.get("/api/users/check_status")
+async def api_check_req_status(req_id: str):
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    p_req = data.get("pending_requests", {}).get(req_id)
+    if not p_req:
+        return {"status": "unknown"}
+    return {
+        "status": p_req.get("status"),
+        "role": p_req.get("role_sugerido"),
+        "pin": p_req.get("approved_pin") if p_req.get("status") == "approved" else None
+    }
 
 # 1. ENTREGAS DA SEMANA
 @app.get("/api/deliveries/week")
