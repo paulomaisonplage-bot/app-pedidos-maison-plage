@@ -286,14 +286,14 @@ const app = {
       } else {
         document.getElementById("mModalActions").innerHTML = "";
       }
-      document.getElementById("orderModal").classList.add("show");
+      document.getElementById("orderModal").classList.add("show"); document.body.style.overflow = "hidden";
     } catch(e) {
       alert("Erro ao abrir detalhes do pedido.");
     }
   },
 
   closeModal() {
-    document.getElementById("orderModal").classList.remove("show");
+    document.getElementById("orderModal").classList.remove("show"); document.body.style.overflow = "";
   },
 
   async handleSearch(val) {
@@ -525,45 +525,9 @@ const app = {
 
   excelDataCache: null,
 
-  async loadExcelViewer(query = "") {
-    const tbody = document.getElementById("excelTableBody");
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">⏳ Carregando visualizador de planilha...</td></tr>';
-    
-    try {
-      const qParam = query ? `&q=${encodeURIComponent(query)}` : '';
-      const res = await fetch(`/api/excel/preview?role=${this.currentUser.role}${qParam}`);
-      const data = await res.json();
-      
-      this.excelDataCache = data;
-      document.getElementById("excelMetrics").innerHTML = `📦 <b>${data.total_pedidos}</b> pedidos • <b>${data.total_linhas}</b> itens • Total: <span style="color:#10b981;font-weight:800">${data.valor_total_formatado}</span>`;
-
-      if (!data.linhas || data.linhas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">Nenhum registro encontrado.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = data.linhas.map(row => `
-        <tr onclick="app.openOrder('${row.pc}')">
-          <td style="font-weight:800;color:#60a5fa">PC ${row.pc}</td>
-          <td style="font-weight:600">${row.fornecedor}</td>
-          <td>${row.material}</td>
-          <td style="color:#94a3b8">${row.quantidade} ${row.unidade}</td>
-          <td style="font-weight:800;color:#10b981">${row.valor_total}</td>
-          <td style="font-size:11px;color:#f59e0b">${row.entrega}</td>
-        </tr>
-      `).join("");
-
-    } catch(e) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#ef4444">Erro ao carregar planilha.</td></tr>';
-    }
-  },
-
-  filterExcelTimer: null,
-  filterExcel(val) {
-    clearTimeout(this.filterExcelTimer);
-    this.filterExcelTimer = setTimeout(() => {
-      this.loadExcelViewer(val.trim());
-    }, 300);
+  loadExcelViewer() {
+    // Aba agora exibe os Cards Especializados de Planilhas
+  }, 300);
   },
 
   currentCallTarget: "",

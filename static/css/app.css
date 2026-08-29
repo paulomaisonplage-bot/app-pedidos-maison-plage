@@ -116,18 +116,43 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .role-select { background: #1e293b; color: #fff; border: 1px solid var(--surface-border); padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; }
 .btn-del-user { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid var(--danger); border-radius: 8px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
 
-/* MODAL */
-.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 1000; align-items: flex-end; justify-content: center; }
+/* MODAL ULTRA FLUIDO ANTI-TRAVAMENTO iOS */
+.modal-backdrop { 
+  display: none; 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.8); 
+  backdrop-filter: blur(6px); 
+  z-index: 1000; 
+  align-items: flex-end; 
+  justify-content: center;
+  touch-action: none;
+}
 .modal-backdrop.show { display: flex; }
-.modal-sheet { background: #151e2e; width: 100%; max-width: 550px; max-height: 88vh; border-radius: 28px 28px 0 0; padding: 20px; border-top: 1px solid var(--surface-border); overflow-y: auto; }
-.sheet-handle { width: 40px; height: 4px; background: #334155; border-radius: 2px; margin: 0 auto 16px; }
-.modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-.order-number { font-size: 20px; font-weight: 800; color: #60a5fa; }
-.order-fornec { font-size: 13px; color: var(--text-muted); }
-.btn-close { background: #1e293b; border: 1px solid var(--surface-border); color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-.order-meta-card { background: var(--bg); border: 1px solid var(--surface-border); padding: 12px; border-radius: 14px; font-size: 12px; margin-bottom: 16px; line-height: 1.6; }
-.items-head { font-size: 13px; font-weight: 800; margin-bottom: 10px; }
-.items-list-box { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+
+.modal-sheet { 
+  background: #151e2e; 
+  width: 100%; 
+  max-width: 550px; 
+  max-height: 88vh; 
+  border-radius: 28px 28px 0 0; 
+  padding: 20px; 
+  border-top: 1px solid var(--surface-border); 
+  overflow-y: scroll; 
+  -webkit-overflow-scrolling: touch; 
+  overscroll-behavior-y: contain; 
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+}
+
+.items-list-box { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 6px; 
+  margin-bottom: 20px; 
+  touch-action: pan-y;
+}
 .item-box-row { background: var(--bg); border: 1px solid var(--surface-border); padding: 10px; border-radius: 10px; font-size: 12px; display: flex; justify-content: space-between; }
 .form-group { margin-bottom: 12px; }
 .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 700; }
