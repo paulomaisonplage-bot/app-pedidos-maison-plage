@@ -172,6 +172,7 @@ const app = {
 
     if (mod === "week") this.loadWeek();
     if (mod === "month") this.loadMonth();
+    if (mod === "search") this.loadCatalogAZ();
     if (mod === "groups") this.loadGroups();
     if (mod === "recent") this.loadRecent();
     if (mod === "suppliers") this.loadSuppliers();
