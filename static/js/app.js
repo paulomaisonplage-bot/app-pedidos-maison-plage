@@ -232,7 +232,7 @@ const app = {
                   <div class="contact-box-header">👤 <b>Vendedor:</b> ${v.nome || 'Atendimento'}</div>
                   ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
                   <div class="sup-actions">
-                    ${v.telefone_clean ? `<a href="tel:${v.telefone_clean}" class="btn-call">📞 Ligar Vendedor</a>` : ''}
+                    ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
                     ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome || '')}%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
                   </div>
                 </div>
@@ -244,7 +244,7 @@ const app = {
                   ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo: <b>${emp.telefone}</b></div>` : ''}
                   ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
                   <div class="sup-actions">
-                    ${emp.telefone_clean ? `<a href="tel:${emp.telefone_clean}" class="btn-call" style="background:#475569;">☎️ Ligar Loja</a>` : ''}
+                    ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
                     ${emp.email ? `<a href="mailto:${emp.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
                   </div>
                 </div>
@@ -274,9 +274,14 @@ const app = {
 
       if (data.can_pdf) {
         document.getElementById("mModalActions").innerHTML = `
-          <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action">
-            📄 Abrir PDF Oficial (PC ${data.pc})
-          </a>
+          <div style="display:flex;gap:8px;">
+            <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action" style="margin-top:0;flex:1;">
+              📄 Abrir PDF
+            </a>
+            <button onclick="app.shareOrderPdf('${data.pc}')" class="btn-pdf-action" style="margin-top:0;flex:1;background:linear-gradient(135deg, #7c3aed, #6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.4);border:none;cursor:pointer;">
+              📤 Compartilhar / Salvar
+            </button>
+          </div>
         `;
       } else {
         document.getElementById("mModalActions").innerHTML = "";
@@ -431,7 +436,7 @@ const app = {
               <div class="contact-box-header">👤 <b>Vendedor Responsável:</b> ${v.nome}</div>
               ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
               <div class="sup-actions">
-                ${v.telefone_clean ? `<a href="tel:${v.telefone_clean}" class="btn-call">📞 Ligar Vendedor</a>` : ''}
+                ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
                 ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome)}%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
               </div>
             </div>
@@ -443,7 +448,7 @@ const app = {
                 ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
                 ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
                 <div class="sup-actions">
-                  ${emp.telefone_clean ? `<a href="tel:${emp.telefone_clean}" class="btn-call" style="background:#475569;">☎️ Ligar Loja</a>` : ''}
+                  ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
                   ${emp.email ? `<a href="mailto:${emp.email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
                 </div>
               </div>
@@ -559,6 +564,58 @@ const app = {
     this.filterExcelTimer = setTimeout(() => {
       this.loadExcelViewer(val.trim());
     }, 300);
+  },
+
+  currentCallTarget: "",
+
+  promptCall(name, number) {
+    this.currentCallTarget = name;
+    document.getElementById("callModalContactName").innerText = name;
+    document.getElementById("callPhoneInput").value = number;
+    document.getElementById("callModal").classList.add("show");
+    setTimeout(() => {
+      document.getElementById("callPhoneInput").focus();
+    }, 150);
+  },
+
+  closeCallModal(e) {
+    if (e && e.target && e.target.id !== "callModal" && !e.target.classList.contains("btn-close")) return;
+    document.getElementById("callModal").classList.remove("show");
+  },
+
+  confirmCall() {
+    const rawVal = document.getElementById("callPhoneInput").value;
+    const cleanNum = rawVal.replace(/[^0-9+]/g, '');
+    if (!cleanNum) {
+      alert("Por favor, digite um número válido para discar.");
+      return;
+    }
+    document.getElementById("callModal").classList.remove("show");
+    window.location.href = `tel:${cleanNum}`;
+  },
+
+  async shareOrderPdf(pc) {
+    const url = `/api/order/${pc}/pdf?role=${this.currentUser.role}`;
+    const filename = `PedidoCompra_${pc}.pdf`;
+    try {
+      if (navigator.share) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Falha ao baixar PDF");
+        const blob = await res.blob();
+        const file = new File([blob], filename, { type: "application/pdf" });
+        await navigator.share({
+          files: [file],
+          title: `Pedido PC ${pc} - Maison Plage`,
+          text: `Segue o pedido de compra PC ${pc} da obra Residencial Maison Plage.`
+        });
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch(e) {
+      if (e.name !== "AbortError") {
+        window.open(url, '_blank');
+      }
+    }
   },
 
   async loadTeam() {
