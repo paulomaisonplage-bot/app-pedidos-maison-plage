@@ -614,37 +614,41 @@ const app = {
 
       box.innerHTML = `
         <!-- 1. CARDS DE INDICADORES (KPIS DE PREVISÃO) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-          <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;">
-            <div class="fin-kpi-label">💰 Previsão Total de Desembolso (Jul a Dez/26)</div>
-            <div class="fin-kpi-value" style="color:#60a5fa;font-size:22px;">${kpis.total_desembolso}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;padding:10px 14px;">
+            <div class="fin-kpi-label" style="font-size:11px;">💰 Previsão Total de Desembolso (Jul a Dez/26)</div>
+            <div class="fin-kpi-value" style="color:#60a5fa;font-size:20px;">${kpis.total_desembolso}</div>
           </div>
-          <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;">
-            <div class="fin-kpi-label">📅 Previsão em Agosto (Mês Atual)</div>
-            <div class="fin-kpi-value" style="color:#fbbf24;">${kpis.mes_atual}</div>
+          <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;padding:10px 14px;">
+            <div class="fin-kpi-label" style="font-size:11px;">📅 Previsão em Agosto (Mês Atual)</div>
+            <div class="fin-kpi-value" style="color:#fbbf24;font-size:17px;">${kpis.mes_atual}</div>
           </div>
-          <div class="fin-kpi-card" style="border-left:4px solid #10b981;">
-            <div class="fin-kpi-label">⏳ Previsão Futura (Setembro+)</div>
-            <div class="fin-kpi-value" style="color:#34d399;">${kpis.futuro}</div>
+          <div class="fin-kpi-card" style="border-left:4px solid #10b981;padding:10px 14px;">
+            <div class="fin-kpi-label" style="font-size:11px;">⏳ Previsão Futura (Setembro+)</div>
+            <div class="fin-kpi-value" style="color:#34d399;font-size:17px;">${kpis.futuro}</div>
           </div>
         </div>
 
-        <!-- 2. PAINEL EM BARRAS HORIZONTAIS NEON (OPÇÃO 01) -->
-        <div class="fin-section-box">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <div class="fin-section-title">📈 Previsão de Desembolso Mês a Mês</div>
-            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:6px;">Base: Data de Entrega</div>
+        <!-- 2. PAINEL COMPACTO EM BARRAS HORIZONTAIS NEON (PINTADAS NO SAFARI/IOS) -->
+        <div class="fin-section-box" style="padding:12px 14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div class="fin-section-title" style="font-size:13px;">📈 Previsão de Desembolso Mensal</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Entrega</div>
           </div>
           
-          <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
             ${bars.map(b => `
-              <div class="fin-neon-row ${b.is_current ? 'neon-current-row' : ''}">
-                <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin-bottom:6px;">
-                  <span style="${b.is_current ? 'color:#fbbf24;font-size:13px;' : 'color:#fff;'}">${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/2026${b.is_current ? ' ⭐ (Mês Atual)' : ''}</span>
-                  <span style="${b.is_current ? 'color:#fbbf24;' : 'color:#10b981;'}">${b.valor_fmt} <span style="color:#94a3b8;font-size:11px;font-weight:600;">(${b.pct}%)</span></span>
+              <div class="fin-compact-row ${b.is_current ? 'compact-current-row' : ''}">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:4px;">
+                  <span style="${b.is_current ? 'color:#fbbf24;font-size:12px;font-weight:800;' : 'color:#e2e8f0;'}">
+                    ${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/2026${b.is_current ? ' ⭐ (Mês Atual)' : ''}
+                  </span>
+                  <span style="${b.is_current ? 'color:#fbbf24;font-weight:800;' : 'color:#10b981;font-weight:700;'}">
+                    ${b.valor_fmt} <span style="color:#94a3b8;font-size:10px;font-weight:500;">(${b.pct}%)</span>
+                  </span>
                 </div>
-                <div class="fin-neon-track">
-                  <div class="fin-neon-fill ${b.is_current ? 'fill-gold' : 'fill-cyan'}" style="width:${Math.max(b.pct, 3)}%;"></div>
+                <div class="fin-compact-track">
+                  <div class="fin-compact-fill ${b.is_current ? 'fill-gold' : 'fill-cyan'}" style="width:${Math.max(b.pct, 4)}%;"></div>
                 </div>
               </div>
             `).join("")}
@@ -652,17 +656,17 @@ const app = {
         </div>
 
         <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
-        <div class="fin-section-box" style="margin-top:14px;">
-          <div class="fin-section-title">🏢 Onde está o Investimento da Obra (Macro-Grupos)</div>
-          <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
+        <div class="fin-section-box" style="padding:12px 14px;">
+          <div class="fin-section-title" style="font-size:13px;">🏢 Onde está o Investimento da Obra (Macro-Grupos)</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
             ${groups.map(g => `
               <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px;">
+                <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;">
                   <span>${g.icon} ${g.name}</span>
-                  <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:11px;">(${g.valor_fmt})</span></span>
+                  <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:10px;">(${g.valor_fmt})</span></span>
                 </div>
-                <div class="fin-progress-track">
-                  <div class="fin-progress-fill" style="width:${g.pct}%;background:${g.color};"></div>
+                <div class="fin-progress-track" style="height:8px;">
+                  <div class="fin-progress-fill" style="width:${g.pct}%;background:${g.color};height:8px;"></div>
                 </div>
               </div>
             `).join("")}

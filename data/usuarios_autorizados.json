@@ -58,6 +58,16 @@
       "created_at": "29/08/2026 19:50",
       "role_sugerido": "engenharia",
       "status": "active"
+    },
+    "mp_inv_960cc8229e20": {
+      "created_at": "29/08/2026 20:24",
+      "role_sugerido": "engenharia",
+      "status": "active"
+    },
+    "mp_inv_eb7448aa52fc": {
+      "created_at": "29/08/2026 20:24",
+      "role_sugerido": "engenharia",
+      "status": "active"
     }
   }
 }
