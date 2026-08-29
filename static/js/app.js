@@ -588,7 +588,7 @@ const app = {
 
   async loadFinancial() {
     const box = document.getElementById("financialBox");
-    box.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">⏳ Carregando indicadores do fluxo financeiro...</div>';
+    box.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">⏳ Calculando previsão do fluxo financeiro...</div>';
     
     try {
       const res = await fetch(`/api/financial/summary?role=${this.currentUser.role}`);
@@ -599,35 +599,37 @@ const app = {
       const groups = data.macro_groups || [];
 
       box.innerHTML = `
-        <!-- 1. CARDS DE INDICADORES (KPIS) -->
+        <!-- 1. CARDS DE INDICADORES (KPIS DE PREVISÃO) -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
           <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;">
-            <div class="fin-kpi-label">💰 Total Contratado na Obra (>= Jun/26)</div>
-            <div class="fin-kpi-value" style="color:#60a5fa;font-size:22px;">${kpis.total_contratado}</div>
+            <div class="fin-kpi-label">💰 Previsão Total de Desembolso (>= Jun/26)</div>
+            <div class="fin-kpi-value" style="color:#60a5fa;font-size:22px;">${kpis.total_desembolso}</div>
           </div>
           <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;">
-            <div class="fin-kpi-label">📅 A Pagar em Agosto</div>
+            <div class="fin-kpi-label">📅 Previsão em Agosto (Mês Atual)</div>
             <div class="fin-kpi-value" style="color:#fbbf24;">${kpis.mes_atual}</div>
           </div>
           <div class="fin-kpi-card" style="border-left:4px solid #10b981;">
-            <div class="fin-kpi-label">⏳ Desembolso Futuro (Set+)</div>
+            <div class="fin-kpi-label">⏳ Previsão Futura (Setembro+)</div>
             <div class="fin-kpi-value" style="color:#34d399;">${kpis.futuro}</div>
           </div>
         </div>
 
-        <!-- 2. GRÁFICO DE DESEMBOLSO MENSAL -->
+        <!-- 2. GRÁFICO VISUAL EM COLUNAS VERTICAIS (FLUXO DE CAIXA MÊS A MÊS) -->
         <div class="fin-section-box">
-          <div class="fin-section-title">📈 Fluxo de Desembolso Mensal (2026)</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div class="fin-section-title">📈 Previsão de Desembolso Mensal (2026)</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:6px;">Base: Data de Entrega</div>
+          </div>
+          
+          <div class="fin-chart-columns-container">
             ${bars.map(b => `
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px;">
-                  <span style="${b.is_current ? 'color:#fbbf24;font-weight:800;' : 'color:#fff;'}">${b.mes_nome}${b.is_current ? ' (Atual)' : ''}</span>
-                  <span style="color:#10b981;">${b.valor_fmt}</span>
+              <div class="fin-col-wrapper ${b.is_current ? 'current-month-col' : ''}">
+                <div class="fin-col-val">${b.valor_compacto}</div>
+                <div class="fin-col-track">
+                  <div class="fin-col-bar ${b.is_current ? 'bar-current' : ''}" style="height:${Math.max(b.pct, 4)}%;"></div>
                 </div>
-                <div class="fin-progress-track">
-                  <div class="fin-progress-fill" style="width:${Math.max(b.pct, 3)}%;background:${b.is_current ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #2563eb, #3b82f6)'};"></div>
-                </div>
+                <div class="fin-col-label">${b.mes_short}</div>
               </div>
             `).join("")}
           </div>
@@ -635,11 +637,11 @@ const app = {
 
         <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
         <div class="fin-section-box" style="margin-top:14px;">
-          <div class="fin-section-title">🏢 Onde está o Gasto da Obra (Macro-Grupos)</div>
-          <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
+          <div class="fin-section-title">🏢 Onde está o Investimento da Obra (Macro-Grupos)</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
             ${groups.map(g => `
               <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px;">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px;">
                   <span>${g.icon} ${g.name}</span>
                   <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:11px;">(${g.valor_fmt})</span></span>
                 </div>
@@ -653,7 +655,7 @@ const app = {
       `;
 
     } catch(e) {
-      box.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar dados financeiros.</div>';
+      box.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar previsão financeira.</div>';
     }
   },
 

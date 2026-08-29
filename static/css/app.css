@@ -224,3 +224,14 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .material-lean-row:active { background: rgba(37,99,235,0.2); transform: scale(0.99); }
 .mat-lean-name { font-size: 13px; font-weight: 700; color: #fff; flex: 1; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mat-lean-badge { background: rgba(37,99,235,0.15); color: #60a5fa; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
+
+/* GRÁFICO EM COLUNAS VERTICAIS EXECUTIVO */
+.fin-chart-columns-container { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; padding: 10px 4px 4px 4px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+.fin-col-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; margin: 0 3px; }
+.fin-col-val { font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 6px; white-space: nowrap; }
+.fin-col-track { width: 100%; max-width: 32px; height: 100px; background: rgba(255,255,255,0.04); border-radius: 6px 6px 0 0; display: flex; align-items: flex-end; overflow: hidden; }
+.fin-col-bar { width: 100%; background: linear-gradient(180deg, #3b82f6, #1d4ed8); border-radius: 6px 6px 0 0; transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 -2px 10px rgba(59,130,246,0.3); }
+.fin-col-bar.bar-current { background: linear-gradient(180deg, #fbbf24, #d97706); box-shadow: 0 -2px 12px rgba(251,191,36,0.5); }
+.current-month-col .fin-col-val { color: #fbbf24; font-weight: 900; font-size: 11px; }
+.fin-col-label { font-size: 11px; font-weight: 700; color: #94a3b8; margin-top: 8px; }
+.current-month-col .fin-col-label { color: #fbbf24; font-weight: 800; }
