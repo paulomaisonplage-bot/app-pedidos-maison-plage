@@ -162,67 +162,33 @@
     
       <!-- MODULO: VISUALIZADOR DE EXCEL INTEGRADO -->
       <!-- MODULO: CENTRAL DE PLANILHAS E RELATÓRIOS EM EXCEL -->
+      <!-- MODULO: CENTRAL DE PLANILHAS EM EXCEL (2 RELATÓRIOS OFICIAIS) -->
       <section id="modExcel" class="module-section">
         <div class="excel-header-box">
-          <div style="font-size:16px;font-weight:800;color:#fff;">📊 Central de Planilhas da Obra</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Baixe relatórios estruturados e oficiais em formato Microsoft Excel (.xlsx) prontos para análise:</div>
+          <div style="font-size:16px;font-weight:800;color:#fff;">📊 Planilhas Oficiais da Obra</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Baixe os relatórios em formato Microsoft Excel (.xlsx) prontos para análise no computador ou celular:</div>
         </div>
 
         <div class="cards-list">
           <!-- CARD 1: GERAL CONSOLIDADA -->
           <div class="supplier-card" style="border-left:4px solid #3b82f6;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-              <div>
-                <div class="sup-name" style="color:#fff;">📑 1. Planilha Geral Consolidada da Obra</div>
-                <div class="sup-info">Todos os 163 pedidos ativos e 534 itens (a partir de Junho/2026) com dados completos de compras, fornecedores e valores.</div>
-              </div>
+            <div>
+              <div class="sup-name" style="color:#fff;">📑 1. Planilha Geral Consolidada da Obra</div>
+              <div class="sup-info">Todos os 163 pedidos ativos e 534 itens de compras (a partir de Junho/2026), com fornecedores oficiais, quantidades, prazos e valores consolidados.</div>
             </div>
             <div class="sup-actions">
-              <a href="/api/export/excel?role=admin" class="btn-download-action" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Planilha Geral (.xlsx)</a>
+              <a href="/api/export/excel?tipo=geral&role=admin" class="btn-download-action" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Planilha Geral (.xlsx)</a>
             </div>
           </div>
 
           <!-- CARD 2: FLUXO DE DESEMBOLSO -->
           <div class="supplier-card" style="border-left:4px solid #10b981;">
             <div>
-              <div class="sup-name" style="color:#fff;">💰 2. Cronograma de Desembolso Financeiro</div>
-              <div class="sup-info">Parcelas de pagamento desdobradas por prazos (30/60/90 dias) e organizadas por datas de vencimento mês a mês.</div>
+              <div class="sup-name" style="color:#fff;">💰 2. Planilha de Fluxo Financeiro & Desembolso</div>
+              <div class="sup-info">Todas as parcelas calculadas por condição de pagamento (30/60/90 dias), organizadas por datas de vencimento e valores mensais para gestão de caixa.</div>
             </div>
             <div class="sup-actions">
-              <a href="/api/export/excel?role=admin" class="btn-download-action" style="background:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Fluxo de Caixa (.xlsx)</a>
-            </div>
-          </div>
-
-          <!-- CARD 3: CURVA ABC -->
-          <div class="supplier-card" style="border-left:4px solid #f59e0b;">
-            <div>
-              <div class="sup-name" style="color:#fff;">🏢 3. Curva ABC de Insumos & Macro-Grupos</div>
-              <div class="sup-info">Ranking de gastos nas 5 Grandes Áreas da Obra (Obra Grossa, Instalações, Acabamentos, EPIs e Serviços).</div>
-            </div>
-            <div class="sup-actions">
-              <a href="/api/export/excel?role=admin" class="btn-download-action" style="background:#d97706;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Curva ABC (.xlsx)</a>
-            </div>
-          </div>
-
-          <!-- CARD 4: CATÁLOGO DE FORNECEDORES -->
-          <div class="supplier-card" style="border-left:4px solid #8b5cf6;">
-            <div>
-              <div class="sup-name" style="color:#fff;">📞 4. Catálogo Oficial de Fornecedores & Vendedores</div>
-              <div class="sup-info">Lista de 110 empresas, CNPJs da Receita Federal, Telefones Comerciais, Celulares/WhatsApp e E-mails.</div>
-            </div>
-            <div class="sup-actions">
-              <a href="/api/export/excel?role=admin" class="btn-download-action" style="background:#7c3aed;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Lista de Contatos (.xlsx)</a>
-            </div>
-          </div>
-
-          <!-- CARD 5: CONTROLE DE RECEBIMENTO -->
-          <div class="supplier-card" style="border-left:4px solid #ec4899;">
-            <div>
-              <div class="sup-name" style="color:#fff;">🚚 5. Planilha de Conferência de Cargas no Canteiro</div>
-              <div class="sup-info">Foco operacional de campo com previsões de entrega, status e itens para conferência física no almoxarifado.</div>
-            </div>
-            <div class="sup-actions">
-              <a href="/api/export/excel?role=admin" class="btn-download-action" style="background:#db2777;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Controle de Cargas (.xlsx)</a>
+              <a href="/api/export/excel?tipo=financeiro&role=admin" class="btn-download-action" style="background:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📥 Baixar Fluxo Financeiro (.xlsx)</a>
             </div>
           </div>
 

@@ -343,62 +343,75 @@ async def api_financial_summary(role: str = "campo"):
     resumo = query_service.get_financial_schedule_summary()
     return {"summary_text": resumo}
 
-# 8. EXPORTAR PLANILHA EXCEL
+# 8. EXPORTAR PLANILHAS EM EXCEL (.xlsx)
 @app.get("/api/export/excel")
-async def api_export_excel(role: str = "campo"):
+async def api_export_excel(tipo: str = "geral", role: str = "campo"):
     if role not in ["admin", "engenharia"]:
-        raise HTTPException(status_code=403, detail="Download reservado para Engenharia.")
-    if os.path.exists(EXCEL_PATH):
-        return FileResponse(
-            EXCEL_PATH,
-            filename="pedidos_compra_maison_plage.xlsx",
+        raise HTTPException(status_code=403, detail="Download reservado para Engenharia e Administração.")
+    
+    import pandas as pd
+    import io
+    
+    if tipo == "financeiro":
+        # Gera Planilha de Fluxo Financeiro / Desembolso
+        insts = query_service.get_all_installments(from_previous_month_only=True)
+        rows = []
+        for i in insts:
+            rows.append({
+                "Número do Pedido": i.get("numero_pedido"),
+                "Fornecedor": i.get("fornecedor_nome"),
+                "Parcela": f"{i.get('parcela_num', 1)}/{i.get('total_parcelas', 1)}",
+                "Data de Vencimento": i.get("data_vencimento"),
+                "Mês/Ano": i.get("mes_ano"),
+                "Valor da Parcela (R$)": float(i.get("valor_parcela", 0.0) or 0.0),
+                "Condição de Pagamento": i.get("condicao_pagamento"),
+                "Descrição do Insumo": i.get("descricao_material"),
+                "Família / Macro-Grupo": i.get("familia_insumo")
+            })
+        
+        df_fin = pd.DataFrame(rows)
+        out = io.BytesIO()
+        with pd.ExcelWriter(out, engine='openpyxl') as writer:
+            df_fin.to_excel(writer, index=False, sheet_name="Fluxo_Desembolso")
+        out.seek(0)
+        
+        return Response(
+            content=out.getvalue(),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=pedidos_compra_maison_plage.xlsx"}
+            headers={"Content-Disposition": "attachment; filename=fluxo_desembolso_maison_plage.xlsx"}
         )
-    raise HTTPException(status_code=404, detail="Planilha não encontrada.")
-
-# 9. DADOS DA PLANILHA PARA VISUALIZADOR DE EXCEL INTEGRADO
-@app.get("/api/excel/preview")
-async def api_excel_preview(role: str = "campo", q: Optional[str] = None):
-    if role not in ["admin", "engenharia"]:
-        raise HTTPException(status_code=403, detail="Visualização de planilha reservada para Engenharia.")
     
-    records = query_service._get_all_records()
-    if q:
-        q_l = q.lower()
-        records = [
-            r for r in records
-            if q_l in str(r.get("numero_pedido", "")).lower()
-            or q_l in str(r.get("fornecedor_nome", "")).lower()
-            or q_l in str(r.get("descricao_material", "")).lower()
-            or q_l in str(r.get("familia_insumo", "")).lower()
-        ]
-    
-    total_pedidos = len(set(r.get("numero_pedido") for r in records))
-    total_val = sum(float(str(r.get("preco_total_item", 0.0) or 0.0)) for r in records)
-    
-    linhas = []
-    for r in records[:150]:
-        linhas.append({
-            "pc": str(r.get("numero_pedido", "")),
-            "data_pedido": str(r.get("data_pedido", "-")),
-            "fornecedor": str(r.get("fornecedor_nome", "-")),
-            "material": str(r.get("descricao_material", "-")),
-            "quantidade": r.get("quantidade", 0),
-            "unidade": str(r.get("unidade", "UN")).strip(),
-            "valor_unit": f"R${float(r.get('preco_unitario', 0.0) or 0.0):,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "valor_total": f"R${float(r.get('preco_total_item', 0.0) or 0.0):,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "entrega": str(r.get("data_entrega_prevista", "-")),
-            "cond_pag": str(r.get("condicao_pagamento", "-"))
-        })
-
-    return {
-        "total_linhas": len(records),
-        "total_pedidos": total_pedidos,
-        "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-        "linhas": linhas
-    }
-
+    else:
+        # Gera Planilha Geral Consolidada da Obra (>= Junho/2026)
+        records = query_service._get_all_records()
+        rows = []
+        for r in records:
+            rows.append({
+                "Número do Pedido": r.get("numero_pedido"),
+                "Data de Emissão": r.get("data_pedido"),
+                "Fornecedor": r.get("fornecedor_nome"),
+                "Descrição do Insumo": r.get("descricao_material"),
+                "Família de Insumo": r.get("familia_insumo"),
+                "Quantidade": r.get("quantidade"),
+                "Unidade": r.get("unidade"),
+                "Preço Unitário (R$)": float(r.get("preco_unitario", 0.0) or 0.0),
+                "Preço Total Item (R$)": float(r.get("preco_total_item", 0.0) or 0.0),
+                "Previsão de Entrega": r.get("data_entrega_prevista"),
+                "Condição de Pagamento": r.get("condicao_pagamento"),
+                "Vendedor": r.get("vendedor")
+            })
+            
+        df_geral = pd.DataFrame(rows)
+        out = io.BytesIO()
+        with pd.ExcelWriter(out, engine='openpyxl') as writer:
+            df_geral.to_excel(writer, index=False, sheet_name="Pedidos_Compra")
+        out.seek(0)
+        
+        return Response(
+            content=out.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=pedidos_compra_maison_plage_geral.xlsx"}
+        )
 
 # DETALHES DO PEDIDO
 @app.get("/api/order/{pc_num}")
