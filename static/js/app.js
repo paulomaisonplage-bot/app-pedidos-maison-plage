@@ -100,11 +100,31 @@ const app = {
     document.querySelectorAll(".module-tab").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".module-section").forEach(s => s.classList.remove("active"));
 
-    const btn = Array.from(document.querySelectorAll(".module-tab")).find(b => b.innerText.toLowerCase().includes(mod.substring(0, 3)));
-    if (btn) btn.classList.add("active");
+    const tabMap = {
+      week: document.querySelector(".module-tab[onclick*='week']"),
+      month: document.querySelector(".module-tab[onclick*='month']"),
+      search: document.querySelector(".module-tab[onclick*='search']"),
+      groups: document.querySelector(".module-tab[onclick*='groups']"),
+      recent: document.querySelector(".module-tab[onclick*='recent']"),
+      suppliers: document.getElementById("tabSuppliers"),
+      financial: document.getElementById("tabFinancial"),
+      team: document.getElementById("tabTeam"),
+      excel: document.getElementById("tabExport")
+    };
+    if (tabMap[mod]) tabMap[mod].classList.add("active");
 
-    const sec = document.getElementById(`mod${mod.charAt(0).toUpperCase() + mod.slice(1)}`);
-    if (sec) sec.classList.add("active");
+    const secMap = {
+      week: document.getElementById("modWeek"),
+      month: document.getElementById("modMonth"),
+      search: document.getElementById("modSearch"),
+      groups: document.getElementById("modGroups"),
+      recent: document.getElementById("modRecent"),
+      suppliers: document.getElementById("modSuppliers"),
+      financial: document.getElementById("modFinancial"),
+      team: document.getElementById("modTeam"),
+      excel: document.getElementById("modExcel")
+    };
+    if (secMap[mod]) secMap[mod].classList.add("active");
 
     if (mod === "week") this.loadWeek();
     if (mod === "month") this.loadMonth();
@@ -113,6 +133,7 @@ const app = {
     if (mod === "suppliers") this.loadSuppliers();
     if (mod === "financial") this.loadFinancial();
     if (mod === "team") this.loadTeam();
+    if (mod === "excel") this.loadExcelViewer();
   },
 
   async loadWeek() {
