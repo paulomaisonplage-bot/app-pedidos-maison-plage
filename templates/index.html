@@ -97,7 +97,7 @@
         <button class="module-tab" onclick="app.setModule('recent')">🛒 Compras</button>
         <button class="module-tab" id="tabSuppliers" onclick="app.setModule('suppliers')">📞 Fornecedores</button>
         <button class="module-tab" id="tabFinancial" onclick="app.setModule('financial')">💰 Financeiro</button>
-        <button class="module-tab" id="tabTeam" onclick="app.setModule('team')" style="display:none;">👥 Equipe</button>
+        <button class="module-tab" id="tabTeam" onclick="app.setModule('team')" style="display:none;">👥 Usuários</button>
         <button class="module-tab" id="tabExport" onclick="app.setModule('excel')">📊 Planilha</button>
       </nav>
     </header>
@@ -129,17 +129,17 @@
         <div class="cards-list" id="monthCards"></div>
       </section>
 
-      <!-- MÓDULO 3: BUSCA DE INSUMOS -->
+      <!-- MÓDULO 3: CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (A-Z) -->
       <section id="modSearch" class="module-section">
-        <div class="quick-tags-grid">
-          <button class="quick-tag" onclick="app.quickSearch('Cimento')">🧱 Cimento</button>
-          <button class="quick-tag" onclick="app.quickSearch('Tijolo')">🧱 Tijolo</button>
-          <button class="quick-tag" onclick="app.quickSearch('Tubo PVC')">💧 Tubo PVC</button>
-          <button class="quick-tag" onclick="app.quickSearch('Cabo')">⚡ Cabos</button>
-          <button class="quick-tag" onclick="app.quickSearch('Aço')">🔩 Aço</button>
-          <button class="quick-tag" onclick="app.quickSearch('Tinta')">🎨 Tintas</button>
+        <div class="search-head-box">
+          <input type="search" id="catalogSearchInput" class="search-input" placeholder="🔍 Filtrar entre os 861 insumos..." oninput="app.filterCatalog(this.value)">
+          <div class="letters-bar" id="lettersBar"></div>
+          <div id="catalogMetrics" style="font-size:11px;color:var(--text-muted);margin-top:8px;">Carregando insumos...</div>
         </div>
-        <div class="cards-list" id="searchResults"></div>
+
+        <div class="materials-lean-list" id="materialsLeanList">
+          <div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando catálogo alfabético...</div>
+        </div>
       </section>
 
       <!-- MÓDULO 4: GRUPOS DA OBRA -->
@@ -165,7 +165,7 @@
       <!-- MÓDULO 8: GESTÃO DE EQUIPE (ADMIN MASTER) -->
       <section id="modTeam" class="module-section">
         <div class="team-header">
-          <h2>👥 Membros & Permissões</h2>
+          <h2>👥 Gestão de Usuários</h2>
           <button class="btn-add-user" onclick="app.openAddUserModal()">+ Novo Membro</button>
         </div>
         <div class="cards-list" id="teamCards"></div>
@@ -308,6 +308,22 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL DE PEDIDOS DO INSUMO SELECIONADO -->
+  <div class="modal-backdrop" id="matOrdersModal" onclick="app.closeMatOrdersModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="modal-head">
+        <div>
+          <h2 class="order-number" id="matModalTitle" style="font-size:16px;">Insumo</h2>
+          <p class="order-fornec" id="matModalSub">Pedidos de Compra Vinculados</p>
+        </div>
+        <button class="btn-close" onclick="app.closeMatOrdersModal()">✕</button>
+      </div>
+      <div class="cards-list" id="matOrdersCards" style="margin-top:10px;"></div>
     </div>
   </div>
 

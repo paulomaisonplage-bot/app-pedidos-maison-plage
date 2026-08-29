@@ -26,6 +26,8 @@ if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_con
 
 USERS_FILE = "data/usuarios_autorizados.json"
 query_service = OrderQueryService(EXCEL_PATH)
+auth_service = AuthService(USERS_FILE)
+
 
 def build_order_card_data(pc: str, role: str) -> Optional[dict]:
     hide_fin = (role == "campo")
@@ -311,25 +313,91 @@ async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo
             cards.append(c)
     return {"mes": mes, "ano": ano, "cards": cards}
 
-# 3. BUSCA DE INSUMOS
-@app.get("/api/materials/search")
-async def api_search_materials(q: str, role: str = "campo"):
+# 3. CATÁLOGO ALFABÉTICO COMPLETO A-Z DE INSUMOS
+@app.get("/api/materials/catalog")
+async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] = None):
+    raw_dict = query_service.manager.load_existing_records()
+    
+    insumos_map = {}
+    for r in raw_dict.values():
+        desc = str(r.get("descricao_material", "") or "").strip()
+        cod = str(r.get("codigo_insumo", "") or "").strip()
+        fam = str(r.get("familia_insumo", "04 DIVERSOS") or "04 DIVERSOS").strip()
+        pc = str(r.get("numero_pedido", "")).strip()
+        qtd = float(r.get("quantidade", 0) or 0.0)
+        unid = str(r.get("unidade", "UN") or "UN").strip()
+        
+        if not desc and not cod:
+            continue
+            
+        key = desc.upper() if desc else f"COD_{cod}"
+        if key not in insumos_map:
+            insumos_map[key] = {
+                "nome": desc if desc else f"Insumo Cód. {cod}",
+                "codigo": cod,
+                "familia": fam,
+                "unidade": unid,
+                "qtd_total": 0.0,
+                "pedidos": set()
+            }
+            
+        insumos_map[key]["qtd_total"] += qtd
+        if pc:
+            insumos_map[key]["pedidos"].add(pc)
+
+    # Ordena alfabeticamente A-Z
+    sorted_items = sorted(insumos_map.values(), key=lambda x: x["nome"].upper())
+
+    # Filtro por letra inicial
+    if letter and letter.upper() != "TODOS":
+        l_upper = letter.upper()
+        sorted_items = [i for i in sorted_items if i["nome"].upper().startswith(l_upper)]
+
+    # Filtro por texto de busca
+    if q:
+        q_l = q.lower().strip()
+        sorted_items = [i for i in sorted_items if q_l in i["nome"].lower() or q_l in i["codigo"].lower() or q_l in i["familia"].lower()]
+
+    result = []
+    for it in sorted_items[:300]: # Até 300 itens por página para renderização ultra rápida
+        qtd_fmt = f"{it['qtd_total']:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".").rstrip('0').rstrip(',')
+        result.append({
+            "nome": it["nome"],
+            "codigo": it["codigo"],
+            "familia": it["familia"],
+            "unidade": it["unidade"],
+            "qtd_formatada": f"{qtd_fmt} {it['unidade'].lower()}",
+            "pedidos_count": len(it["pedidos"]),
+            "pedidos": sorted(list(it["pedidos"]), reverse=True)
+        })
+
+    return {
+        "total_cadastrados": len(insumos_map),
+        "total_filtrados": len(sorted_items),
+        "insumos": result
+    }
+
+@app.get("/api/materials/orders")
+async def api_material_orders(nome: str, role: str = "campo"):
     hide_fin = (role == "campo")
-    msg, pcs = query_service.search_materials_for_site(q, hide_financials=hide_fin, item_offset=0, page_size=50)
+    raw_dict = query_service.manager.load_existing_records()
+    
+    nome_u = nome.upper().strip()
+    matched_pcs = set()
+    for r in raw_dict.values():
+        desc = str(r.get("descricao_material", "") or "").strip().upper()
+        if nome_u == desc:
+            pc = str(r.get("numero_pedido", "")).strip()
+            if pc:
+                matched_pcs.add(pc)
+                
     cards = []
-    for pc in pcs:
-        items = query_service.get_order_by_number(pc)
-        if items:
-            it0 = items[0]
-            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-            matched = [x for x in items if q.lower() in str(x.get("descricao_material", "")).lower() or q.lower() in str(x.get("descricao_completa", "")).lower()]
-            cards.append({
-                "pc": str(pc),
-                "fornecedor": fornec,
-                "data_entrega": it0.get("data_entrega_prevista", "-"),
-                "matched_items": [f"{m.get('quantidade')} {m.get('unidade', 'UN')} - {m.get('descricao_material', '') or m.get('descricao_completa', '')}" for m in matched[:3]]
-            })
-    return {"query": q, "results": cards}
+    for pc in sorted(list(matched_pcs), reverse=True):
+        c = build_order_card_data(pc, role)
+        if c:
+            cards.append(c)
+            
+    return {"material": nome, "total_pedidos": len(cards), "cards": cards}
 
 # 4. GRUPOS DA OBRA
 @app.get("/api/groups")

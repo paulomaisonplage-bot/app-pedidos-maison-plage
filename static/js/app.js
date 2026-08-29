@@ -398,6 +398,91 @@ const app = {
     document.getElementById("searchResults").innerHTML = "";
   },
 
+  currentLetter: "TODOS",
+  catalogQuery: "",
+
+  renderLettersBar() {
+    const bar = document.getElementById("lettersBar");
+    if (!bar) return;
+    const letters = ["TODOS", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+    bar.innerHTML = letters.map(l => `
+      <button class="letter-pill ${this.currentLetter === l ? 'active' : ''}" onclick="app.selectLetter('${l}')">${l}</button>
+    `).join("");
+  },
+
+  selectLetter(l) {
+    this.currentLetter = l;
+    this.renderLettersBar();
+    this.loadCatalogAZ();
+  },
+
+  filterCatalog(val) {
+    this.catalogQuery = val.trim();
+    clearTimeout(this.filterCatalogTimer);
+    this.filterCatalogTimer = setTimeout(() => {
+      this.loadCatalogAZ();
+    }, 250);
+  },
+
+  async loadCatalogAZ() {
+    this.renderLettersBar();
+    const list = document.getElementById("materialsLeanList");
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando insumos...</div>';
+    
+    try {
+      const qP = this.catalogQuery ? `&q=${encodeURIComponent(this.catalogQuery)}` : '';
+      const letP = this.currentLetter ? `&letter=${encodeURIComponent(this.currentLetter)}` : '';
+      const res = await fetch(`/api/materials/catalog?role=${this.currentUser.role}${qP}${letP}`);
+      const data = await res.json();
+      
+      document.getElementById("catalogMetrics").innerHTML = `📋 <b>${data.total_filtrados}</b> de <b>${data.total_cadastrados}</b> insumos cadastrados`;
+
+      if (!data.insumos || data.insumos.length === 0) {
+        list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum insumo localizado com este filtro.</div>';
+        return;
+      }
+
+      list.innerHTML = data.insumos.map(m => `
+        <div class="material-lean-row" onclick="app.openMaterialOrders('${encodeURIComponent(m.nome)}')">
+          <div class="mat-lean-name">${m.nome}</div>
+          <div class="mat-lean-badge">${m.qtd_formatada} • ${m.pedidos_count} PC</div>
+        </div>
+      `).join("");
+
+    } catch(e) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar catálogo de insumos.</div>';
+    }
+  },
+
+  async openMaterialOrders(encodedName) {
+    const name = decodeURIComponent(encodedName);
+    document.getElementById("matModalTitle").innerText = name;
+    document.getElementById("matModalSub").innerText = "Carregando pedidos...";
+    const cardsDiv = document.getElementById("matOrdersCards");
+    cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Buscando pedidos...</div>';
+    document.getElementById("matOrdersModal").classList.add("show");
+    document.body.style.overflow = "hidden";
+
+    try {
+      const res = await fetch(`/api/materials/orders?nome=${encodeURIComponent(name)}&role=${this.currentUser.role}`);
+      const data = await res.json();
+      document.getElementById("matModalSub").innerText = `${data.total_pedidos} Pedido(s) de Compra`;
+      if (!data.cards || data.cards.length === 0) {
+        cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido encontrado.</div>';
+        return;
+      }
+      cardsDiv.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
+    } catch(e) {
+      cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar pedidos deste insumo.</div>';
+    }
+  },
+
+  closeMatOrdersModal(e) {
+    if (e && e.target && e.target.id !== "matOrdersModal" && !e.target.classList.contains("btn-close")) return;
+    document.getElementById("matOrdersModal").classList.remove("show");
+    document.body.style.overflow = "";
+  },
+
   async loadGroups() {
     const grid = document.getElementById("groupsGrid");
     grid.innerHTML = '<div style="grid-column:span 2;padding:20px;text-align:center;color:#94a3b8">⏳ Carregando Macro-Grupos da obra...</div>';

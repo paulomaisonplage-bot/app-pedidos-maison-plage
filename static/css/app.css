@@ -213,3 +213,14 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .fin-section-title { font-size: 13px; font-weight: 800; color: #fff; }
 .fin-progress-track { background: rgba(0,0,0,0.3); border-radius: 6px; height: 10px; overflow: hidden; width: 100%; }
 .fin-progress-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+
+/* CATÁLOGO ALFABÉTICO ENXUTO A-Z */
+.search-head-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.letters-bar { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 4px 0; -webkit-overflow-scrolling: touch; }
+.letter-pill { background: #1e293b; color: #94a3b8; border: 1px solid var(--surface-border); padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.letter-pill.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
+.materials-lean-list { display: flex; flex-direction: column; gap: 6px; }
+.material-lean-row { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.15s; }
+.material-lean-row:active { background: rgba(37,99,235,0.2); transform: scale(0.99); }
+.mat-lean-name { font-size: 13px; font-weight: 700; color: #fff; flex: 1; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mat-lean-badge { background: rgba(37,99,235,0.15); color: #60a5fa; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
