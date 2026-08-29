@@ -692,7 +692,11 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     hide_fin = (role == "campo")
     items = query_service.get_order_by_number(pc_num)
     if not items:
-        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+        raw_dict = query_service.manager.load_existing_records()
+        items = [r for r in raw_dict.values() if str(r.get("numero_pedido", "")).strip() == str(pc_num).strip()]
+        
+    if not items:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
     
     it0 = items[0]
     total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
