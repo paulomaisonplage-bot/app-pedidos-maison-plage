@@ -3,6 +3,8 @@ const app = {
   currentPin: "",
   currentUser: null,
   activeModule: "week",
+  clientTabCache: { loaded: {} },
+  orderDetailCache: {},
   weekOffset: 0,
   currentMonth: 8,
 
@@ -283,87 +285,98 @@ const app = {
   },
 
   async openOrder(pc) {
+    // Se já estiver em cache, renderiza imediatamente sem delay
+    if (this.orderDetailCache[pc]) {
+      this.renderOrderModal(this.orderDetailCache[pc]);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/order/${pc}?role=${this.currentUser.role}`);
       const data = await res.json();
-
-      document.getElementById("mOrderNum").innerText = `PC ${data.pc}`;
-      document.getElementById("mFornec").innerText = data.fornecedor;
-      
-      let contactHtml = "";
-      if (data.contatos) {
-        const v = data.contatos.vendedor;
-        const emp = data.contatos.empresa;
-        
-        const hasVendor = v && (v.nome || v.telefone);
-        const hasCompany = emp && (emp.telefone || emp.email);
-
-        if (hasVendor || hasCompany) {
-          contactHtml = `
-            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-              ${hasVendor ? `
-                <div class="contact-sub-box">
-                  <div class="contact-box-header">👤 <b>Vendedor:</b> ${v.nome || 'Atendimento'}</div>
-                  ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
-                  <div class="sup-actions">
-                    ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
-                    ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome || '')}%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
-                  </div>
-                </div>
-              ` : ''}
-
-              ${hasCompany ? `
-                <div class="contact-sub-box" style="background:rgba(255,255,255,0.02);">
-                  <div class="contact-box-header">🏢 <b>Central da Empresa</b></div>
-                  ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo: <b>${emp.telefone}</b></div>` : ''}
-                  ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
-                  <div class="sup-actions">
-                    ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
-                    ${emp.email ? `<a href="mailto:${emp.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        }
-      }
-
-      document.getElementById("mOrderMeta").innerHTML = `
-        <div>🚚 <b>Entrega Prevista:</b> ${data.data_entrega}</div>
-        <div>📅 <b>Emissão:</b> ${data.data_emissao}</div>
-        ${data.condicao_pagamento ? `<div>💳 <b>Pagamento:</b> ${data.condicao_pagamento}</div>` : ''}
-        ${data.valor_total_formatado ? `<div>💰 <b>Valor Total:</b> <span style="color:#10b981;font-weight:800">${data.valor_total_formatado}</span></div>` : ''}
-        ${contactHtml}
-      `;
-
-      document.getElementById("mItemsList").innerHTML = data.itens.map(it => `
-        <div class="item-box-row">
-          <div>
-            <div style="font-weight:700">${it.descricao}</div>
-            <div style="color:#60a5fa;font-size:11px">Qtd: ${it.quantidade} ${it.unidade} ${it.valor_unitario ? `• Un: ${it.valor_unitario}` : ''}</div>
-          </div>
-          ${it.valor_total ? `<div style="font-weight:800;color:#10b981">${it.valor_total}</div>` : ''}
-        </div>
-      `).join("");
-
-      if (data.can_pdf) {
-        document.getElementById("mModalActions").innerHTML = `
-          <div style="display:flex;gap:8px;">
-            <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action" style="margin-top:0;flex:1;">
-              📄 Abrir PDF
-            </a>
-            <button onclick="app.shareOrderPdf('${data.pc}')" class="btn-pdf-action" style="margin-top:0;flex:1;background:linear-gradient(135deg, #7c3aed, #6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.4);border:none;cursor:pointer;">
-              📤 Compartilhar / Salvar
-            </button>
-          </div>
-        `;
-      } else {
-        document.getElementById("mModalActions").innerHTML = "";
-      }
-      document.getElementById("orderModal").classList.add("show"); document.body.style.overflow = "hidden";
+      this.orderDetailCache[pc] = data;
+      this.renderOrderModal(data);
     } catch(e) {
       alert("Erro ao abrir detalhes do pedido.");
     }
+  },
+
+  renderOrderModal(data) {
+    document.getElementById("mOrderNum").innerText = `PC ${data.pc}`;
+    document.getElementById("mFornec").innerText = data.fornecedor;
+    
+    let contactHtml = "";
+    if (data.contatos) {
+      const v = data.contatos.vendedor;
+      const emp = data.contatos.empresa;
+      
+      const hasVendor = v && (v.nome || v.telefone);
+      const hasCompany = emp && (emp.telefone || emp.email);
+
+      if (hasVendor || hasCompany) {
+        contactHtml = `
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+            ${hasVendor ? `
+              <div class="contact-sub-box">
+                <div class="contact-box-header">👤 <b>Vendedor:</b> ${v.nome || 'Atendimento'}</div>
+                ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+                <div class="sup-actions">
+                  ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
+                  ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome || '')}%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+                </div>
+              </div>
+            ` : ''}
+
+            ${hasCompany ? `
+              <div class="contact-sub-box" style="background:rgba(255,255,255,0.02);">
+                <div class="contact-box-header">🏢 <b>Central da Empresa</b></div>
+                ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo: <b>${emp.telefone}</b></div>` : ''}
+                ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
+                <div class="sup-actions">
+                  ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
+                  ${emp.email ? `<a href="mailto:${emp.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+    }
+
+    document.getElementById("mOrderMeta").innerHTML = `
+      <div>🚚 <b>Entrega Prevista:</b> ${data.data_entrega}</div>
+      <div>📅 <b>Emissão:</b> ${data.data_emissao}</div>
+      ${data.condicao_pagamento ? `<div>💳 <b>Pagamento:</b> ${data.condicao_pagamento}</div>` : ''}
+      ${data.valor_total_formatado ? `<div>💰 <b>Valor Total:</b> <span style="color:#10b981;font-weight:800">${data.valor_total_formatado}</span></div>` : ''}
+      ${contactHtml}
+    `;
+
+    document.getElementById("mItemsList").innerHTML = data.itens.map(it => `
+      <div class="item-box-row">
+        <div>
+          <div style="font-weight:700">${it.descricao}</div>
+          <div style="color:#60a5fa;font-size:11px">Qtd: ${it.quantidade} ${it.unidade} ${it.valor_unitario ? `• Un: ${it.valor_unitario}` : ''}</div>
+        </div>
+        ${it.valor_total ? `<div style="font-weight:800;color:#10b981">${it.valor_total}</div>` : ''}
+      </div>
+    `).join("");
+
+    if (data.can_pdf) {
+      document.getElementById("mModalActions").innerHTML = `
+        <div style="display:flex;gap:8px;">
+          <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action" style="margin-top:0;flex:1;">
+            📄 Abrir PDF
+          </a>
+          <button onclick="app.shareOrderPdf('${data.pc}')" class="btn-pdf-action" style="margin-top:0;flex:1;background:linear-gradient(135deg, #7c3aed, #6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.4);border:none;cursor:pointer;">
+            📤 Compartilhar / Salvar
+          </button>
+        </div>
+      `;
+    } else {
+      document.getElementById("mModalActions").innerHTML = "";
+    }
+    document.getElementById("orderModal").classList.add("show");
+    document.body.style.overflow = "hidden";
   },
 
   closeModal() {

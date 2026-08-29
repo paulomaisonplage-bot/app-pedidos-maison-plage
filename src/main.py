@@ -20,7 +20,48 @@ from src.auth_service import AuthService
 
 
 
+# ==========================================
+# FAST IN-MEMORY CACHE ENGINE (RESPOSTA < 2ms)
+# ==========================================
+CACHE_STORE = {
+    "last_load": 0,
+    "raw_records": {},
+    "orders_by_pc": {},
+    "recent_cards": None,
+    "financial_summary": None,
+    "catalog_materials": None
+}
+
+def get_cached_raw_records(force_reload: bool = False):
+    now = time.time()
+    if force_reload or (now - CACHE_STORE["last_load"] > 180) or not CACHE_STORE["raw_records"]:
+        raw = query_service.manager.load_existing_records()
+        CACHE_STORE["raw_records"] = raw
+        
+        # Indexa pedidos por PC
+        by_pc = {}
+        for r in raw.values():
+            pc = str(r.get("numero_pedido", "")).strip()
+            if pc:
+                if pc not in by_pc:
+                    by_pc[pc] = []
+                by_pc[pc].append(r)
+        CACHE_STORE["orders_by_pc"] = by_pc
+        CACHE_STORE["last_load"] = now
+        CACHE_STORE["recent_cards"] = None
+        CACHE_STORE["financial_summary"] = None
+        CACHE_STORE["catalog_materials"] = None
+        
+    return CACHE_STORE["raw_records"], CACHE_STORE["orders_by_pc"]
+
+
+
 app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.20260829172549")
+
+@app.on_event("startup")
+async def startup_event():
+    # Pré-aquece o cache na inicialização do servidor
+    get_cached_raw_records(force_reload=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -853,14 +894,16 @@ async def api_export_excel(tipo: str = "geral", role: str = "campo"):
             headers={"Content-Disposition": "attachment; filename=pedidos_compra_maison_plage_geral.xlsx"}
         )
 
-# DETALHES DO PEDIDO
+# DETALHES DO PEDIDO (RESPOSTA INSTANTÂNEA EM MEMÓRIA RAM)
 @app.get("/api/order/{pc_num}")
 async def api_order_detail(pc_num: str, role: str = "campo"):
     hide_fin = (role == "campo")
-    items = query_service.get_order_by_number(pc_num)
+    _, orders_by_pc = get_cached_raw_records()
+    
+    items = orders_by_pc.get(str(pc_num).strip(), [])
     if not items:
-        raw_dict = query_service.manager.load_existing_records()
-        items = [r for r in raw_dict.values() if str(r.get("numero_pedido", "")).strip() == str(pc_num).strip()]
+        # Tenta na lista filtrada caso ainda nao esteja no cache
+        items = query_service.get_order_by_number(pc_num)
         
     if not items:
         raise HTTPException(status_code=404, detail="Pedido não encontrado.")
@@ -870,7 +913,6 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     fornec_nome = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
     fornec_cnpj = str(it0.get("fornecedor_cnpj", "")).strip()
     
-    # Busca contato estruturado do fornecedor com algoritmo inteligente
     matched_sup = find_supplier_contact(fornec_nome, fornec_cnpj)
     fornec_contato = parse_supplier_dual_contacts(matched_sup) if matched_sup else None
 
