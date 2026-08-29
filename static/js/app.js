@@ -357,48 +357,6 @@ const app = {
     document.getElementById("orderModal").classList.remove("show"); document.body.style.overflow = "";
   },
 
-  async handleSearch(val) {
-    const q = val.trim();
-    document.getElementById("clearSearchBtn").style.display = q ? "block" : "none";
-    if (q.length < 2) return;
-    this.setModule("search");
-
-    const list = document.getElementById("searchResults");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">🔍 Buscando insumos...</div>';
-
-    try {
-      const res = await fetch(`/api/materials/search?q=${encodeURIComponent(q)}&role=${this.currentUser.role}`);
-      const data = await res.json();
-      if (!data.results || data.results.length === 0) {
-        list.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum resultado para "${q}".</div>`;
-        return;
-      }
-      list.innerHTML = data.results.map(c => `
-        <div class="item-card" onclick="app.openOrder('${c.pc}')">
-          <div class="card-header-row">
-            <span class="card-tag-pc">PC ${c.pc}</span>
-            <span class="card-tag-date">🚚 ${c.data_entrega}</span>
-          </div>
-          <div class="card-supplier-name">${c.fornecedor}</div>
-          <div class="card-summary-desc">${c.matched_items.join("<br>")}</div>
-        </div>
-      `).join("");
-    } catch(e) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro na busca.</div>';
-    }
-  },
-
-  quickSearch(t) {
-    document.getElementById("searchInput").value = t;
-    this.handleSearch(t);
-  },
-
-  clearSearch() {
-    document.getElementById("searchInput").value = "";
-    document.getElementById("clearSearchBtn").style.display = "none";
-    document.getElementById("searchResults").innerHTML = "";
-  },
-
   currentLetter: "TODOS",
   catalogQuery: "",
 
@@ -553,10 +511,14 @@ const app = {
 
   async loadRecent() {
     const list = document.getElementById("recentCards");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando compras recentes...</div>';
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando compras recentes...</div>';
     try {
-      const res = await fetch(`/api/orders/recent?role=${this.currentUser.role}`);
+      const res = await fetch(`/api/recent_purchases?role=${this.currentUser.role}`);
       const data = await res.json();
+      if (!data.cards || data.cards.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhuma compra recente encontrada.</div>';
+        return;
+      }
       list.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
     } catch(e) {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar compras recentes.</div>';
@@ -610,13 +572,72 @@ const app = {
 
   async loadFinancial() {
     const box = document.getElementById("financialBox");
-    box.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Calculando cronograma de desembolso...</div>';
+    box.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">⏳ Carregando indicadores do fluxo financeiro...</div>';
+    
     try {
       const res = await fetch(`/api/financial/summary?role=${this.currentUser.role}`);
       const data = await res.json();
-      box.innerText = data.summary_text;
+      
+      const kpis = data.kpis || {};
+      const bars = data.monthly_bars || [];
+      const groups = data.macro_groups || [];
+
+      box.innerHTML = `
+        <!-- 1. CARDS DE INDICADORES (KPIS) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;">
+            <div class="fin-kpi-label">💰 Total Contratado na Obra (>= Jun/26)</div>
+            <div class="fin-kpi-value" style="color:#60a5fa;font-size:22px;">${kpis.total_contratado}</div>
+          </div>
+          <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;">
+            <div class="fin-kpi-label">📅 A Pagar em Agosto</div>
+            <div class="fin-kpi-value" style="color:#fbbf24;">${kpis.mes_atual}</div>
+          </div>
+          <div class="fin-kpi-card" style="border-left:4px solid #10b981;">
+            <div class="fin-kpi-label">⏳ Desembolso Futuro (Set+)</div>
+            <div class="fin-kpi-value" style="color:#34d399;">${kpis.futuro}</div>
+          </div>
+        </div>
+
+        <!-- 2. GRÁFICO DE DESEMBOLSO MENSAL -->
+        <div class="fin-section-box">
+          <div class="fin-section-title">📈 Fluxo de Desembolso Mensal (2026)</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+            ${bars.map(b => `
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px;">
+                  <span style="${b.is_current ? 'color:#fbbf24;font-weight:800;' : 'color:#fff;'}">${b.mes_nome}${b.is_current ? ' (Atual)' : ''}</span>
+                  <span style="color:#10b981;">${b.valor_fmt}</span>
+                </div>
+                <div class="fin-progress-track">
+                  <div class="fin-progress-fill" style="width:${Math.max(b.pct, 3)}%;background:${b.is_current ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #2563eb, #3b82f6)'};"></div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
+        <div class="fin-section-box" style="margin-top:14px;">
+          <div class="fin-section-title">🏢 Onde está o Gasto da Obra (Macro-Grupos)</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
+            ${groups.map(g => `
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px;">
+                  <span>${g.icon} ${g.name}</span>
+                  <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:11px;">(${g.valor_fmt})</span></span>
+                </div>
+                <div class="fin-progress-track">
+                  <div class="fin-progress-fill" style="width:${g.pct}%;background:${g.color};"></div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+
     } catch(e) {
-      box.innerText = "Erro ao calcular fluxo financeiro.";
+      box.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar dados financeiros.</div>';
     }
   },
 

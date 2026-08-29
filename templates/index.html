@@ -94,7 +94,7 @@
         <button class="module-tab" onclick="app.setModule('month')">🗓️ Mês</button>
         <button class="module-tab" onclick="app.setModule('search')">🔍 Insumos</button>
         <button class="module-tab" onclick="app.setModule('groups')">🏢 Grupos</button>
-        <button class="module-tab" onclick="app.setModule('recent')">🛒 Compras</button>
+        <button class="module-tab" onclick="app.setModule('recent')">🛒 Recentes</button>
         <button class="module-tab" id="tabSuppliers" onclick="app.setModule('suppliers')">📞 Fornecedores</button>
         <button class="module-tab" id="tabFinancial" onclick="app.setModule('financial')">💰 Financeiro</button>
         <button class="module-tab" id="tabTeam" onclick="app.setModule('team')" style="display:none;">👥 Usuários</button>
@@ -132,9 +132,8 @@
       <!-- MÓDULO 3: CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (A-Z) -->
       <section id="modSearch" class="module-section">
         <div class="search-head-box">
-          <input type="search" id="catalogSearchInput" class="search-input" placeholder="🔍 Filtrar entre os 861 insumos..." oninput="app.filterCatalog(this.value)">
           <div class="letters-bar" id="lettersBar"></div>
-          <div id="catalogMetrics" style="font-size:11px;color:var(--text-muted);margin-top:8px;">Carregando insumos...</div>
+          <div id="catalogMetrics" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Carregando insumos...</div>
         </div>
 
         <div class="materials-lean-list" id="materialsLeanList">
