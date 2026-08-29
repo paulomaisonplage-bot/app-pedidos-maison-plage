@@ -252,7 +252,7 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
     
     catalog = load_all_suppliers_contacts()
     if q:
-        clean_q = re.sub(r'[^\\w\\s]', ' ', q).lower().strip()
+        clean_q = re.sub(r'[^\w\s]', ' ', q).lower().strip()
         tokens = [t for t in clean_q.split() if len(t) >= 2]
         catalog = [
             f for f in catalog
@@ -262,12 +262,13 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
     fornecs = []
     for f in catalog:
         tel = str(f.get("telefone", "") or "").strip()
-        clean_tel = re.sub(r'[^0-9]', '', tel)
+        clean_tel = str(f.get("telefone_clean", "") or re.sub(r'[^0-9]', '', tel)).strip()
+        email = str(f.get("email", "") or "").strip()
         fornecs.append({
             "razao_social": f.get("nome", "Não Informado"),
-            "telefone": tel if tel else "Não Informado",
-            "telefone_clean": clean_tel,
-            "email": f.get("email", "Não Informado"),
+            "telefone": tel if tel else (f.get("vendedor") if f.get("vendedor") else "Não Informado"),
+            "telefone_clean": clean_tel if clean_tel else None,
+            "email": email if email and email != "Não Informado" else None,
             "contato_vendedor": f.get("vendedor", "-")
         })
 

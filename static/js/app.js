@@ -374,24 +374,27 @@ const app = {
 
   async loadSuppliers() {
     const list = document.getElementById("suppliersCards");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando contatos de fornecedores...</div>';
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando contatos de fornecedores...</div>';
     try {
       const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
       const data = await res.json();
-      list.innerHTML = data.suppliers.map(s => `
-        <div class="supplier-card">
-          <div class="sup-name">${s.razao_social}</div>
-          <div class="sup-info">📞 <b>Telefone:</b> ${s.telefone}</div>
-          <div class="sup-info">✉️ <b>E-mail:</b> ${s.email}</div>
-          <div class="sup-info">👤 <b>Vendedor:</b> ${s.contato_vendedor}</div>
-          <div class="sup-actions">
-            ${s.telefone_clean ? `<a href="tel:${s.telefone_clean}" class="btn-call">📞 Ligar</a>` : ''}
-            ${s.email && s.email !== 'Não Informado' ? `<a href="mailto:${s.email}?subject=Maison%20Plage%20-%20Consulta%20de%20Pedidos" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
-            ${s.telefone_clean ? `<a href="https://wa.me/55${s.telefone_clean}" target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+      list.innerHTML = data.suppliers.map(s => {
+        const telClean = s.telefone_clean || '';
+        const email = s.email || '';
+        return `
+          <div class="supplier-card">
+            <div class="sup-name">${s.razao_social}</div>
+            <div class="sup-info">📞 <b>Contato / Tel:</b> ${s.telefone}</div>
+            ${email ? `<div class="sup-info">✉️ <b>E-mail:</b> ${email}</div>` : ''}
+            <div class="sup-info">👤 <b>Vendedor:</b> ${s.contato_vendedor}</div>
+            <div class="sup-actions">
+              ${telClean ? `<a href="tel:${telClean}" class="btn-call" onclick="event.stopPropagation();">📞 Ligar</a>` : ''}
+              ${email ? `<a href="mailto:${email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail" onclick="event.stopPropagation();">✉️ Enviar E-mail</a>` : ''}
+              ${telClean ? `<a href="https://wa.me/55${telClean}?text=Ol%C3%A1%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp" onclick="event.stopPropagation();">💬 WhatsApp</a>` : ''}
+            </div>
           </div>
-        </div>
-      `).join("");
-
+        `;
+      }).join("");
     } catch(e) {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar fornecedores.</div>';
     }

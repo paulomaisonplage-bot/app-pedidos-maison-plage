@@ -5,7 +5,9 @@
     "vendedor": "MARCOS BIANA 82 996002588",
     "fone_empresa": "(82) 3623 1822",
     "email": "marcosbiana10@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296002588",
+    "telefone_clean": "8296002588"
   },
   {
     "nome": "AM COMERCIAL E DISTRIBUIDORA LTDA",
@@ -13,7 +15,9 @@
     "vendedor": "JONATHAN (82) 99107 6423",
     "fone_empresa": "(82) 2121 1552",
     "email": "Vendas12@amcomercial.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8291076423",
+    "telefone_clean": "8291076423"
   },
   {
     "nome": "APLICSIL COMÉRCIO E SILICONES",
@@ -21,7 +25,9 @@
     "vendedor": "ROBERTA FRANCO 82 9334 5285",
     "fone_empresa": "(19) 3886 6642",
     "email": "roberta@rfsantana.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293345285",
+    "telefone_clean": "8293345285"
   },
   {
     "nome": "ARACAJU LTDA",
@@ -29,7 +35,9 @@
     "vendedor": "FALCONIERE tel.98102 5920",
     "fone_empresa": "(79)99979 8948",
     "email": "atendimento@disgal.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8102-5920",
+    "telefone_clean": "8281025920"
   },
   {
     "nome": "ARMACELL BRASIL LTDA",
@@ -37,7 +45,9 @@
     "vendedor": "Ledjane Silva 81 9949 5538",
     "fone_empresa": "(48)32114034",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8199495538",
+    "telefone_clean": "8199495538"
   },
   {
     "nome": "BELGO BEKAERT ARAMES LTDA",
@@ -45,7 +55,9 @@
     "vendedor": "MONCLAR 82 9983 2159",
     "fone_empresa": "(82)99983 2159",
     "email": "Monclarnc@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299832159",
+    "telefone_clean": "8299832159"
   },
   {
     "nome": "BF DISTRIBUIDORA EM MADEIRAS LTDA",
@@ -53,7 +65,9 @@
     "vendedor": "BEATRIZ (82) 99999 9663",
     "fone_empresa": "(82) 3320 4514",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299999663",
+    "telefone_clean": "8299999663"
   },
   {
     "nome": "BR PARAFUSOS IMPORTADORA COMERCIAL",
@@ -69,7 +83,9 @@
     "vendedor": "wellington TEL. 79 99946 5478",
     "fone_empresa": "(11)22467655",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "7999465478",
+    "telefone_clean": "7999465478"
   },
   {
     "nome": "CARAJÁS MATERIAL DE CONSTRUÇÃO LTDA",
@@ -77,7 +93,9 @@
     "vendedor": "MARCOS CARAJAS 9387 3413",
     "fone_empresa": "(82) 4009 2292",
     "email": "june.melo@carajas.net.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293873413",
+    "telefone_clean": "8293873413"
   },
   {
     "nome": "CARAJÁS MATERIAL DE CONSTRUÇÃO LTDA",
@@ -85,7 +103,9 @@
     "vendedor": "MARCOS CARAJAS 9387 3413",
     "fone_empresa": "(82) 4009 2292",
     "email": "celiavendas@carajas.net.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293873413",
+    "telefone_clean": "8293873413"
   },
   {
     "nome": "CENTER FRIOS MÁQUINAS E EQUIPAMENTOS",
@@ -93,7 +113,9 @@
     "vendedor": "RICARDO 99682 0108",
     "fone_empresa": "(82) 3223 2497",
     "email": "vendas02@centerfrios.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296820108",
+    "telefone_clean": "8296820108"
   },
   {
     "nome": "CERÂMICA COUTINHO LTDA",
@@ -101,7 +123,9 @@
     "vendedor": "AGRIPINO NETO 98142 2141",
     "fone_empresa": "(81)36220126",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8142-2141",
+    "telefone_clean": "8281422141"
   },
   {
     "nome": "CERÂMICA SOLEDADE LTDA",
@@ -109,7 +133,9 @@
     "vendedor": "ARTHUR 82 9904 9836",
     "fone_empresa": "(82)99904 9836",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299049836",
+    "telefone_clean": "8299049836"
   },
   {
     "nome": "CODAÇO DOBRA DE FERRO E AÇO LTDA",
@@ -125,7 +151,9 @@
     "vendedor": "ROBERTO GUSTAVO 98802 8764",
     "fone_empresa": "(11) 2134 0002",
     "email": "roberto@francosantana.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8802-8764",
+    "telefone_clean": "8288028764"
   },
   {
     "nome": "COMERCIAL M B LTDA",
@@ -133,7 +161,9 @@
     "vendedor": "EDIVALDO 82 99999 1543",
     "fone_empresa": "(82) 2123 9999",
     "email": "edivaldombcomercial@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299991543",
+    "telefone_clean": "8299991543"
   },
   {
     "nome": "COMERCIO DE CONDUTORES COMERCIO DE CONDUTORES ELETRICOS LTDA",
@@ -141,7 +171,9 @@
     "vendedor": "ADILTON TEL. 71 9963 0742",
     "fone_empresa": "(11) 2118 3200",
     "email": "adilton_telecentro@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "7199630742",
+    "telefone_clean": "7199630742"
   },
   {
     "nome": "COMERCIO DE PRODUTOS COMERCIO DE PRODUTOS ELETRICOS E METALICOS",
@@ -149,7 +181,9 @@
     "vendedor": "SAULO 81 8190 9310",
     "fone_empresa": "(47)34523003",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(81) 8190-9310",
+    "telefone_clean": "8181909310"
   },
   {
     "nome": "COMERCIO DE PRODUTOS COMERCIO DE PRODUTOS METALURGICOS LTDA",
@@ -157,7 +191,9 @@
     "vendedor": "LUIZ GONZADA 82 98834 5998",
     "fone_empresa": "(19) 3948 5230",
     "email": "luizgonzagacosta@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8834-5998",
+    "telefone_clean": "8288345998"
   },
   {
     "nome": "COMERCIO DE TECIDOS COMERCIO DE TECIDOS TECNICOS LTDA",
@@ -165,7 +201,9 @@
     "vendedor": "MATHEUS TEGAP 81 9471 0606",
     "fone_empresa": "(41) 2105 9900",
     "email": "ere1@tegape.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8194710606",
+    "telefone_clean": "8194710606"
   },
   {
     "nome": "COMERCIO DE TECIDOS LTDA",
@@ -181,7 +219,9 @@
     "vendedor": "ERICK CORTAG 1999922 1246",
     "fone_empresa": "(19)38627700",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "1999221246",
+    "telefone_clean": "1999221246"
   },
   {
     "nome": "COMFERRAL COMÉRCIO DE FERRAGENS LTDA",
@@ -197,7 +237,9 @@
     "vendedor": "DIONE 9626 0227",
     "fone_empresa": "(82) 3185 6126",
     "email": "litoralmadeirasal@outlook.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296260227",
+    "telefone_clean": "8296260227"
   },
   {
     "nome": "CONSTRUCAO LTDA",
@@ -205,7 +247,9 @@
     "vendedor": "Elvio Evhex tel. 88 9914 6991",
     "fone_empresa": "(41) 3133 3000",
     "email": "thaysi@evehx.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8899146991",
+    "telefone_clean": "8899146991"
   },
   {
     "nome": "COREMAL QUÍMICA E POLÍMEROS",
@@ -213,7 +257,9 @@
     "vendedor": "DALBTON TEL.99602 7935",
     "fone_empresa": "(82)30330036",
     "email": "gerencia.dvsrepresentacoes@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296027935",
+    "telefone_clean": "8296027935"
   },
   {
     "nome": "CSN CIMENTOS BRASIL S.A.",
@@ -221,7 +267,9 @@
     "vendedor": "JOÃO NETO TEL.71 9 9605 5535",
     "fone_empresa": "(21)38043100",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "7196055535",
+    "telefone_clean": "7196055535"
   },
   {
     "nome": "DOM METAL COMÉRCIO EIRELI",
@@ -229,7 +277,9 @@
     "vendedor": "WELITON 81 9605 0887",
     "fone_empresa": "(81) 2011 4432",
     "email": "DOMMETALIND@GMAIL.COM",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8196050887",
+    "telefone_clean": "8196050887"
   },
   {
     "nome": "E COMERCIO LTDA COMERCIO LTDA",
@@ -237,7 +287,9 @@
     "vendedor": "FERNANDO (11) 98337 3415",
     "fone_empresa": "(11)98337 3415",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(11) 8337-3415",
+    "telefone_clean": "1183373415"
   },
   {
     "nome": "E DE CONSTRUCAO LTDA CONSTRUCAO LTDA",
@@ -245,7 +297,9 @@
     "vendedor": "EDIVALDO 82 99999 1543",
     "fone_empresa": "(82) 2123 9999",
     "email": "edivaldombcomercial@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299991543",
+    "telefone_clean": "8299991543"
   },
   {
     "nome": "ECOLIT COMERCIAL DE ILUMINAÇÃO",
@@ -253,7 +307,9 @@
     "vendedor": "EDMUNDO JR. TEL.9 8107 9114",
     "fone_empresa": "(81)32676250",
     "email": "junior.vendas.al@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8107-9114",
+    "telefone_clean": "8281079114"
   },
   {
     "nome": "ELETROLUZ MATERIAIS ELÉTRICOS LTDA",
@@ -261,7 +317,9 @@
     "vendedor": "EDVAN 98217 5680",
     "fone_empresa": "(82) 3036 1330",
     "email": "edvanluz1@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8217-5680",
+    "telefone_clean": "8282175680"
   },
   {
     "nome": "EMBALAR DISTRIBUIDORA DE EMBALAGENS",
@@ -269,7 +327,9 @@
     "vendedor": "GRACIELLE (82) 98701 5713",
     "fone_empresa": "(82) 3359 6241",
     "email": "vendas5@embalardistribuidora.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8701-5713",
+    "telefone_clean": "8287015713"
   },
   {
     "nome": "ESTRIBOPEÇAS INDÚSTRIA E COMÉRCIO",
@@ -277,7 +337,9 @@
     "vendedor": "Washington tel. 11 95368 4951",
     "fone_empresa": "(11) 2438 1509",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(11) 5368-4951",
+    "telefone_clean": "1153684951"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -285,7 +347,9 @@
     "vendedor": "EDSON TEL. 98840 4754",
     "fone_empresa": "(82) 3376 2254",
     "email": "isonor@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8840-4754",
+    "telefone_clean": "8288404754"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -293,7 +357,9 @@
     "vendedor": "AFRANIO TEL. 89971 4507",
     "fone_empresa": "(82)99113 8461",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 89971-4507",
+    "telefone_clean": "82899714507"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -301,7 +367,9 @@
     "vendedor": "RICARDO (82) 99639 4555",
     "fone_empresa": "(82)98272744",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296394555",
+    "telefone_clean": "8296394555"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -309,7 +377,9 @@
     "vendedor": "EVERALDO 9113 4849",
     "fone_empresa": "(82)99113 4849",
     "email": "lok_mais_equipamentos@outlook.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8291134849",
+    "telefone_clean": "8291134849"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -317,7 +387,9 @@
     "vendedor": "ALDENER 30229622",
     "fone_empresa": "(82) 3336 5602",
     "email": "quiteria@refricomrefrigeracao.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 3022-9622",
+    "telefone_clean": "8230229622"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -325,7 +397,9 @@
     "vendedor": "VALDIANE (82) 98755 4108",
     "fone_empresa": "(82) 3328 3241",
     "email": "valmaq@valmaq.net.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8755-4108",
+    "telefone_clean": "8287554108"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -333,7 +407,9 @@
     "vendedor": "FLUVYO 9922 9254",
     "fone_empresa": "(82)99922 9254",
     "email": "fluvyo@graficaboaarte.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299229254",
+    "telefone_clean": "8299229254"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -349,7 +425,9 @@
     "vendedor": "RODRIGO FRIGELAR 81 9852 7782",
     "fone_empresa": "(51) 3058 8869",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8198527782",
+    "telefone_clean": "8198527782"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -365,7 +443,9 @@
     "vendedor": "ADELANIA (82) 99974 4817",
     "fone_empresa": "(82)33371706",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299744817",
+    "telefone_clean": "8299744817"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -373,7 +453,9 @@
     "vendedor": "JAILTO CARIBE 9153 1970",
     "fone_empresa": "(82)99957 0922",
     "email": "jailton@caribesuprimentos.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8291531970",
+    "telefone_clean": "8291531970"
   },
   {
     "nome": "FORNECEDOR DIVERSOS",
@@ -381,7 +463,9 @@
     "vendedor": "LUCIANA 81 9836 3179",
     "fone_empresa": "(81)99729 5566",
     "email": "ceramicaportonassau@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8198363179",
+    "telefone_clean": "8198363179"
   },
   {
     "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
@@ -389,7 +473,9 @@
     "vendedor": "RODRIGO FRIGELAR 81 9852 7782",
     "fone_empresa": "(81) 2102 8909",
     "email": "VERACOUTINHO@REFRIGELAR.COM.BR",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8198527782",
+    "telefone_clean": "8198527782"
   },
   {
     "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
@@ -397,7 +483,9 @@
     "vendedor": "RODRIGO (82) 99852 7782",
     "fone_empresa": "(82)99179 2520",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8298527782",
+    "telefone_clean": "8298527782"
   },
   {
     "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
@@ -405,7 +493,9 @@
     "vendedor": "RODRIGO FRIGELAR 81 9852 7782",
     "fone_empresa": "(51)30588869",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8198527782",
+    "telefone_clean": "8198527782"
   },
   {
     "nome": "FRIGELAR COMÉRCIO E DISTRIBUIÇÃO",
@@ -413,7 +503,9 @@
     "vendedor": "BETO WAGNER 81 9795 2626",
     "fone_empresa": "(71)30255700",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8197952626",
+    "telefone_clean": "8197952626"
   },
   {
     "nome": "FRIOVIX REFRIGERAÇÃO LTDA",
@@ -421,7 +513,9 @@
     "vendedor": "BRUNO FRIOPEÇA 99943 0469",
     "fone_empresa": "(82) 3026 8351",
     "email": "bruno.costa@friopecas.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299430469",
+    "telefone_clean": "8299430469"
   },
   {
     "nome": "FRIOVIX REFRIGERAÇÃO LTDA",
@@ -429,7 +523,9 @@
     "vendedor": "BRUNO (82) 99943 0469",
     "fone_empresa": "(82) 3334 3606",
     "email": "glauciene.cavalcante@friopecas.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299430469",
+    "telefone_clean": "8299430469"
   },
   {
     "nome": "GEOSSINTETICOS BAHIA GEOSSINTETICOS BAHIA COMERCIO E SERVICOS",
@@ -437,7 +533,9 @@
     "vendedor": "JAELSON 81 8792 4916",
     "fone_empresa": "(82) 3435 0517",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(81) 8792-4916",
+    "telefone_clean": "8187924916"
   },
   {
     "nome": "GEOSSINTETICOS GEOSSINTETICOS PERNAMBUCO COMERCIO LTDA",
@@ -445,7 +543,9 @@
     "vendedor": "JAELSON 81 8792 4916",
     "fone_empresa": "(81) 3251 2273",
     "email": "vendas3@santamartageo.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(81) 8792-4916",
+    "telefone_clean": "8187924916"
   },
   {
     "nome": "GERDAU AÇOS LONGOS S.A.",
@@ -461,7 +561,9 @@
     "vendedor": "SIDLEY TEL. 99931 9041",
     "fone_empresa": "(82)33333333",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299319041",
+    "telefone_clean": "8299319041"
   },
   {
     "nome": "GRAMFIX COMÉRCIO EIRELI",
@@ -469,7 +571,9 @@
     "vendedor": "RAFAELE (82) 99621 2669",
     "fone_empresa": "(82) 3432 5874",
     "email": "vendas5@gramfix.net.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296212669",
+    "telefone_clean": "8296212669"
   },
   {
     "nome": "IMPERMEABILIZANTES LTDA",
@@ -477,7 +581,9 @@
     "vendedor": "JOELLITON TEL. 98864 8697",
     "fone_empresa": "(82) 3436 7330",
     "email": "protfercomercial@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8864-8697",
+    "telefone_clean": "8288648697"
   },
   {
     "nome": "IMPORTADORA COMERCIAL IMPORTADORA COMERCIAL LTDA - ME",
@@ -485,7 +591,9 @@
     "vendedor": "ROSE (82) 98769 0081",
     "fone_empresa": "(82) 3311 5444",
     "email": "vendas06@brparafusos.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8769-0081",
+    "telefone_clean": "8287690081"
   },
   {
     "nome": "INDUSTRIA E COMERCIO DE INDUSTRIA E COMERCIO DE MATERIAIS ELETRICOS",
@@ -493,7 +601,9 @@
     "vendedor": "EMERSON SIL 9335 4109",
     "fone_empresa": "(82) 3313 5263",
     "email": "escritoriocej@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293354109",
+    "telefone_clean": "8293354109"
   },
   {
     "nome": "INDUSTRIA E COMERCIO LTDA",
@@ -501,7 +611,9 @@
     "vendedor": "ANDRE JERUEL TEL.99329 6815",
     "fone_empresa": "(11) 4584 9922",
     "email": "orcamento@jeruelplast.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293296815",
+    "telefone_clean": "8293296815"
   },
   {
     "nome": "INFRANET DISTRIBUIDORA DE REDES",
@@ -509,7 +621,9 @@
     "vendedor": "JOSIVALDO Tel (82) 98154 8851",
     "fone_empresa": "(82) 3326 8298",
     "email": "vanuzia@r2distribuicao.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8154-8851",
+    "telefone_clean": "8281548851"
   },
   {
     "nome": "INNOVA SAFETY EQUIPAMENTOS LTDA",
@@ -517,7 +631,9 @@
     "vendedor": "DANIEL (11) 93930 4448",
     "fone_empresa": "(11)29629279",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(11) 3930-4448",
+    "telefone_clean": "1139304448"
   },
   {
     "nome": "INPLAST INDUSTRIAL DE PLÁSTICOS",
@@ -525,7 +641,9 @@
     "vendedor": "LAVINIA TEL. 9101 3902",
     "fone_empresa": "(79) 3024 9200",
     "email": "lalamcz@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8291013902",
+    "telefone_clean": "8291013902"
   },
   {
     "nome": "INSDUSTRIA E COMERCIO E COMERCIO",
@@ -533,7 +651,9 @@
     "vendedor": "YASMIM 82 3324 6923",
     "fone_empresa": "(82) 3324 1633",
     "email": "vendas@industriasucroquimica.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 3324-6923",
+    "telefone_clean": "8233246923"
   },
   {
     "nome": "INSTITUICAO DE PAGAMENTO",
@@ -549,7 +669,9 @@
     "vendedor": "Janayna TEL 98170 9116",
     "fone_empresa": "(82)98170 9116",
     "email": "jbezerra@intercement.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8170-9116",
+    "telefone_clean": "8281709116"
   },
   {
     "nome": "JL CONFECÇÕES DE UNIFORMES LTDA",
@@ -565,7 +687,9 @@
     "vendedor": "JÚNIOR P. Rachão 9973 0571",
     "fone_empresa": "(82)99730571",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299730571",
+    "telefone_clean": "8299730571"
   },
   {
     "nome": "KRONA TUBOS E CONEXÕES DO NORDESTE",
@@ -573,7 +697,9 @@
     "vendedor": "VERUSKA 99392 4848",
     "fone_empresa": "(82)98101 0017",
     "email": "Mettrus.krona@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293924848",
+    "telefone_clean": "8293924848"
   },
   {
     "nome": "LACA COMÉRCIO E TINTAS LTDA",
@@ -589,7 +715,9 @@
     "vendedor": "WILSON (82) 99674 6640",
     "fone_empresa": "(83)32446484",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296746640",
+    "telefone_clean": "8296746640"
   },
   {
     "nome": "LTDA LTDA",
@@ -597,7 +725,9 @@
     "vendedor": "ANDRE JERUEL TEL.99329 6815",
     "fone_empresa": "(79) 3114 4000",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8293296815",
+    "telefone_clean": "8293296815"
   },
   {
     "nome": "MINERAÇÃO LTDA LTDA",
@@ -613,7 +743,9 @@
     "vendedor": "PHILLIPE (82) 987097204",
     "fone_empresa": "(82)91324749",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8709-7204",
+    "telefone_clean": "8287097204"
   },
   {
     "nome": "MIXPEL COMÉRCIO E DISTRIBUIÇÃO",
@@ -629,7 +761,9 @@
     "vendedor": "PHILLIPE (82) 98709 7204",
     "fone_empresa": "(82) 2122 4750",
     "email": "vendas9@mixpelinfo.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8709-7204",
+    "telefone_clean": "8287097204"
   },
   {
     "nome": "O BORRACHÃO COMERCIAL LTDA",
@@ -637,7 +771,9 @@
     "vendedor": "SIDLEY (82) 99931 9041",
     "fone_empresa": "(82) 3304 1423",
     "email": "cotacao@oborrachao.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299319041",
+    "telefone_clean": "8299319041"
   },
   {
     "nome": "PARA CONSTRUÇÃO CIVIL CONSTRUÇÃO CIVIL LTDA",
@@ -645,7 +781,9 @@
     "vendedor": "JULIANA (54) 99138 7668",
     "fone_empresa": "(54) 3211 8700",
     "email": "comercial1@c3equipamentos.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "5491387668",
+    "telefone_clean": "5491387668"
   },
   {
     "nome": "PARAFUSOS LTDA - ME LTDA - ME",
@@ -653,7 +791,9 @@
     "vendedor": "EDSON central paraf 98815 2206",
     "fone_empresa": "(82) 3231 2281",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8815-2206",
+    "telefone_clean": "8288152206"
   },
   {
     "nome": "PARAGOMINAS HOME CENTER LTDA",
@@ -669,7 +809,9 @@
     "vendedor": "CLAUDIA 9164 4976 POINT",
     "fone_empresa": "(48)32792236",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8291644976",
+    "telefone_clean": "8291644976"
   },
   {
     "nome": "PBS S/A 592 - PBS S/A",
@@ -677,7 +819,9 @@
     "vendedor": "CLÁUDIA PORTOBELO 9164 4976",
     "fone_empresa": "(82) 3325 5041",
     "email": "portobelloengenhariamcz@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8291644976",
+    "telefone_clean": "8291644976"
   },
   {
     "nome": "PERFIL LÍDER METALÚRGICA LTDA",
@@ -685,7 +829,9 @@
     "vendedor": "MARCIO LEAL 81 9586 1424",
     "fone_empresa": "(11)24127787",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8195861424",
+    "telefone_clean": "8195861424"
   },
   {
     "nome": "PLASTECH INDÚSTRIA E COMÉRCIO",
@@ -693,7 +839,9 @@
     "vendedor": "MÔNICA CAMPOS71 3394.1459",
     "fone_empresa": "(71)33941459",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(71) 3394-1459",
+    "telefone_clean": "7133941459"
   },
   {
     "nome": "PLASTPUPIN COMÉRCIO DE PLÁSTICOS",
@@ -701,7 +849,9 @@
     "vendedor": "SAMUEL PUPIMN16 99742 0445",
     "fone_empresa": "(16)36269846",
     "email": "metalplastcompras@terra.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "1697420445",
+    "telefone_clean": "1697420445"
   },
   {
     "nome": "POLIMIX CONCRETO 1800 - POLIMIX CONCRETO LTDA",
@@ -709,7 +859,9 @@
     "vendedor": "BRUCE ANTONIO TEL 99412 6506",
     "fone_empresa": "(82) 3142 0736",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8294126506",
+    "telefone_clean": "8294126506"
   },
   {
     "nome": "PROT-SEG COMÉRCIO ATACADISTA LTDA",
@@ -717,7 +869,9 @@
     "vendedor": "CARLA 82 9665 0010",
     "fone_empresa": "(82)99970 2271",
     "email": "carla@protsegdistribuidora.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296650010",
+    "telefone_clean": "8296650010"
   },
   {
     "nome": "PROTFER COMÉRCIO E FERRAGENS",
@@ -725,7 +879,9 @@
     "vendedor": "JOELLITON 82 98864 8697",
     "fone_empresa": "(82) 3221 0522",
     "email": "joelliton_protfer@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8864-8697",
+    "telefone_clean": "8288648697"
   },
   {
     "nome": "PROTFER TELAS LTDA 74 - PROTFER TELAS LTDA",
@@ -733,7 +889,9 @@
     "vendedor": "JOELLITON TEL. 98864 8697",
     "fone_empresa": "(82) 3326 4606",
     "email": "joelliton_protfer@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8864-8697",
+    "telefone_clean": "8288648697"
   },
   {
     "nome": "PS COMÉRCIO DE FERRO E AÇO",
@@ -741,7 +899,9 @@
     "vendedor": "WAGNER MAIA 98186 4466",
     "fone_empresa": "(82) 4009 2324",
     "email": "robertojunior@aconordeste.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8186-4466",
+    "telefone_clean": "8281864466"
   },
   {
     "nome": "RESSEG DISTRIBUIDORA DE EPIs LTDA",
@@ -749,7 +909,9 @@
     "vendedor": "CAROLINE (82) 98829 0309",
     "fone_empresa": "(81) 3311 3060",
     "email": "vendas15@ressegdistribuidora.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8829-0309",
+    "telefone_clean": "8288290309"
   },
   {
     "nome": "SANEANTES LTDA",
@@ -757,7 +919,9 @@
     "vendedor": "JOSEANE (82) 98852 9650",
     "fone_empresa": "(82) 3221 8286",
     "email": "comercial2@higicleanmaceio.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8852-9650",
+    "telefone_clean": "8288529650"
   },
   {
     "nome": "SANITARIOS LTDA LTDA",
@@ -765,7 +929,9 @@
     "vendedor": "TARCISIO 99670 9444",
     "fone_empresa": "(82)99670 9444",
     "email": "tf.representacoes_al@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8296709444",
+    "telefone_clean": "8296709444"
   },
   {
     "nome": "SANTIAGO EQUIPAMENTOS DE INCÊNDIO",
@@ -773,7 +939,9 @@
     "vendedor": "Washington 11 95368 4951",
     "fone_empresa": "(11)24381509",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(11) 5368-4951",
+    "telefone_clean": "1153684951"
   },
   {
     "nome": "SERVICOS LTDA",
@@ -781,7 +949,9 @@
     "vendedor": "LUIS LMV MAQUINAS 99943 0888",
     "fone_empresa": "(82)35211456",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299430888",
+    "telefone_clean": "8299430888"
   },
   {
     "nome": "SMART CENTER COMÉRCIO DE MATERIAIS",
@@ -789,7 +959,9 @@
     "vendedor": "CHARLES MELO 981869547",
     "fone_empresa": "(42)31225050",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8186-9547",
+    "telefone_clean": "8281869547"
   },
   {
     "nome": "SOLUCOES EM GEOTECNIA",
@@ -797,7 +969,9 @@
     "vendedor": "LUANE TOT SOLO 11978112445",
     "fone_empresa": "(11)35008080",
     "email": "",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(11) 7811-2445",
+    "telefone_clean": "1178112445"
   },
   {
     "nome": "SOPREMA IMPERMEABILIZANTES LTDA",
@@ -805,7 +979,9 @@
     "vendedor": "Anderson Denver 9979 9339",
     "fone_empresa": "(82) 3338 8662",
     "email": "andersonrepal@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299799339",
+    "telefone_clean": "8299799339"
   },
   {
     "nome": "STECK DISTRIBUIDORA ELÉTRICA LTDA",
@@ -829,7 +1005,9 @@
     "vendedor": "YARA (82) 99946 0627",
     "fone_empresa": "(82) 3371 6155",
     "email": "toke_digital@outlook.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8299460627",
+    "telefone_clean": "8299460627"
   },
   {
     "nome": "UNICONEX CONEXÕES LTDA",
@@ -837,7 +1015,9 @@
     "vendedor": "Washington tel. 11 95368 4951",
     "fone_empresa": "(11) 2438 1509",
     "email": "contato@equipamentosparaincendio.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(11) 5368-4951",
+    "telefone_clean": "1153684951"
   },
   {
     "nome": "VEDACIT DO NORDESTE S.A.",
@@ -845,7 +1025,9 @@
     "vendedor": "JANE REP. VEDACIT 98833 6104",
     "fone_empresa": "(82) 3338 1933",
     "email": "vendas@britorepresentacoes.com.br",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8833-6104",
+    "telefone_clean": "8288336104"
   },
   {
     "nome": "VELÉTRICA DISTRIBUIDORA ELÉTRICA",
@@ -853,7 +1035,9 @@
     "vendedor": "EBERTON TEL. 3522 5770",
     "fone_empresa": "(82)99321 1557",
     "email": "ebertonsantos7391@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 3522-5770",
+    "telefone_clean": "8235225770"
   },
   {
     "nome": "VIAPOL LTDA",
@@ -861,7 +1045,9 @@
     "vendedor": "EDMUNDO JR. TEL.9 8107 9114",
     "fone_empresa": "(71) 3507 9900",
     "email": "junior.vendas.al@gmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8107-9114",
+    "telefone_clean": "8281079114"
   },
   {
     "nome": "VOTORANTIM CIMENTOS N/NE S.A.",
@@ -869,7 +1055,9 @@
     "vendedor": "Everson TEL 81 9601 9867",
     "fone_empresa": "(81)99601 9867",
     "email": "everson.bezerra@vcimentos.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "8196019867",
+    "telefone_clean": "8196019867"
   },
   {
     "nome": "W D B COMÉRCIO EIRELI",
@@ -877,6 +1065,8 @@
     "vendedor": "PATRICIA (82) 98862 2294",
     "fone_empresa": "(82) 3025 2838",
     "email": "patmcz@hotmail.com",
-    "qtd_pedidos": 1
+    "qtd_pedidos": 1,
+    "telefone": "(82) 8862-2294",
+    "telefone_clean": "8288622294"
   }
 ]
