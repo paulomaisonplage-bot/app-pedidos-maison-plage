@@ -16,12 +16,12 @@
 </head>
 <body>
 
-  <!-- TELA DE LOGIN POR PIN -->
+  <!-- TELA DE LOGIN COM PIN, OTP E SIMULADOR DE PERFIS -->
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
       <div class="login-logo">🏗️</div>
       <h1 class="login-title">Maison Plage</h1>
-      <p class="login-sub">Digite seu PIN de 4 dígitos para acessar:</p>
+      <p class="login-sub">Acesse via PIN ou Código enviado por E-mail:</p>
 
       <div class="pin-display">
         <span class="pin-dot" id="dot1"></span>
@@ -45,8 +45,20 @@
         <button class="pin-btn pin-action" onclick="app.submitPin()">➔</button>
       </div>
 
-      <div class="login-hint">
-        👑 <b>Admin Master:</b> PIN 8459 | 👷 <b>Campo:</b> PIN 1003
+      <!-- SIMULADOR DE TESTES DOS 4 PERFIS -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center;">🧪 Simulador de Perfis (Testes Rápidos):</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button class="btn-profile-test" onclick="app.quickLogin('admin')">👑 Admin Master</button>
+          <button class="btn-profile-test" onclick="app.quickLogin('engenharia')">🏗️ Engenharia</button>
+          <button class="btn-profile-test" onclick="app.quickLogin('administracao')">📦 Administração</button>
+          <button class="btn-profile-test" onclick="app.quickLogin('campo')">👷 Campo</button>
+        </div>
+      </div>
+
+      <!-- ACESSO POR CÓDIGO VIA E-MAIL -->
+      <div style="margin-top:16px;text-align:center;">
+        <button class="btn-email-otp" onclick="app.promptEmailLogin()">✉️ Entrar com Código por E-mail</button>
       </div>
     </div>
   </div>

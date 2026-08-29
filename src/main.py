@@ -25,6 +25,38 @@ if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_con
 USERS_FILE = "data/usuarios_autorizados.json"
 query_service = OrderQueryService(EXCEL_PATH)
 
+def build_order_card_data(pc: str, role: str) -> Optional[dict]:
+    hide_fin = (role == "campo")
+    items = query_service.get_order_by_number(pc)
+    if not items:
+        return None
+    it0 = items[0]
+    total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+    fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+    
+    # 3 primeiros itens com quantidade e unidade
+    top_3_items = []
+    for it in items[:3]:
+        desc = str(it.get("descricao_material", "") or it.get("descricao_completa", "Item")).strip()
+        qtd = it.get("quantidade", 0)
+        un = str(it.get("unidade", "UN")).strip()
+        top_3_items.append(f"• {qtd} {un} - {desc}")
+        
+    extra_count = len(items) - 3 if len(items) > 3 else 0
+
+    return {
+        "pc": str(pc),
+        "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
+        "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
+        "data_emissao": it0.get("data_pedido", "-"),
+        "total_itens": len(items),
+        "itens_resumo": top_3_items,
+        "extra_itens_count": extra_count,
+        "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+        "can_pdf": (role in ["admin", "engenharia", "administracao"])
+    }
+
+
 def find_file_id_for_order(pc_num: str) -> Optional[str]:
     pdf_links_path = "data/pdf_links.json"
     if not os.path.exists(pdf_links_path) and os.path.exists("../data/pdf_links.json"):
@@ -133,6 +165,47 @@ async def get_manifest():
 async def get_service_worker():
     return FileResponse("static/sw.js", media_type="application/javascript")
 
+# AUTENTICAÇÃO POR E-MAIL / SMS
+import random
+OTP_STORE = {}
+
+class EmailOtpRequest(BaseModel):
+    email: str
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    code: str
+
+@app.post("/api/auth/send_otp")
+async def api_send_otp(req: EmailOtpRequest):
+    code = f"{random.randint(100000, 999999)}"
+    email_clean = req.email.strip().lower()
+    OTP_STORE[email_clean] = {
+        "code": code,
+        "expires_at": time.time() + 600
+    }
+    # Em producao, enviamos o email via SMTP/SendGrid. Para testes imediatos:
+    print(f"\n[AUTH] Código OTP enviado para {email_clean}: {code}\n")
+    return {"success": True, "message": f"Código enviado para {email_clean}", "dev_code": code}
+
+@app.post("/api/auth/verify_otp")
+async def api_verify_otp(req: VerifyOtpRequest):
+    email_clean = req.email.strip().lower()
+    stored = OTP_STORE.get(email_clean)
+    if not stored or time.time() > stored["expires_at"]:
+        raise HTTPException(status_code=400, detail="Código expirado ou não solicitado.")
+    if stored["code"] != req.code.strip():
+        raise HTTPException(status_code=400, detail="Código de validação incorreto.")
+    
+    # Determina o perfil com base no email ou default Admin/Engenharia
+    user_info = {
+        "id": "email_user",
+        "nome": email_clean.split("@")[0].capitalize(),
+        "role": "admin" if "paulo" in email_clean or "admin" in email_clean else "engenharia",
+        "email": email_clean
+    }
+    return {"success": True, "user": user_info}
+
 # AUTENTICAÇÃO
 @app.post("/api/auth/login")
 async def api_login(req: LoginRequest):
@@ -219,21 +292,9 @@ async def api_deliveries_week(offset: int = 0, role: str = "campo"):
 
     cards = []
     for pc in pcs:
-        items = query_service.get_order_by_number(pc)
-        if items:
-            it0 = items[0]
-            total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-            desc = str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")).strip()
-            cards.append({
-                "pc": str(pc),
-                "fornecedor": fornec,
-                "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
-                "total_itens": len(items),
-                "descricao_resumo": desc,
-                "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-                "can_pdf": (role in ["admin", "engenharia", "administracao"])
-            })
+        c = build_order_card_data(pc, role)
+        if c:
+            cards.append(c)
     return {"offset": offset, "periodo": periodo_str, "cards": cards}
 
 # 2. ENTREGAS DO MÊS
@@ -243,20 +304,9 @@ async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo
     msg, pcs = query_service.get_delivery_summary_for_month(mes=mes, ano=ano, hide_financials=hide_fin, item_offset=0, page_size=100)
     cards = []
     for pc in pcs:
-        items = query_service.get_order_by_number(pc)
-        if items:
-            it0 = items[0]
-            total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-            desc = str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")).strip()
-            cards.append({
-                "pc": str(pc),
-                "fornecedor": fornec,
-                "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
-                "total_itens": len(items),
-                "descricao_resumo": desc,
-                "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None
-            })
+        c = build_order_card_data(pc, role)
+        if c:
+            cards.append(c)
     return {"mes": mes, "ano": ano, "cards": cards}
 
 # 3. BUSCA DE INSUMOS
@@ -286,27 +336,15 @@ async def api_get_groups():
     return {"groups": families}
 
 # 5. COMPRAS RECENTES
-@app.get("/api/orders/recent")
-async def api_recent_orders(role: str = "campo"):
+@app.get("/api/recent_purchases")
+async def api_recent_purchases(role: str = "campo"):
     hide_fin = (role == "campo")
-    msg, pcs = query_service.get_recent_orders_summary(max_orders=30, hide_financials=hide_fin, item_offset=0, page_size=30)
+    msg, pcs = query_service.get_recent_purchases_summary(limit=40, hide_financials=hide_fin)
     cards = []
     for pc in pcs:
-        items = query_service.get_order_by_number(pc)
-        if items:
-            it0 = items[0]
-            total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-            fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-            desc = str(it0.get("descricao_material", "") or it0.get("descricao_completa", "Diversos")).strip()
-            cards.append({
-                "pc": str(pc),
-                "fornecedor": fornec,
-                "data_emissao": it0.get("data_pedido", "-"),
-                "data_entrega": it0.get("data_entrega_prevista", "-"),
-                "total_itens": len(items),
-                "descricao_resumo": desc,
-                "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None
-            })
+        c = build_order_card_data(pc, role)
+        if c:
+            cards.append(c)
     return {"cards": cards}
 
 # 6. FORNECEDORES

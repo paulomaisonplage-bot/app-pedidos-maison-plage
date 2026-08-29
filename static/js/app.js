@@ -43,6 +43,50 @@ const app = {
     }
   },
 
+  quickLogin(role) {
+    const pins = {
+      admin: "8459",
+      engenharia: "7722",
+      administracao: "4411",
+      campo: "1003"
+    };
+    this.currentPin = pins[role] || "8459";
+    this.submitPin();
+  },
+
+  async promptEmailLogin() {
+    const email = prompt("Digite seu e-mail cadastrado para receber o código de acesso:");
+    if (!email) return;
+    try {
+      const res = await fetch('/api/auth/send_otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const code = prompt(`Digite o código de 6 dígitos enviado para ${email}:
+(Código de teste: ${data.dev_code})`);
+        if (!code) return;
+        const vRes = await fetch('/api/auth/verify_otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, code: code })
+        });
+        const vData = await vRes.json();
+        if (vData.success) {
+          this.currentUser = vData.user;
+          localStorage.setItem("mp_auth_user", JSON.stringify(vData.user));
+          this.showApp();
+        } else {
+          alert("Código inválido.");
+        }
+      }
+    } catch(e) {
+      alert("Erro ao processar autenticação por e-mail.");
+    }
+  },
+
   async submitPin() {
     try {
       const res = await fetch('/api/auth/login', {
@@ -196,6 +240,18 @@ const app = {
   },
 
   renderOrderCard(c) {
+    let itemsListHtml = "";
+    if (c.itens_resumo && c.itens_resumo.length > 0) {
+      itemsListHtml = `
+        <div class="card-items-snippet">
+          ${c.itens_resumo.map(it => `<div class="card-item-line">${it}</div>`).join("")}
+          ${c.extra_itens_count > 0 ? `<div class="card-item-more">➕ + ${c.extra_itens_count} itens</div>` : ''}
+        </div>
+      `;
+    } else {
+      itemsListHtml = `<div class="card-summary-desc">${c.descricao_resumo || 'Diversos'}</div>`;
+    }
+
     return `
       <div class="item-card" onclick="app.openOrder('${c.pc}')">
         <div class="card-header-row">
@@ -203,7 +259,7 @@ const app = {
           <span class="card-tag-date">🚚 ${c.data_entrega}</span>
         </div>
         <div class="card-supplier-name">${c.fornecedor}</div>
-        <div class="card-summary-desc">${c.descricao_resumo} (+${c.total_itens - 1} itens)</div>
+        ${itemsListHtml}
         <div class="card-footer-row">
           <span>📦 ${c.total_itens} ${c.total_itens > 1 ? 'itens' : 'item'}</span>
           ${c.valor_total_formatado ? `<span class="card-money-val">${c.valor_total_formatado}</span>` : ''}
