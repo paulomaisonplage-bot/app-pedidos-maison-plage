@@ -432,9 +432,60 @@ async def api_material_orders(nome: str, role: str = "campo"):
 
 # 4. GRUPOS DA OBRA
 @app.get("/api/groups")
-async def api_get_groups():
-    families = query_service.get_all_families_summary()
-    return {"groups": families}
+async def api_groups():
+    fams = query_service.get_all_families_summary()
+    return {"groups": fams}
+
+@app.get("/api/groups/orders")
+async def api_group_orders(familia: str, role: str = "campo"):
+    hide_fin = (role == "campo")
+    raw_dict = query_service.manager.load_existing_records()
+    fam_upper = familia.upper().strip()
+    
+    # Mapeia pedidos que contenham itens desta familia
+    pc_items_map = {}
+    for r in raw_dict.values():
+        pc = str(r.get("numero_pedido", "")).strip()
+        if not pc:
+            continue
+        if pc not in pc_items_map:
+            pc_items_map[pc] = []
+        pc_items_map[pc].append(r)
+        
+    matching_pcs = []
+    for pc, items in pc_items_map.items():
+        if any(fam_upper in str(i.get("familia_insumo", "") or "").upper() for i in items):
+            matching_pcs.append(pc)
+            
+    cards = []
+    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
+        items = pc_items_map[pc]
+        it0 = items[0]
+        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+        
+        top_3 = []
+        for it in items[:3]:
+            desc = str(it.get("descricao_material", "") or "").strip()
+            qtd = it.get("quantidade", 0)
+            un = str(it.get("unidade", "UN")).strip()
+            top_3.append(f"• {qtd} {un} - {desc}")
+            
+        extra_count = len(items) - 3 if len(items) > 3 else 0
+        
+        cards.append({
+            "pc": pc,
+            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
+            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
+            "data_emissao": it0.get("data_pedido", "-"),
+            "total_itens": len(items),
+            "itens_resumo": top_3,
+            "extra_itens_count": extra_count,
+            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+            "can_pdf": (role in ["admin", "engenharia", "administracao"])
+        })
+        
+    return {"familia": familia, "total_pedidos": len(cards), "cards": cards}
 
 # 5. COMPRAS RECENTES
 @app.get("/api/recent_purchases")

@@ -504,9 +504,25 @@ const app = {
   },
 
   async openGroupOrders(fam) {
-    this.setModule("search");
-    document.getElementById("searchInput").value = fam;
-    this.handleSearch(fam);
+    document.getElementById("matModalTitle").innerText = `📁 ${fam}`;
+    document.getElementById("matModalSub").innerText = "Carregando pedidos do grupo...";
+    const cardsDiv = document.getElementById("matOrdersCards");
+    cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Buscando pedidos...</div>';
+    document.getElementById("matOrdersModal").classList.add("show");
+    document.body.style.overflow = "hidden";
+
+    try {
+      const res = await fetch(`/api/groups/orders?familia=${encodeURIComponent(fam)}&role=${this.currentUser.role}`);
+      const data = await res.json();
+      document.getElementById("matModalSub").innerText = `${data.total_pedidos} Pedido(s) de Compra`;
+      if (!data.cards || data.cards.length === 0) {
+        cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido encontrado para este grupo.</div>';
+        return;
+      }
+      cardsDiv.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
+    } catch(e) {
+      cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar pedidos deste grupo.</div>';
+    }
   },
 
   async loadRecent() {
