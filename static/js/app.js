@@ -275,18 +275,62 @@ const app = {
 
   async loadGroups() {
     const grid = document.getElementById("groupsGrid");
-    grid.innerHTML = '<div style="grid-column:span 2;padding:20px;text-align:center;color:#94a3b8">Carregando grupos da obra...</div>';
+    grid.innerHTML = '<div style="grid-column:span 2;padding:20px;text-align:center;color:#94a3b8">⏳ Carregando Macro-Grupos da obra...</div>';
     try {
       const res = await fetch('/api/groups');
       const data = await res.json();
-      grid.innerHTML = data.groups.map(g => `
-        <div class="group-card" onclick="app.openGroupOrders('${g.familia}')">
-          <div class="group-name">${g.familia}</div>
-          <div class="group-count">📦 ${g.orders_count} pedidos • ${g.items_count} itens</div>
+      
+      const macroMap = {
+        "🏗️ Obra Grossa & Estrutura": ["BLOCOS", "PRODUTOS METÁLICOS", "AGREGADOS", "ARGAMASSAS", "MADEIRAS", "PRÉ-MOLDADOS", "ESTRUTURA"],
+        "⚡ Instalações Prediais": ["ELÉTRICAS", "HIDRÁULICAS", "INCÊNDIO", "GÁS", "TUBOS", "CONEXÕES", "FIAÇÃO"],
+        "🛡️ Acabamentos & Pintura": ["IMPERMEABILIZANTES", "TINTAS", "VERNIZES", "LOUÇAS", "METAIS", "PAVIMENTAÇÃO", "DRENAGEM"],
+        "🦺 Segurança, EPIs & Apoio": ["EPI", "EPC", "FERRAMENTAS", "EQUIPAMENTOS", "AUXILIARES", "LIMPEZA", "EXPEDIENTE"],
+        "🚜 Serviços & Esquadrias": ["ESQUADRIAS", "VIDROS", "SERVIÇOS", "LOCAÇÃO", "MÁQUINAS", "EMPREITADOS", "DIVERSOS"]
+      };
+
+      const groups = data.groups || [];
+      const macroCards = [];
+
+      for (const [macroName, keywords] of Object.entries(macroMap)) {
+        const subList = groups.filter(g => keywords.some(k => g.familia.toUpperCase().includes(k)));
+        const totOrders = subList.reduce((acc, curr) => acc + (curr.orders_count || 0), 0);
+        const totItems = subList.reduce((acc, curr) => acc + (curr.items_count || 0), 0);
+
+        macroCards.push({
+          title: macroName,
+          orders: totOrders,
+          items: totItems,
+          subs: subList
+        });
+      }
+
+      grid.innerHTML = macroCards.map((m, idx) => `
+        <div class="macro-group-card" onclick="app.toggleMacro(${idx})">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="macro-title">${m.title}</div>
+            <div class="macro-badge">${m.orders} pedidos</div>
+          </div>
+          <div class="macro-sub-info">📦 ${m.items} itens cadastrados • ${m.subs.length} subfamílias</div>
+          <div id="macroSubs_${idx}" class="macro-subs-container" style="display:none;margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;">
+            ${m.subs.map(s => `
+              <div class="macro-sub-item" onclick="event.stopPropagation(); app.openGroupOrders('${s.familia}')">
+                <span>📁 ${s.familia}</span>
+                <span style="color:#60a5fa;font-weight:700">${s.orders_count} peds</span>
+              </div>
+            `).join("")}
+          </div>
         </div>
       `).join("");
+
     } catch(e) {
       grid.innerHTML = '<div style="grid-column:span 2;padding:20px;text-align:center;color:#ef4444">Erro ao carregar grupos.</div>';
+    }
+  },
+
+  toggleMacro(idx) {
+    const el = document.getElementById(`macroSubs_${idx}`);
+    if (el) {
+      el.style.display = (el.style.display === "none") ? "block" : "none";
     }
   },
 

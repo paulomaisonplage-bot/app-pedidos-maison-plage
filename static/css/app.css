@@ -137,3 +137,12 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 /* BOTÃO DE PDF NO MODAL */
 .btn-pdf-action { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; text-decoration: none; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 13px; margin-top: 14px; box-shadow: 0 4px 15px rgba(37,99,235,0.4); }
 .btn-pdf-action:active { transform: scale(0.98); }
+
+/* MACRO GRUPOS */
+.macro-group-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; grid-column: span 2; }
+.macro-group-card:active { transform: scale(0.99); }
+.macro-title { font-size: 15px; font-weight: 800; color: #fff; }
+.macro-badge { background: rgba(37,99,235,0.2); color: #60a5fa; font-weight: 800; font-size: 11px; padding: 3px 8px; border-radius: 8px; }
+.macro-sub-info { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.macro-sub-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.macro-sub-item:active { background: rgba(37,99,235,0.3); }
