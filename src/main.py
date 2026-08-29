@@ -25,7 +25,26 @@ if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_con
 USERS_FILE = "data/usuarios_autorizados.json"
 query_service = OrderQueryService(EXCEL_PATH)
 
+def find_file_id_for_order(pc_num: str) -> Optional[str]:
+    pdf_links_path = "data/pdf_links.json"
+    if not os.path.exists(pdf_links_path) and os.path.exists("../data/pdf_links.json"):
+        pdf_links_path = "../data/pdf_links.json"
+    if os.path.exists(pdf_links_path):
+        try:
+            with open(pdf_links_path, "r", encoding="utf-8") as f:
+                cache = json.load(f)
+            for k, fid in cache.items():
+                if f"PedidoCompra{pc_num}_" in k or f"PedidoCompra{pc_num}." in k or f"PC_{pc_num}" in k:
+                    return fid
+            for k, fid in cache.items():
+                if str(pc_num) in k:
+                    return fid
+        except Exception:
+            pass
+    return None
+
 def find_supplier_contact(f_nome: str, f_cnpj: str = ""):
+
     catalog = load_all_suppliers_contacts()
     cnpj_clean = re.sub(r'[^0-9]', '', str(f_cnpj or ''))
     if cnpj_clean and len(cnpj_clean) == 14:
