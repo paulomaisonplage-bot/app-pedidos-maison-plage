@@ -195,11 +195,24 @@ const app = {
       document.getElementById("mOrderNum").innerText = `PC ${data.pc}`;
       document.getElementById("mFornec").innerText = data.fornecedor;
       
+      let contactHtml = "";
+      if (data.fornecedor_contato) {
+        const fc = data.fornecedor_contato;
+        contactHtml = `
+          <div class="modal-fornec-actions">
+            ${fc.telefone_clean ? `<a href="tel:${fc.telefone_clean}" class="btn-call">📞 Ligar</a>` : ''}
+            ${fc.email ? `<a href="mailto:${fc.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
+            ${fc.telefone_clean ? `<a href="https://wa.me/55${fc.telefone_clean}?text=Ol%C3%A1%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+          </div>
+        `;
+      }
+
       document.getElementById("mOrderMeta").innerHTML = `
         <div>🚚 <b>Entrega Prevista:</b> ${data.data_entrega}</div>
         <div>📅 <b>Emissão:</b> ${data.data_emissao}</div>
         ${data.condicao_pagamento ? `<div>💳 <b>Pagamento:</b> ${data.condicao_pagamento}</div>` : ''}
         ${data.valor_total_formatado ? `<div>💰 <b>Valor Total:</b> <span style="color:#10b981;font-weight:800">${data.valor_total_formatado}</span></div>` : ''}
+        ${contactHtml}
       `;
 
       document.getElementById("mItemsList").innerHTML = data.itens.map(it => `
@@ -389,8 +402,14 @@ const app = {
     }
   },
 
-  downloadExcel() {
-    window.location.href = `/api/export/excel?role=${this.currentUser.role}`;
+  async downloadExcel() {
+    const url = `/api/export/excel?role=${this.currentUser.role}`;
+    
+    // Tenta abrir em nova aba primeiro (padrão iOS)
+    const win = window.open(url, '_blank');
+    if (!win) {
+      window.location.href = url;
+    }
   },
 
   async loadTeam() {

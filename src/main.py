@@ -305,8 +305,22 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     
     it0 = items[0]
     total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-    fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+    fornec_nome = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
     
+    # Busca contato do fornecedor
+    catalog = load_all_suppliers_contacts()
+    fornec_contato = None
+    for f in catalog:
+        if f["nome"].strip().upper() in fornec_nome.upper() or fornec_nome.upper() in f["nome"].strip().upper():
+            tel = str(f.get("telefone", "") or "").strip()
+            fornec_contato = {
+                "telefone": tel if tel else None,
+                "telefone_clean": re.sub(r'[^0-9]', '', tel) if tel else None,
+                "email": f.get("email") if f.get("email") != "Não Informado" else None,
+                "vendedor": f.get("vendedor", "-")
+            }
+            break
+
     itens_formatados = []
     for it in items:
         itens_formatados.append({
@@ -320,7 +334,8 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
 
     return {
         "pc": str(pc_num),
-        "fornecedor": fornec,
+        "fornecedor": fornec_nome,
+        "fornecedor_contato": fornec_contato if not hide_fin else None,
         "data_emissao": it0.get("data_pedido", "-"),
         "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
         "condicao_pagamento": it0.get("condicao_pagamento", "Conforme Pedido") if not hide_fin else None,
@@ -329,7 +344,6 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
         "can_pdf": (role in ["admin", "engenharia", "administracao"])
     }
 
-# VISUALIZADOR E DOWNLOAD DE PDF ORIGINAL
 @app.get("/api/order/{pc_num}/pdf")
 async def api_order_pdf(pc_num: str, role: str = "campo"):
     if role == "campo":
