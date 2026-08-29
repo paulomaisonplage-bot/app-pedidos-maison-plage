@@ -25,13 +25,37 @@ if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_con
 USERS_FILE = "data/usuarios_autorizados.json"
 query_service = OrderQueryService(EXCEL_PATH)
 
+def find_supplier_contact(f_nome: str, f_cnpj: str = ""):
+    catalog = load_all_suppliers_contacts()
+    cnpj_clean = re.sub(r'[^0-9]', '', str(f_cnpj or ''))
+    if cnpj_clean and len(cnpj_clean) == 14:
+        for s in catalog:
+            s_cnpj = re.sub(r'[^0-9]', '', str(s.get('cnpj', '') or ''))
+            if s_cnpj == cnpj_clean:
+                return s
+                
+    clean_fn = re.sub(r'[^a-zA-Z0-9\s]', ' ', str(f_nome).lower()).strip()
+    stop_words = {'ltda', 'comercio', 'distribuidora', 'produtos', 'me', 'epp', 'sa', 'com', 'brasil', 'material', 'construcao', 'servicos'}
+    tokens = [t for t in clean_fn.split() if len(t) >= 3 and t not in stop_words]
+    
+    if not tokens:
+        tokens = [t for t in clean_fn.split() if len(t) >= 3]
+        
+    for s in catalog:
+        s_nome_clean = re.sub(r'[^a-zA-Z0-9\s]', ' ', s['nome'].lower()).strip()
+        if any(t in s_nome_clean for t in tokens):
+            return s
+            
+    return None
+
 def parse_supplier_dual_contacts(supplier_item: dict) -> dict:
+    if not supplier_item:
+        return {"vendedor": None, "empresa": None}
+        
     vend_raw = str(supplier_item.get("vendedor", "") or "").strip()
     tel_raw = str(supplier_item.get("telefone", "") or "").strip()
     email_raw = str(supplier_item.get("email", "") or "").strip()
     
-    # 1. Extrai dados do vendedor
-    # Ex: "MARCOS BIANA 82 996002588" -> nome: "MARCOS BIANA", tel: "82996002588"
     v_nome = vend_raw
     v_tel = ""
     v_tel_clean = ""
@@ -43,14 +67,12 @@ def parse_supplier_dual_contacts(supplier_item: dict) -> dict:
         p2 = m_tel.group(3).replace(" ", "")
         v_tel_clean = f"{ddd}{p1}{p2}"
         v_tel = f"({ddd}) {p1}-{p2}" if len(p1) == 5 else f"({ddd}) {p1[:4]}-{p1[4:]}{p2}"
-        # Remove telefone do nome do vendedor
         v_nome = vend_raw[:m_tel.start()].strip(" -:–tel.TEL.")
         if not v_nome:
             v_nome = "Vendedor Comercial"
     elif not v_nome or v_nome == "-":
         v_nome = "Atendimento Comercial"
 
-    # 2. Extrai dados da empresa (fixo / central / email)
     emp_tel = tel_raw if tel_raw and tel_raw != v_tel_clean else ""
     emp_tel_clean = re.sub(r'[^0-9]', '', emp_tel) if emp_tel else ""
     emp_email = email_raw if email_raw and email_raw != "Não Informado" else ""
@@ -67,26 +89,6 @@ def parse_supplier_dual_contacts(supplier_item: dict) -> dict:
             "email": emp_email if emp_email else None
         }
     }
-
-auth_service = AuthService(USERS_FILE)
-
-def find_file_id_for_order(pc_num: str) -> Optional[str]:
-    pdf_links_path = "data/pdf_links.json"
-    if not os.path.exists(pdf_links_path) and os.path.exists("../data/pdf_links.json"):
-        pdf_links_path = "../data/pdf_links.json"
-    if os.path.exists(pdf_links_path):
-        try:
-            with open(pdf_links_path, "r", encoding="utf-8") as f:
-                cache = json.load(f)
-            for k, fid in cache.items():
-                if f"PedidoCompra{pc_num}_" in k or f"PedidoCompra{pc_num}." in k or f"PC_{pc_num}" in k:
-                    return fid
-            for k, fid in cache.items():
-                if str(pc_num) in k:
-                    return fid
-        except Exception:
-            pass
-    return None
 
 class LoginRequest(BaseModel):
     pin: str
@@ -390,14 +392,11 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
     it0 = items[0]
     total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
     fornec_nome = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+    fornec_cnpj = str(it0.get("fornecedor_cnpj", "")).strip()
     
-    # Busca contato do fornecedor estruturado
-    catalog = load_all_suppliers_contacts()
-    fornec_contato = None
-    for f in catalog:
-        if f["nome"].strip().upper() in fornec_nome.upper() or fornec_nome.upper() in f["nome"].strip().upper():
-            fornec_contato = parse_supplier_dual_contacts(f)
-            break
+    # Busca contato estruturado do fornecedor com algoritmo inteligente
+    matched_sup = find_supplier_contact(fornec_nome, fornec_cnpj)
+    fornec_contato = parse_supplier_dual_contacts(matched_sup) if matched_sup else None
 
     itens_formatados = []
     for it in items:
@@ -421,7 +420,6 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
         "itens": itens_formatados,
         "can_pdf": (role in ["admin", "engenharia", "administracao"])
     }
-
 
 @app.get("/api/order/{pc_num}/pdf")
 async def api_order_pdf(pc_num: str, role: str = "campo"):

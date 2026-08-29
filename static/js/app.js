@@ -197,32 +197,40 @@ const app = {
       
       let contactHtml = "";
       if (data.contatos) {
-        const v = data.contatos.vendedor || {};
-        const emp = data.contatos.empresa || {};
-        contactHtml = `
-          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-            <div class="contact-sub-box">
-              <div class="contact-box-header">👤 <b>Vendedor da Obra:</b> ${v.nome}</div>
-              ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
-              <div class="sup-actions">
-                ${v.telefone_clean ? `<a href="tel:${v.telefone_clean}" class="btn-call">📞 Ligar Vendedor</a>` : ''}
-                ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome)}%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
-              </div>
-            </div>
+        const v = data.contatos.vendedor;
+        const emp = data.contatos.empresa;
+        
+        const hasVendor = v && (v.nome || v.telefone);
+        const hasCompany = emp && (emp.telefone || emp.email);
 
-            ${(emp.telefone || emp.email) ? `
-              <div class="contact-sub-box" style="background:rgba(255,255,255,0.02);">
-                <div class="contact-box-header">🏢 <b>Central da Empresa</b></div>
-                ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
-                ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
-                <div class="sup-actions">
-                  ${emp.telefone_clean ? `<a href="tel:${emp.telefone_clean}" class="btn-call" style="background:#475569;">☎️ Ligar Loja</a>` : ''}
-                  ${emp.email ? `<a href="mailto:${emp.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
+        if (hasVendor || hasCompany) {
+          contactHtml = `
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+              ${hasVendor ? `
+                <div class="contact-sub-box">
+                  <div class="contact-box-header">👤 <b>Vendedor:</b> ${v.nome || 'Atendimento'}</div>
+                  ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+                  <div class="sup-actions">
+                    ${v.telefone_clean ? `<a href="tel:${v.telefone_clean}" class="btn-call">📞 Ligar Vendedor</a>` : ''}
+                    ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome || '')}%2C%20referente%20ao%20Pedido%20PC%20${data.pc}%20da%20obra%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
-          </div>
-        `;
+              ` : ''}
+
+              ${hasCompany ? `
+                <div class="contact-sub-box" style="background:rgba(255,255,255,0.02);">
+                  <div class="contact-box-header">🏢 <b>Central da Empresa</b></div>
+                  ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo: <b>${emp.telefone}</b></div>` : ''}
+                  ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
+                  <div class="sup-actions">
+                    ${emp.telefone_clean ? `<a href="tel:${emp.telefone_clean}" class="btn-call" style="background:#475569;">☎️ Ligar Loja</a>` : ''}
+                    ${emp.email ? `<a href="mailto:${emp.email}?subject=Pedido%20de%20Compra%20PC%20${data.pc}%20-%20Residencial%20Maison%20Plage" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
       }
 
       document.getElementById("mOrderMeta").innerHTML = `
@@ -243,22 +251,15 @@ const app = {
         </div>
       `).join("");
 
-      
       if (data.can_pdf) {
         document.getElementById("mModalActions").innerHTML = `
-          <div style="display:flex;gap:8px;">
-            <button onclick="app.viewPdf('${data.pc}')" class="btn-pdf-action" style="margin-top:0;flex:2;">
-              👁️ Visualizar PDF no App
-            </button>
-            <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" download class="btn-pdf-action" style="margin-top:0;flex:1;background:#334155;">
-              📥 Baixar
-            </a>
-          </div>
+          <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action">
+            📄 Abrir PDF Oficial (PC ${data.pc})
+          </a>
         `;
       } else {
         document.getElementById("mModalActions").innerHTML = "";
       }
-
       document.getElementById("orderModal").classList.add("show");
     } catch(e) {
       alert("Erro ao abrir detalhes do pedido.");
