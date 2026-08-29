@@ -13,8 +13,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from src.query_service import OrderQueryService, load_all_suppliers_contacts
-from src.excel_manager import calculate_installments_for_item
+from src.excel_manager import calculate_installments_for_item, parse_date
 from src.auth_service import AuthService
+
 
 
 app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.20260829172549")
@@ -25,6 +26,13 @@ templates = Jinja2Templates(directory="templates")
 EXCEL_PATH = os.getenv("EXCEL_PATH", "data/pedidos_compra_consolidado.xlsx")
 if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_consolidado.xlsx"):
     EXCEL_PATH = "../data/pedidos_compra_consolidado.xlsx"
+
+def get_previous_month_cutoff_date() -> date:
+    hoje = date.today()
+    if hoje.month == 1:
+        return date(hoje.year - 1, 12, 1)
+    else:
+        return date(hoje.year, hoje.month - 1, 1)
 
 USERS_FILE = "data/usuarios_autorizados.json"
 query_service = OrderQueryService(EXCEL_PATH)
@@ -315,13 +323,18 @@ async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo
             cards.append(c)
     return {"mes": mes, "ano": ano, "cards": cards}
 
-# 3. CATÁLOGO ALFABÉTICO COMPLETO A-Z DE INSUMOS
+# 3. CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (DO MÊS ANTERIOR EM DIANTE)
 @app.get("/api/materials/catalog")
 async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] = None):
+    cutoff = get_previous_month_cutoff_date()
     raw_dict = query_service.manager.load_existing_records()
     
     insumos_map = {}
     for r in raw_dict.values():
+        dt_ent = (parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None)
+        if not dt_ent or dt_ent < cutoff:
+            continue
+            
         desc = str(r.get("descricao_material", "") or "").strip()
         cod = str(r.get("codigo_insumo", "") or "").strip()
         fam = str(r.get("familia_insumo", "04 DIVERSOS") or "04 DIVERSOS").strip()
@@ -347,15 +360,12 @@ async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] =
         if pc:
             insumos_map[key]["pedidos"].add(pc)
 
-    # Ordena alfabeticamente A-Z
     sorted_items = sorted(insumos_map.values(), key=lambda x: x["nome"].upper())
 
-    # Filtro por letra inicial
     if letter and letter.upper() != "TODOS":
         l_upper = letter.upper()
         sorted_items = [i for i in sorted_items if i["nome"].upper().startswith(l_upper)]
 
-    # Filtro por texto de busca
     if q:
         q_l = q.lower().strip()
         sorted_items = [i for i in sorted_items if q_l in i["nome"].lower() or q_l in i["codigo"].lower() or q_l in i["familia"].lower()]
@@ -382,12 +392,16 @@ async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] =
 @app.get("/api/materials/orders")
 async def api_material_orders(nome: str, role: str = "campo"):
     hide_fin = (role == "campo")
+    cutoff = get_previous_month_cutoff_date()
     raw_dict = query_service.manager.load_existing_records()
     mat_upper = nome.upper().strip()
     
-    # 1. Agrupa itens por PC na base inteira
     pc_items_map = {}
     for r in raw_dict.values():
+        dt_ent = (parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None)
+        if not dt_ent or dt_ent < cutoff:
+            continue
+            
         pc = str(r.get("numero_pedido", "")).strip()
         if not pc:
             continue
@@ -527,13 +541,12 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
 
     return {"suppliers": fornecs}
 
-# 7. FLUXO FINANCEIRO INTELIGENTE (PREVISÃO REAL DE DESEMBOLSO)
+# 7. FLUXO FINANCEIRO INTELIGENTE (PREVISÃO DO MÊS ANTERIOR EM DIANTE)
 @app.get("/api/financial/summary")
 async def api_financial_summary(role: str = "campo"):
     if role not in ["admin", "engenharia"]:
         raise HTTPException(status_code=403, detail="Acesso exclusivo para Engenharia e Administração.")
     
-    # 1. Varre toda a base para capturar 100% das parcelas com vencimento >= Junho/2026
     raw_dict = query_service.manager.load_existing_records()
     all_raw_records = list(raw_dict.values())
     
@@ -541,9 +554,11 @@ async def api_financial_summary(role: str = "campo"):
     for r in all_raw_records:
         all_insts.extend(calculate_installments_for_item(r))
         
-    monthly_vals = {6: 0.0, 7: 0.0, 8: 0.0, 9: 0.0, 10: 0.0, 11: 0.0, 12: 0.0}
-    month_short = {6: "Jun", 7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez"}
-    month_names = {6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
+    cutoff = get_previous_month_cutoff_date()
+    # Mapeia os meses a partir do mes anterior (Julho=7 ate Dezembro=12)
+    start_m = cutoff.month
+    monthly_vals = {m: 0.0 for m in range(start_m, 13)}
+    month_names = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
     
     total_desembolso_periodo = 0.0
     for i in all_insts:
@@ -553,25 +568,23 @@ async def api_financial_summary(role: str = "campo"):
             monthly_vals[dt_venc.month] += val
             total_desembolso_periodo += val
 
-    val_ago = monthly_vals[8]
+    val_ago = monthly_vals.get(8, 0.0)
     val_futuro = sum(v for m, v in monthly_vals.items() if m >= 9)
     max_month_val = max(monthly_vals.values()) or 1.0
 
     bars = []
-    for m in range(6, 13):
+    for m in range(start_m, 13):
         v = monthly_vals[m]
-        pct = (v / max_month_val) * 100
+        pct = (v / total_desembolso_periodo * 100) if total_desembolso_periodo > 0 else 0
         bars.append({
             "mes_num": m,
-            "mes_short": month_short[m],
             "mes_nome": month_names[m],
             "valor_fmt": f"R${v:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "valor_compacto": f"R${(v/1000):,.1f}k".replace(",", "X").replace(".", ",").replace("X", ".") if v >= 1000 else f"R${v:,.0f}",
             "pct": round(pct, 1),
             "is_current": (m == 8)
         })
 
-    # 2. Distribuição por Macro-Grupos (Considerando os registros >= Junho/2026)
+    # Macro-Grupos
     MACRO_GROUPS = [
         {"name": "Obra Grossa & Estrutura", "icon": "🏗️", "sub": ["01 AGREGADOS", "02 ARTEFATOS", "03 BLOCOS", "15 MADEIRA", "18 MISTURAS", "20 PAVIMENTA", "23 PRODUTOS METALICOS", "34 ARGAMASSAS", "36 TELHAS", "39 VEDA"], "total": 0.0, "color": "#3b82f6"},
         {"name": "Instalações Prediais", "icon": "⚡", "sub": ["07 ENERGIA", "12 INSTAL.HIDRAULICA", "13 INSTALA", "14 LOU", "24 PVC", "28 INST. DE INCENDIO", "42 INST. DE REFRIGERA", "43 INST. DE G"], "total": 0.0, "color": "#10b981"},
@@ -580,10 +593,10 @@ async def api_financial_summary(role: str = "campo"):
         {"name": "Serviços & Equipamentos", "icon": "🚜", "sub": ["06 ALUGUEL", "08 ESQUADRIAS METALICAS", "26 SERVI", "31 ESQUADRIAS DE MADEIRA", "01 Equipamentos Aluguel", "02 Equipamentos", "01 Verbas", "02 Servi"], "total": 0.0, "color": "#ec4899"}
     ]
 
-    records_pos_junho = query_service._get_all_records()
-    total_contratado_compras = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records_pos_junho)
+    records_pos_corte = [r for r in all_raw_records if ((parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None) or date.min) >= cutoff]
+    total_contratado_compras = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records_pos_corte)
 
-    for r in records_pos_junho:
+    for r in records_pos_corte:
         fam_raw = str(r.get("familia_insumo", "") or "").upper()
         val = float(r.get("preco_total_item", 0.0) or 0.0)
         alloc = False

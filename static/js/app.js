@@ -602,7 +602,7 @@ const app = {
         <!-- 1. CARDS DE INDICADORES (KPIS DE PREVISÃO) -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
           <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;">
-            <div class="fin-kpi-label">💰 Previsão Total de Desembolso (>= Jun/26)</div>
+            <div class="fin-kpi-label">💰 Previsão Total de Desembolso (Jul a Dez/26)</div>
             <div class="fin-kpi-value" style="color:#60a5fa;font-size:22px;">${kpis.total_desembolso}</div>
           </div>
           <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;">
@@ -615,21 +615,23 @@ const app = {
           </div>
         </div>
 
-        <!-- 2. GRÁFICO VISUAL EM COLUNAS VERTICAIS (FLUXO DE CAIXA MÊS A MÊS) -->
+        <!-- 2. PAINEL EM BARRAS HORIZONTAIS NEON (OPÇÃO 01) -->
         <div class="fin-section-box">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <div class="fin-section-title">📈 Previsão de Desembolso Mensal (2026)</div>
+            <div class="fin-section-title">📈 Previsão de Desembolso Mês a Mês</div>
             <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:6px;">Base: Data de Entrega</div>
           </div>
           
-          <div class="fin-chart-columns-container">
+          <div style="display:flex;flex-direction:column;gap:12px;">
             ${bars.map(b => `
-              <div class="fin-col-wrapper ${b.is_current ? 'current-month-col' : ''}">
-                <div class="fin-col-val">${b.valor_compacto}</div>
-                <div class="fin-col-track">
-                  <div class="fin-col-bar ${b.is_current ? 'bar-current' : ''}" style="height:${Math.max(b.pct, 4)}%;"></div>
+              <div class="fin-neon-row ${b.is_current ? 'neon-current-row' : ''}">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin-bottom:6px;">
+                  <span style="${b.is_current ? 'color:#fbbf24;font-size:13px;' : 'color:#fff;'}">${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/2026${b.is_current ? ' ⭐ (Mês Atual)' : ''}</span>
+                  <span style="${b.is_current ? 'color:#fbbf24;' : 'color:#10b981;'}">${b.valor_fmt} <span style="color:#94a3b8;font-size:11px;font-weight:600;">(${b.pct}%)</span></span>
                 </div>
-                <div class="fin-col-label">${b.mes_short}</div>
+                <div class="fin-neon-track">
+                  <div class="fin-neon-fill ${b.is_current ? 'fill-gold' : 'fill-cyan'}" style="width:${Math.max(b.pct, 3)}%;"></div>
+                </div>
               </div>
             `).join("")}
           </div>
