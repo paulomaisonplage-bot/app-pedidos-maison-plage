@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from src.query_service import OrderQueryService, load_all_suppliers_contacts
 from src.auth_service import AuthService
 
-app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.0")
+app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.20260829172549")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
