@@ -149,3 +149,18 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 
 /* CONTATOS NO MODAL DO PEDIDO */
 .modal-fornec-actions { display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; }
+
+/* VISUALIZADOR DE PDF */
+.pdf-sheet { height: 92vh; max-height: 92vh; display: flex; flex-direction: column; }
+.pdf-frame-wrapper { flex: 1; width: 100%; height: 100%; border-radius: 14px; overflow: hidden; background: #fff; margin-top: 10px; }
+.pdf-frame-wrapper iframe { width: 100%; height: 100%; border: none; }
+.btn-share-pdf { background: #2563eb; color: #fff; border: none; padding: 6px 12px; border-radius: 10px; font-weight: 700; font-size: 11px; cursor: pointer; }
+
+/* VISUALIZADOR DE EXCEL */
+.excel-header-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.btn-download-action { background: #059669; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.excel-table-container { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); overflow-x: auto; max-height: 65vh; }
+.excel-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; white-space: nowrap; }
+.excel-table th { background: #0f172a; color: #94a3b8; padding: 10px 12px; font-weight: 700; border-bottom: 1px solid var(--surface-border); position: sticky; top: 0; }
+.excel-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.excel-table tr:active { background: rgba(37,99,235,0.15); cursor: pointer; }

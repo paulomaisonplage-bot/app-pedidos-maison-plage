@@ -225,15 +225,22 @@ const app = {
         </div>
       `).join("");
 
+      
       if (data.can_pdf) {
         document.getElementById("mModalActions").innerHTML = `
-          <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action">
-            📄 Visualizar / Baixar PDF Original (PC ${data.pc})
-          </a>
+          <div style="display:flex;gap:8px;">
+            <button onclick="app.viewPdf('${data.pc}')" class="btn-pdf-action" style="margin-top:0;flex:2;">
+              👁️ Visualizar PDF no App
+            </button>
+            <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" download class="btn-pdf-action" style="margin-top:0;flex:1;background:#334155;">
+              📥 Baixar
+            </a>
+          </div>
         `;
       } else {
         document.getElementById("mModalActions").innerHTML = "";
       }
+
       document.getElementById("orderModal").classList.add("show");
     } catch(e) {
       alert("Erro ao abrir detalhes do pedido.");
@@ -410,6 +417,88 @@ const app = {
     if (!win) {
       window.location.href = url;
     }
+  },
+
+  currentPdfUrl: "",
+  currentPdfName: "",
+
+  viewPdf(pc) {
+    const url = `/api/order/${pc}/pdf?role=${this.currentUser.role}`;
+    this.currentPdfUrl = url;
+    this.currentPdfName = `PC_${pc}.pdf`;
+
+    document.getElementById("pdfViewerTitle").innerText = `Pedido PC ${pc}`;
+    document.getElementById("pdfViewerSub").innerText = `Documento Oficial Sienge`;
+    document.getElementById("pdfFrame").src = url;
+    document.getElementById("pdfViewerModal").classList.add("show");
+  },
+
+  closePdfViewer() {
+    document.getElementById("pdfViewerModal").classList.remove("show");
+    document.getElementById("pdfFrame").src = "";
+  },
+
+  async sharePdf() {
+    if (!this.currentPdfUrl) return;
+    try {
+      if (navigator.share) {
+        const res = await fetch(this.currentPdfUrl);
+        const blob = await res.blob();
+        const file = new File([blob], this.currentPdfName, { type: "application/pdf" });
+        await navigator.share({
+          files: [file],
+          title: this.currentPdfName,
+          text: `Segue PDF do ${this.currentPdfName} da obra Maison Plage`
+        });
+      } else {
+        window.open(this.currentPdfUrl, '_blank');
+      }
+    } catch(e) {
+      window.open(this.currentPdfUrl, '_blank');
+    }
+  },
+
+  excelDataCache: null,
+
+  async loadExcelViewer(query = "") {
+    const tbody = document.getElementById("excelTableBody");
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">⏳ Carregando visualizador de planilha...</td></tr>';
+    
+    try {
+      const qParam = query ? `&q=${encodeURIComponent(query)}` : '';
+      const res = await fetch(`/api/excel/preview?role=${this.currentUser.role}${qParam}`);
+      const data = await res.json();
+      
+      this.excelDataCache = data;
+      document.getElementById("excelMetrics").innerHTML = `📦 <b>${data.total_pedidos}</b> pedidos • <b>${data.total_linhas}</b> itens • Total: <span style="color:#10b981;font-weight:800">${data.valor_total_formatado}</span>`;
+
+      if (!data.linhas || data.linhas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">Nenhum registro encontrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.linhas.map(row => `
+        <tr onclick="app.openOrder('${row.pc}')">
+          <td style="font-weight:800;color:#60a5fa">PC ${row.pc}</td>
+          <td style="font-weight:600">${row.fornecedor}</td>
+          <td>${row.material}</td>
+          <td style="color:#94a3b8">${row.quantidade} ${row.unidade}</td>
+          <td style="font-weight:800;color:#10b981">${row.valor_total}</td>
+          <td style="font-size:11px;color:#f59e0b">${row.entrega}</td>
+        </tr>
+      `).join("");
+
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#ef4444">Erro ao carregar planilha.</td></tr>';
+    }
+  },
+
+  filterExcelTimer: null,
+  filterExcel(val) {
+    clearTimeout(this.filterExcelTimer);
+    this.filterExcelTimer = setTimeout(() => {
+      this.loadExcelViewer(val.trim());
+    }, 300);
   },
 
   async loadTeam() {

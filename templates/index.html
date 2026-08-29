@@ -86,7 +86,7 @@
         <button class="module-tab" id="tabSuppliers" onclick="app.setModule('suppliers')">📞 Fornecedores</button>
         <button class="module-tab" id="tabFinancial" onclick="app.setModule('financial')">💰 Financeiro</button>
         <button class="module-tab" id="tabTeam" onclick="app.setModule('team')" style="display:none;">👥 Equipe</button>
-        <a href="/api/export/excel?role=admin" class="module-tab" id="tabExport" download>📥 Excel</a>
+        <button class="module-tab" id="tabExport" onclick="app.setModule('excel')">📊 Planilha</button>
       </nav>
     </header>
 
@@ -164,6 +164,39 @@
         <div class="cards-list" id="teamCards"></div>
       </section>
 
+    
+      <!-- MODULO: VISUALIZADOR DE EXCEL INTEGRADO -->
+      <section id="modExcel" class="app-module" style="display:none;">
+        <div class="excel-header-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div>
+              <div style="font-size:16px;font-weight:800;color:#fff;">📊 Planilha Geral da Obra</div>
+              <div id="excelMetrics" style="font-size:11px;color:var(--text-muted);margin-top:2px;">Carregando dados...</div>
+            </div>
+            <button class="btn-download-action" onclick="app.downloadExcel()">📥 Baixar .xlsx</button>
+          </div>
+          <input type="search" id="excelSearchInput" class="search-input" placeholder="🔍 Filtrar por pedido, fornecedor, insumo..." oninput="app.filterExcel(this.value)">
+        </div>
+
+        <div class="excel-table-container">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th>PC</th>
+                <th>Fornecedor</th>
+                <th>Insumo / Material</th>
+                <th>Qtd</th>
+                <th>Total Item</th>
+                <th>Entrega</th>
+              </tr>
+            </thead>
+            <tbody id="excelTableBody">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">Carregando planilha...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -218,5 +251,25 @@
   </div>
 
   <script src="/static/js/app.js"></script>
+
+  <!-- MODAL DE VISUALIZADOR DE PDF INTEGRADO -->
+  <div id="pdfViewerModal" class="modal-backdrop">
+    <div class="modal-sheet pdf-sheet">
+      <div class="modal-head">
+        <div>
+          <div id="pdfViewerTitle" class="order-number">Visualizador de PDF</div>
+          <div id="pdfViewerSub" class="order-fornec">Documento Oficial</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-share-pdf" onclick="app.sharePdf()">📤 Compartilhar</button>
+          <button class="btn-close" onclick="app.closePdfViewer()">✕</button>
+        </div>
+      </div>
+      <div class="pdf-frame-wrapper">
+        <iframe id="pdfFrame" src="" frameborder="0"></iframe>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
