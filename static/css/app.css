@@ -95,9 +95,12 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .supplier-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
 .sup-name { font-weight: 800; color: #60a5fa; font-size: 14px; margin-bottom: 6px; }
 .sup-info { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-.sup-actions { display: flex; gap: 8px; margin-top: 10px; }
-.btn-call { background: #2563eb; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px; }
-.btn-wpp { background: #059669; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+.sup-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn-call { background: #2563eb; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-mail { background: #7c3aed; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-wpp { background: #059669; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-call:active, .btn-mail:active, .btn-wpp:active { transform: scale(0.96); opacity: 0.9; }
+
 
 /* FINANCEIRO */
 .financial-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 16px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }

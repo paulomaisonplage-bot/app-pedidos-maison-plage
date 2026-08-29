@@ -322,10 +322,12 @@ const app = {
           <div class="sup-info">👤 <b>Vendedor:</b> ${s.contato_vendedor}</div>
           <div class="sup-actions">
             ${s.telefone_clean ? `<a href="tel:${s.telefone_clean}" class="btn-call">📞 Ligar</a>` : ''}
+            ${s.email && s.email !== 'Não Informado' ? `<a href="mailto:${s.email}?subject=Maison%20Plage%20-%20Consulta%20de%20Pedidos" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
             ${s.telefone_clean ? `<a href="https://wa.me/55${s.telefone_clean}" target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
           </div>
         </div>
       `).join("");
+
     } catch(e) {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar fornecedores.</div>';
     }
