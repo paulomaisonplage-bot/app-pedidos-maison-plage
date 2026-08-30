@@ -9,6 +9,7 @@ const app = {
   currentMonth: 8,
 
   init() {
+    // 1. Verifica convite na URL
     const urlParams = new URLSearchParams(window.location.search);
     const inviteToken = urlParams.get('convite') || urlParams.get('invite');
     if (inviteToken) {
@@ -16,19 +17,27 @@ const app = {
       return;
     }
     
+    // 2. Verifica usuário autenticado salvo
+    const savedUser = localStorage.getItem("mp_auth_user");
+    if (savedUser) {
+      try {
+        this.currentUser = JSON.parse(savedUser);
+        this.showApp();
+        return;
+      } catch(e) {
+        localStorage.removeItem("mp_auth_user");
+      }
+    }
+
+    // 3. Verifica se há solicitação pendente
     const savedReq = localStorage.getItem("mp_pending_req_id");
-    if (savedReq && !saved) {
+    if (savedReq) {
       this.showPendingInviteScreen(savedReq);
       return;
     }
 
-    const saved = localStorage.getItem("mp_auth_user");
-    if (saved) {
-      this.currentUser = JSON.parse(saved);
-      this.showApp();
-    } else {
-      this.showLogin();
-    }
+    // 4. Exibe tela de login padrão
+    this.showLogin();
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');
