@@ -3,6 +3,8 @@ const app = {
   currentPin: "",
   currentUser: null,
   activeModule: "week",
+  clientTabLoaded: {},
+  orderDetailCache: {},
   clientTabCache: { loaded: {} },
   orderDetailCache: {},
   weekOffset: 0,
@@ -185,15 +187,19 @@ const app = {
     };
     if (secMap[mod]) secMap[mod].classList.add("active");
 
-    if (mod === "week") this.loadWeek();
-    if (mod === "month") this.loadMonth();
-    if (mod === "search") this.loadCatalogAZ();
-    if (mod === "groups") this.loadGroups();
-    if (mod === "recent") this.loadRecent();
-    if (mod === "suppliers") this.loadSuppliers();
-    if (mod === "financial") this.loadFinancial();
-    if (mod === "team") this.loadTeam();
-    if (mod === "excel") this.loadExcelViewer();
+    // Se a aba ainda não foi carregada nesta sessão, carrega os dados
+    if (!this.clientTabLoaded[mod]) {
+      this.clientTabLoaded[mod] = true;
+      if (mod === "week") this.loadWeek();
+      else if (mod === "month") this.loadMonth();
+      else if (mod === "search") this.loadCatalogAZ();
+      else if (mod === "groups") this.loadGroups();
+      else if (mod === "recent") this.loadRecent();
+      else if (mod === "suppliers") this.loadSuppliers();
+      else if (mod === "financial") this.loadFinancial();
+      else if (mod === "team") this.loadTeam();
+      else if (mod === "excel") this.loadExcelViewer();
+    }
   },
 
   async loadWeek() {
@@ -285,12 +291,10 @@ const app = {
   },
 
   async openOrder(pc) {
-    // Se já estiver em cache, renderiza imediatamente sem delay
     if (this.orderDetailCache[pc]) {
       this.renderOrderModal(this.orderDetailCache[pc]);
       return;
     }
-
     try {
       const res = await fetch(`/api/order/${pc}?role=${this.currentUser.role}`);
       const data = await res.json();
