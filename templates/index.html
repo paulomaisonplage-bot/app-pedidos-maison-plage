@@ -64,13 +64,15 @@
       <h1 class="login-title" style="font-size:22px;">Maison Plage</h1>
       <p class="login-sub" style="font-size:12px;margin-bottom:20px;">Acesso Exclusivo à Obra</p>
 
-      <div style="margin-bottom:16px;">
-        <input type="password" id="nativePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="• • • •" class="search-input" style="font-size:24px;letter-spacing:10px;text-align:center;font-weight:800;color:#60a5fa;padding:12px;background:rgba(0,0,0,0.3);" onkeyup="if(this.value.length===4) app.submitNativePin()">
-      </div>
+      <form onsubmit="event.preventDefault(); app.submitNativePin();" style="width:100%;">
+        <div style="margin-bottom:16px;">
+          <input type="tel" id="nativePinInput" maxlength="4" placeholder="• • • •" class="search-input" style="font-size:26px;letter-spacing:12px;text-align:center;font-weight:800;color:#60a5fa;padding:14px;background:rgba(0,0,0,0.35);border:1px solid #3b82f6;" oninput="if(this.value.length===4) app.submitNativePin()" autofocus>
+        </div>
 
-      <button class="btn-pdf-action" onclick="app.submitNativePin()" style="width:100%;padding:14px;font-size:14px;border:none;cursor:pointer;">
-        ➔ Entrar no App
-      </button>
+        <button type="submit" id="btnEnterApp" class="btn-pdf-action" style="width:100%;padding:14px;font-size:14px;border:none;cursor:pointer;">
+          ➔ Entrar no App
+        </button>
+      </form>
 
       <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
         <div style="font-size:11px;color:#94a3b8;line-height:1.5;">

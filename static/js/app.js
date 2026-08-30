@@ -103,10 +103,17 @@ const app = {
   },
 
   async submitNativePin() {
-    const pin = document.getElementById("nativePinInput").value.trim();
+    const pinInput = document.getElementById("nativePinInput");
+    const btn = document.getElementById("btnEnterApp");
+    if (!pinInput) return;
+    const pin = pinInput.value.trim();
     if (pin.length !== 4) {
       alert("Por favor, digite seu PIN de 4 dígitos.");
       return;
+    }
+    if (btn) {
+      btn.innerText = "⏳ Entrando...";
+      btn.style.opacity = "0.7";
     }
     try {
       const res = await fetch('/api/auth/login', {
@@ -121,10 +128,18 @@ const app = {
         this.showApp();
       } else {
         alert(data.detail || "PIN incorreto.");
-        document.getElementById("nativePinInput").value = "";
+        pinInput.value = "";
+        if (btn) {
+          btn.innerText = "➔ Entrar no App";
+          btn.style.opacity = "1";
+        }
       }
     } catch(e) {
       alert("Erro ao validar PIN.");
+      if (btn) {
+        btn.innerText = "➔ Entrar no App";
+        btn.style.opacity = "1";
+      }
     }
   },
 
