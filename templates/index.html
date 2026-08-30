@@ -62,26 +62,39 @@
     <div class="login-box">
       <div class="login-logo">🏗️</div>
       <h1 class="login-title">Maison Plage</h1>
-      <p class="login-sub">Digite seu PIN de 4 dígitos para entrar:</p>
+      <p class="login-sub">Digite seu PIN de 4 dígitos:</p>
 
-      <form onsubmit="event.preventDefault(); app.submitNativePin();" style="width:100%;display:flex;flex-direction:column;align-items:center;">
-        <div style="width:100%;max-width:240px;margin:0 auto 16px auto;">
-          <input type="tel" id="nativePinInput" maxlength="4" placeholder="_ _ _ _" class="search-input" style="width:100%;font-size:28px;text-align:center;font-weight:800;color:#60a5fa;padding:14px;background:rgba(0,0,0,0.35);border:1px solid #3b82f6;border-radius:14px;outline:none;letter-spacing:8px;" oninput="if(this.value.replace(/\D/g,'').length>=4){this.value=this.value.replace(/\D/g,'').slice(0,4);app.submitNativePin();}">
-        </div>
+      <div style="width:100%;max-width:220px;margin:0 auto 16px auto;">
+        <input
+          type="tel"
+          id="pinInput"
+          maxlength="4"
+          inputmode="numeric"
+          placeholder="_ _ _ _"
+          style="width:100%;font-size:32px;text-align:center;font-weight:900;color:#60a5fa;padding:16px 12px;background:rgba(96,165,250,0.08);border:2px solid #3b82f6;border-radius:16px;outline:none;letter-spacing:12px;box-sizing:border-box;"
+          oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4){ doLogin(); }"
+        >
+      </div>
 
-        <button type="button" id="btnEnterApp" onclick="app.submitNativePin()" class="btn-pdf-action" style="width:100%;max-width:240px;margin:0 auto;padding:14px;font-size:15px;border:none;cursor:pointer;font-weight:800;">
-          Entrar no App
-        </button>
-      </form>
+      <button
+        id="btnLogin"
+        style="width:100%;max-width:220px;display:block;margin:0 auto;padding:15px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;border-radius:16px;cursor:pointer;box-shadow:0 4px 15px rgba(37,99,235,0.4);"
+        onclick="doLogin()"
+      >
+        Entrar
+      </button>
 
-      <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+      <p id="loginError" style="color:#ef4444;font-size:12px;margin-top:12px;text-align:center;display:none;">PIN incorreto. Tente novamente.</p>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
         <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
-          🔒 <b>Acesso Exclusivo à Obra</b><br>
-          Novo na equipe? Solicite um link de convite ao Administrador Paulo.
+          🔒 Acesso exclusivo à Obra Maison Plage<br>
+          Novo? Solicite link de convite ao Administrador Paulo.
         </div>
       </div>
     </div>
   </div>
+
 
   <!-- APLICAÇÃO PRINCIPAL (EXIBIDA APÓS O LOGIN) -->
   <div id="appContainer" class="app-container" style="display:none;">
@@ -297,10 +310,77 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=20260830_2145"></script>
+  <script src="/static/js/app.js?v=20260830_2200"></script>
   <script>
+    // ── FUNÇÃO DE LOGIN GLOBAL E AUTOSSUFICIENTE ──
+    // Não depende de app.init() nem de nenhum estado externo.
+    async function doLogin() {
+      var pinEl = document.getElementById('pinInput');
+      var btn   = document.getElementById('btnLogin');
+      var errEl = document.getElementById('loginError');
+      if (!pinEl) return;
+
+      var pin = pinEl.value.replace(/[^0-9]/g, '');
+      if (pin.length !== 4) {
+        errEl.style.display = 'block';
+        errEl.innerText = 'Digite os 4 dígitos completos.';
+        return;
+      }
+
+      btn.innerText = 'Aguarde...';
+      btn.disabled  = true;
+      errEl.style.display = 'none';
+
+      try {
+        var res  = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: pin })
+        });
+        var data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('mp_auth_user', JSON.stringify(data.user));
+          // Inicia o app com o usuário logado
+          app.currentUser = data.user;
+          app.showApp();
+        } else {
+          errEl.style.display = 'block';
+          errEl.innerText = 'PIN incorreto. Tente novamente.';
+          pinEl.value = '';
+          btn.innerText = 'Entrar';
+          btn.disabled  = false;
+        }
+      } catch(e) {
+        errEl.style.display = 'block';
+        errEl.innerText = 'Erro de conexão. Verifique sua internet.';
+        btn.innerText = 'Entrar';
+        btn.disabled  = false;
+      }
+    }
+
+    // ── INICIALIZAÇÃO: APENAS VERIFICA SESSÃO SALVA ──
     document.addEventListener('DOMContentLoaded', function() {
-      app.init();
+      var saved = localStorage.getItem('mp_auth_user');
+      if (saved) {
+        try {
+          app.currentUser = JSON.parse(saved);
+          app.showApp();
+          return;
+        } catch(e) {
+          localStorage.removeItem('mp_auth_user');
+        }
+      }
+      // Sem sessão: mostra tela de login (já visível por padrão)
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('appContainer').style.display = 'none';
+
+      // Verifica invite na URL
+      var params = new URLSearchParams(window.location.search);
+      var token  = params.get('convite') || params.get('invite');
+      if (token && typeof app !== 'undefined') {
+        app.handleInviteEntry(token);
+      }
     });
   </script>
 
