@@ -312,8 +312,7 @@
 
   <script src="/static/js/app.js?v=20260830_2200"></script>
   <script>
-    // ── FUNÇÃO DE LOGIN GLOBAL E AUTOSSUFICIENTE ──
-    // Não depende de app.init() nem de nenhum estado externo.
+    // ── FUNÇÃO DE LOGIN GLOBAL E BLINDADA ──
     async function doLogin() {
       var pinEl = document.getElementById('pinInput');
       var btn   = document.getElementById('btnLogin');
@@ -327,33 +326,44 @@
         return;
       }
 
-      btn.innerText = 'Aguarde...';
+      btn.innerText = 'Verificando...';
       btn.disabled  = true;
       errEl.style.display = 'none';
 
+      var res, data;
       try {
-        var res  = await fetch('/api/auth/login', {
+        res = await fetch('/api/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ pin: pin })
         });
-        var data = await res.json();
+        data = await res.json();
+      } catch(netErr) {
+        console.error('Erro na requisição:', netErr);
+        errEl.style.display = 'block';
+        errEl.innerText = 'Erro ao conectar ao servidor. Tente novamente.';
+        btn.innerText = 'Entrar';
+        btn.disabled  = false;
+        return;
+      }
 
-        if (data.success) {
+      if (data && data.success) {
+        try {
           localStorage.setItem('mp_auth_user', JSON.stringify(data.user));
-          // Inicia o app com o usuário logado
+        } catch(e) {}
+        
+        // Exibe o app imediatamente
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+
+        if (typeof app !== 'undefined') {
           app.currentUser = data.user;
           app.showApp();
-        } else {
-          errEl.style.display = 'block';
-          errEl.innerText = 'PIN incorreto. Tente novamente.';
-          pinEl.value = '';
-          btn.innerText = 'Entrar';
-          btn.disabled  = false;
         }
-      } catch(e) {
+      } else {
         errEl.style.display = 'block';
-        errEl.innerText = 'Erro de conexão. Verifique sua internet.';
+        errEl.innerText = (data && data.detail) ? data.detail : 'PIN incorreto. Tente novamente.';
+        pinEl.value = '';
         btn.innerText = 'Entrar';
         btn.disabled  = false;
       }
