@@ -44,42 +44,27 @@ const app = {
     }
   },
 
-  pressPin(n) {
-    if (this.currentPin.length < 4) {
-      this.currentPin += n;
-      this.updatePinDots();
-      if (this.currentPin.length === 4) {
-        setTimeout(() => this.submitPin(), 100);
-      }
-    }
-  },
-
-  clearPin() {
-    this.currentPin = "";
-    this.updatePinDots();
-  },
-
-  updatePinDots() {
-    for (let i = 1; i <= 4; i++) {
-      const el = document.getElementById(`dot${i}`);
-      if (i <= this.currentPin.length) el.classList.add("filled");
-      else el.classList.remove("filled");
-    }
-  },
-
   quickLogin(role) {
     const pins = {
-      admin: "8459",
+      admin: "0421",
       engenharia: "7722",
       administracao: "4411",
       campo: "1003"
     };
-    this.currentPin = pins[role] || "0421";
-    this.submitPin();
+    const pin = pins[role] || "0421";
+    const input = document.getElementById("nativePinInput");
+    if (input) { input.value = pin; }
+    this.submitNativePin();
+  },
+
+  pressPin(n) {},
+
+  clearPin() {
+    const el = document.getElementById("nativePinInput");
+    if (el) el.value = "";
   },
 
   async submitNativePin() {
-
     const pinInput = document.getElementById("nativePinInput");
     const btn = document.getElementById("btnEnterApp");
     if (!pinInput) return;
@@ -89,8 +74,9 @@ const app = {
       return;
     }
     if (btn) {
-      btn.innerText = "⏳ Entrando...";
+      btn.innerText = "Entrando...";
       btn.style.opacity = "0.7";
+      btn.disabled = true;
     }
     try {
       const res = await fetch('/api/auth/login', {
@@ -106,28 +92,17 @@ const app = {
       } else {
         alert(data.detail || "PIN incorreto.");
         pinInput.value = "";
-        if (btn) {
-          btn.innerText = "➔ Entrar no App";
-          btn.style.opacity = "1";
-        }
+        if (btn) { btn.innerText = "Entrar no App"; btn.style.opacity = "1"; btn.disabled = false; }
       }
     } catch(e) {
-      alert("Erro ao validar PIN.");
-      if (btn) {
-        btn.innerText = "➔ Entrar no App";
-        btn.style.opacity = "1";
-      }
+      alert("Erro de conexao. Tente novamente.");
+      pinInput.value = "";
+      if (btn) { btn.innerText = "Entrar no App"; btn.style.opacity = "1"; btn.disabled = false; }
     }
   },
 
   async submitPin() {
     await this.submitNativePin();
-  },
-
-  pressPin(n) {},
-  clearPin() {
-    const el = document.getElementById("nativePinInput");
-    if (el) el.value = "";
   },
 
   logout() {
