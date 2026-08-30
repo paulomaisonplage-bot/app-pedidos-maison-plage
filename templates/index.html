@@ -62,39 +62,44 @@
     <div class="login-box">
       <div class="login-logo">🏗️</div>
       <h1 class="login-title">Maison Plage</h1>
-      <p class="login-sub">Digite seu PIN de 4 dígitos:</p>
+      <p class="login-sub">Acesse via PIN ou Código enviado por E-mail:</p>
 
-      <div style="width:100%;max-width:220px;margin:0 auto 16px auto;">
-        <input
-          type="tel"
-          id="pinInput"
-          maxlength="4"
-          inputmode="numeric"
-          placeholder="_ _ _ _"
-          style="width:100%;font-size:32px;text-align:center;font-weight:900;color:#60a5fa;padding:16px 12px;background:rgba(96,165,250,0.08);border:2px solid #3b82f6;border-radius:16px;outline:none;letter-spacing:12px;box-sizing:border-box;"
-          oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4){ doLogin(); }"
-        >
+      <div class="pin-display">
+        <span class="pin-dot" id="dot1"></span>
+        <span class="pin-dot" id="dot2"></span>
+        <span class="pin-dot" id="dot3"></span>
+        <span class="pin-dot" id="dot4"></span>
       </div>
 
-      <button
-        id="btnLogin"
-        style="width:100%;max-width:220px;display:block;margin:0 auto;padding:15px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;border-radius:16px;cursor:pointer;box-shadow:0 4px 15px rgba(37,99,235,0.4);"
-        onclick="doLogin()"
-      >
-        Entrar
-      </button>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="app.pressPin('1')">1</button>
+        <button class="pin-btn" onclick="app.pressPin('2')">2</button>
+        <button class="pin-btn" onclick="app.pressPin('3')">3</button>
+        <button class="pin-btn" onclick="app.pressPin('4')">4</button>
+        <button class="pin-btn" onclick="app.pressPin('5')">5</button>
+        <button class="pin-btn" onclick="app.pressPin('6')">6</button>
+        <button class="pin-btn" onclick="app.pressPin('7')">7</button>
+        <button class="pin-btn" onclick="app.pressPin('8')">8</button>
+        <button class="pin-btn" onclick="app.pressPin('9')">9</button>
+        <button class="pin-btn pin-action" onclick="app.clearPin()">✕</button>
+        <button class="pin-btn" onclick="app.pressPin('0')">0</button>
+        <button class="pin-btn pin-action" onclick="app.submitPin()">➔</button>
+      </div>
 
-      <p id="loginError" style="color:#ef4444;font-size:12px;margin-top:12px;text-align:center;display:none;">PIN incorreto. Tente novamente.</p>
-
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-        <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
-          🔒 Acesso exclusivo à Obra Maison Plage<br>
-          Novo? Solicite link de convite ao Administrador Paulo.
+      <!-- SIMULADOR DE TESTES DOS 4 PERFIS -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center;">🧪 Simulador de Perfis (Testes Rápidos):</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button class="btn-profile-test" onclick="app.quickLogin('admin')">👑 Admin Master</button>
+          <button class="btn-profile-test" onclick="app.quickLogin('engenharia')">🏗️ Engenharia</button>
+          <button class="btn-profile-test" onclick="app.quickLogin('administracao')">📦 Administração</button>
+          <button class="btn-profile-test" onclick="app.quickLogin('campo')">👷 Campo</button>
         </div>
+      </div>
+
       </div>
     </div>
   </div>
-
 
   <!-- APLICAÇÃO PRINCIPAL (EXIBIDA APÓS O LOGIN) -->
   <div id="appContainer" class="app-container" style="display:none;">
@@ -310,89 +315,7 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=20260830_2200"></script>
-  <script>
-    // ── FUNÇÃO DE LOGIN GLOBAL E BLINDADA ──
-    async function doLogin() {
-      var pinEl = document.getElementById('pinInput');
-      var btn   = document.getElementById('btnLogin');
-      var errEl = document.getElementById('loginError');
-      if (!pinEl) return;
-
-      var pin = pinEl.value.replace(/[^0-9]/g, '');
-      if (pin.length !== 4) {
-        errEl.style.display = 'block';
-        errEl.innerText = 'Digite os 4 dígitos completos.';
-        return;
-      }
-
-      btn.innerText = 'Verificando...';
-      btn.disabled  = true;
-      errEl.style.display = 'none';
-
-      var res, data;
-      try {
-        res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ pin: pin })
-        });
-        data = await res.json();
-      } catch(netErr) {
-        console.error('Erro na requisição:', netErr);
-        errEl.style.display = 'block';
-        errEl.innerText = 'Erro ao conectar ao servidor. Tente novamente.';
-        btn.innerText = 'Entrar';
-        btn.disabled  = false;
-        return;
-      }
-
-      if (data && data.success) {
-        try {
-          localStorage.setItem('mp_auth_user', JSON.stringify(data.user));
-        } catch(e) {}
-        
-        // Exibe o app imediatamente
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-
-        if (typeof app !== 'undefined') {
-          app.currentUser = data.user;
-          app.showApp();
-        }
-      } else {
-        errEl.style.display = 'block';
-        errEl.innerText = (data && data.detail) ? data.detail : 'PIN incorreto. Tente novamente.';
-        pinEl.value = '';
-        btn.innerText = 'Entrar';
-        btn.disabled  = false;
-      }
-    }
-
-    // ── INICIALIZAÇÃO: APENAS VERIFICA SESSÃO SALVA ──
-    document.addEventListener('DOMContentLoaded', function() {
-      var saved = localStorage.getItem('mp_auth_user');
-      if (saved) {
-        try {
-          app.currentUser = JSON.parse(saved);
-          app.showApp();
-          return;
-        } catch(e) {
-          localStorage.removeItem('mp_auth_user');
-        }
-      }
-      // Sem sessão: mostra tela de login (já visível por padrão)
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('appContainer').style.display = 'none';
-
-      // Verifica invite na URL
-      var params = new URLSearchParams(window.location.search);
-      var token  = params.get('convite') || params.get('invite');
-      if (token && typeof app !== 'undefined') {
-        app.handleInviteEntry(token);
-      }
-    });
-  </script>
+  <script src="/static/js/app.js"></script>
 
   <!-- MODAL DE VISUALIZADOR DE PDF INTEGRADO -->
   <div id="pdfViewerModal" class="modal-backdrop">

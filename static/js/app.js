@@ -3,30 +3,12 @@ const app = {
   currentPin: "",
   currentUser: null,
   activeModule: "week",
-  getCurrentUser() {
-    if (this.currentUser && this.getCurrentRole()) return this.currentUser;
-    try {
-      const saved = localStorage.getItem("mp_auth_user");
-      if (saved) {
-        this.currentUser = JSON.parse(saved);
-        return this.currentUser;
-      }
-    } catch(e) {}
-    this.currentUser = { id: "8459937324", nome: "Paulo Lôbo (Admin Master)", role: "admin", is_admin: true };
-    return this.currentUser;
-  },
-
-  getCurrentRole() {
-    const u = this.getCurrentUser();
-    return (u && u.role) ? u.role : "admin";
-  },
   clientTabCache: { loaded: {} },
   orderDetailCache: {},
   weekOffset: 0,
   currentMonth: 8,
 
   init() {
-    // 1. Verifica convite na URL
     const urlParams = new URLSearchParams(window.location.search);
     const inviteToken = urlParams.get('convite') || urlParams.get('invite');
     if (inviteToken) {
@@ -34,72 +16,98 @@ const app = {
       return;
     }
     
-    // 2. Verifica usuário autenticado salvo
-    const savedUser = localStorage.getItem("mp_auth_user");
-    if (savedUser) {
-      try {
-        this.currentUser = JSON.parse(savedUser);
-        this.showApp();
-        return;
-      } catch(e) {
-        localStorage.removeItem("mp_auth_user");
-      }
-    }
-
-    // 3. Verifica se há solicitação pendente
     const savedReq = localStorage.getItem("mp_pending_req_id");
-    if (savedReq) {
+    if (savedReq && !saved) {
       this.showPendingInviteScreen(savedReq);
       return;
     }
 
-    // 4. Exibe tela de login padrão
-    this.showLogin();
+    const saved = localStorage.getItem("mp_auth_user");
+    if (saved) {
+      this.currentUser = JSON.parse(saved);
+      this.showApp();
+    } else {
+      this.showLogin();
+    }
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');
     }
   },
 
+  pressPin(n) {
+    if (this.currentPin.length < 4) {
+      this.currentPin += n;
+      this.updatePinDots();
+      if (this.currentPin.length === 4) {
+        setTimeout(() => this.submitPin(), 100);
+      }
+    }
+  },
+
+  clearPin() {
+    this.currentPin = "";
+    this.updatePinDots();
+  },
+
+  updatePinDots() {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById(`dot${i}`);
+      if (i <= this.currentPin.length) el.classList.add("filled");
+      else el.classList.remove("filled");
+    }
+  },
+
   quickLogin(role) {
     const pins = {
-      admin: "0421",
+      admin: "8459",
       engenharia: "7722",
       administracao: "4411",
       campo: "1003"
     };
-    const pin = pins[role] || "0421";
-    const input = document.getElementById("nativePinInput");
-    if (input) { input.value = pin; }
-    this.submitNativePin();
+    this.currentPin = pins[role] || "8459";
+    this.submitPin();
   },
 
-  pressPin(n) {},
-
-  clearPin() {
-    const el = document.getElementById("nativePinInput");
-    if (el) el.value = "";
+  async promptEmailLogin() {
+    const email = prompt("Digite seu e-mail cadastrado para receber o código de acesso:");
+    if (!email) return;
+    try {
+      const res = await fetch('/api/auth/send_otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const code = prompt(`Digite o código de 6 dígitos enviado para ${email}:
+(Código de teste: ${data.dev_code})`);
+        if (!code) return;
+        const vRes = await fetch('/api/auth/verify_otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, code: code })
+        });
+        const vData = await vRes.json();
+        if (vData.success) {
+          this.currentUser = vData.user;
+          localStorage.setItem("mp_auth_user", JSON.stringify(vData.user));
+          this.showApp();
+        } else {
+          alert("Código inválido.");
+        }
+      }
+    } catch(e) {
+      alert("Erro ao processar autenticação por e-mail.");
+    }
   },
 
-  async submitNativePin() {
-    const pinInput = document.getElementById("nativePinInput");
-    const btn = document.getElementById("btnEnterApp");
-    if (!pinInput) return;
-    const pin = pinInput.value.trim();
-    if (pin.length !== 4) {
-      alert("Por favor, digite seu PIN de 4 dígitos.");
-      return;
-    }
-    if (btn) {
-      btn.innerText = "Entrando...";
-      btn.style.opacity = "0.7";
-      btn.disabled = true;
-    }
+  async submitPin() {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: pin })
+        body: JSON.stringify({ pin: this.currentPin })
       });
       const data = await res.json();
       if (data.success) {
@@ -108,18 +116,12 @@ const app = {
         this.showApp();
       } else {
         alert(data.detail || "PIN incorreto.");
-        pinInput.value = "";
-        if (btn) { btn.innerText = "Entrar no App"; btn.style.opacity = "1"; btn.disabled = false; }
+        this.clearPin();
       }
     } catch(e) {
-      alert("Erro de conexao. Tente novamente.");
-      pinInput.value = "";
-      if (btn) { btn.innerText = "Entrar no App"; btn.style.opacity = "1"; btn.disabled = false; }
+      alert("Erro ao validar PIN.");
+      this.clearPin();
     }
-  },
-
-  async submitPin() {
-    await this.submitNativePin();
   },
 
   logout() {
@@ -135,35 +137,22 @@ const app = {
   },
 
   showApp() {
-    const user = this.getCurrentUser();
-    const loginEl = document.getElementById("loginScreen");
-    const appEl = document.getElementById("appContainer");
-    if (loginEl) loginEl.style.display = "none";
-    if (appEl) appEl.style.display = "block";
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContainer").style.display = "block";
     
-    const greetingEl = document.getElementById("userGreeting");
-    if (greetingEl && user && user.nome) {
-      greetingEl.innerText = `Olá, ${user.nome.split(" ")[0]}`;
-    }
-    const roleTagEl = document.getElementById("roleTag");
+    document.getElementById("userGreeting").innerText = `Olá, ${this.currentUser.nome.split(" ")[0]}`;
     const roleLabels = { admin: "👑 Admin Master", engenharia: "🏗️ Engenharia", administracao: "📦 Administração", campo: "👷 Campo" };
-    if (roleTagEl) {
-      roleTagEl.innerText = roleLabels[this.getCurrentRole()] || "👑 Admin Master";
-    }
+    document.getElementById("roleTag").innerText = roleLabels[this.currentUser.role] || "👷 Campo";
 
     // Permissões das abas
-    const role = this.getCurrentRole();
-    const tabSup = document.getElementById("tabSuppliers");
-    if (tabSup) tabSup.style.display = (role === "campo") ? "none" : "block";
-    const tabFin = document.getElementById("tabFinancial");
-    if (tabFin) tabFin.style.display = (role === "admin" || role === "engenharia") ? "block" : "none";
-    const tabExp = document.getElementById("tabExport");
-    if (tabExp) tabExp.style.display = (role === "admin" || role === "engenharia") ? "block" : "none";
-    const tabTeam = document.getElementById("tabTeam");
-    if (tabTeam) tabTeam.style.display = (role === "admin") ? "block" : "none";
+    const role = this.currentUser.role;
+    document.getElementById("tabSuppliers").style.display = (role === "campo") ? "none" : "block";
+    document.getElementById("tabFinancial").style.display = (role === "admin" || role === "engenharia") ? "block" : "none";
+    document.getElementById("tabExport").style.display = (role === "admin" || role === "engenharia") ? "block" : "none";
+    document.getElementById("tabTeam").style.display = (role === "admin") ? "block" : "none";
 
     this.setModule("week");
-  },,
+  },
 
   setModule(mod) {
     this.activeModule = mod;
@@ -196,26 +185,22 @@ const app = {
     };
     if (secMap[mod]) secMap[mod].classList.add("active");
 
-    try {
-      if (mod === "week") this.loadWeek();
-      else if (mod === "month") this.loadMonth();
-      else if (mod === "search") this.loadCatalogAZ();
-      else if (mod === "groups") this.loadGroups();
-      else if (mod === "recent") this.loadRecent();
-      else if (mod === "suppliers") this.loadSuppliers();
-      else if (mod === "financial") this.loadFinancial();
-      else if (mod === "team") this.loadTeam();
-      else if (mod === "excel") this.loadExcelViewer();
-    } catch(e) {
-      console.error("Erro ao carregar modulo:", mod, e);
-    }
-  },,
+    if (mod === "week") this.loadWeek();
+    if (mod === "month") this.loadMonth();
+    if (mod === "search") this.loadCatalogAZ();
+    if (mod === "groups") this.loadGroups();
+    if (mod === "recent") this.loadRecent();
+    if (mod === "suppliers") this.loadSuppliers();
+    if (mod === "financial") this.loadFinancial();
+    if (mod === "team") this.loadTeam();
+    if (mod === "excel") this.loadExcelViewer();
+  },
 
   async loadWeek() {
     const list = document.getElementById("weekCards");
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando entregas da semana...</div>';
     try {
-      const res = await fetch(`/api/deliveries/week?offset=${this.weekOffset}&role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/deliveries/week?offset=${this.weekOffset}&role=${this.currentUser.role}`);
       const data = await res.json();
       
       if (data.periodo) {
@@ -245,7 +230,7 @@ const app = {
     const list = document.getElementById("monthCards");
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando entregas do mês...</div>';
     try {
-      const res = await fetch(`/api/deliveries/month?mes=${this.currentMonth}&ano=2026&role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/deliveries/month?mes=${this.currentMonth}&ano=2026&role=${this.currentUser.role}`);
       const data = await res.json();
       if (!data.cards || data.cards.length === 0) {
         list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido previsto para este mês.</div>';
@@ -307,7 +292,7 @@ const app = {
     }
 
     try {
-      const res = await fetch(`/api/order/${pc}?role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/order/${pc}?role=${this.currentUser.role}`);
       const data = await res.json();
       this.orderDetailCache[pc] = data;
       this.renderOrderModal(data);
@@ -379,7 +364,7 @@ const app = {
     if (data.can_pdf) {
       document.getElementById("mModalActions").innerHTML = `
         <div style="display:flex;gap:8px;">
-          <a href="/api/order/${data.pc}/pdf?role=${this.getCurrentRole()}" target="_blank" class="btn-pdf-action" style="margin-top:0;flex:1;">
+          <a href="/api/order/${data.pc}/pdf?role=${this.currentUser.role}" target="_blank" class="btn-pdf-action" style="margin-top:0;flex:1;">
             📄 Abrir PDF
           </a>
           <button onclick="app.shareOrderPdf('${data.pc}')" class="btn-pdf-action" style="margin-top:0;flex:1;background:linear-gradient(135deg, #7c3aed, #6d28d9);box-shadow:0 4px 15px rgba(124,58,237,0.4);border:none;cursor:pointer;">
@@ -433,7 +418,7 @@ const app = {
     try {
       const qP = this.catalogQuery ? `&q=${encodeURIComponent(this.catalogQuery)}` : '';
       const letP = this.currentLetter ? `&letter=${encodeURIComponent(this.currentLetter)}` : '';
-      const res = await fetch(`/api/materials/catalog?role=${this.getCurrentRole()}${qP}${letP}`);
+      const res = await fetch(`/api/materials/catalog?role=${this.currentUser.role}${qP}${letP}`);
       const data = await res.json();
       
       document.getElementById("catalogMetrics").innerHTML = `📋 <b>${data.total_filtrados}</b> de <b>${data.total_cadastrados}</b> insumos cadastrados`;
@@ -465,7 +450,7 @@ const app = {
     document.body.style.overflow = "hidden";
 
     try {
-      const res = await fetch(`/api/materials/orders?nome=${encodeURIComponent(name)}&role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/materials/orders?nome=${encodeURIComponent(name)}&role=${this.currentUser.role}`);
       const data = await res.json();
       document.getElementById("matModalSub").innerText = `${data.total_pedidos} Pedido(s) de Compra`;
       if (!data.cards || data.cards.length === 0) {
@@ -554,7 +539,7 @@ const app = {
     document.body.style.overflow = "hidden";
 
     try {
-      const res = await fetch(`/api/groups/orders?familia=${encodeURIComponent(fam)}&role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/groups/orders?familia=${encodeURIComponent(fam)}&role=${this.currentUser.role}`);
       const data = await res.json();
       document.getElementById("matModalSub").innerText = `${data.total_pedidos} Pedido(s) de Compra`;
       if (!data.cards || data.cards.length === 0) {
@@ -571,7 +556,7 @@ const app = {
     const list = document.getElementById("recentCards");
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando compras recentes...</div>';
     try {
-      const res = await fetch(`/api/recent_purchases?role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/recent_purchases?role=${this.currentUser.role}`);
       const data = await res.json();
       if (!data.cards || data.cards.length === 0) {
         list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhuma compra recente encontrada.</div>';
@@ -587,7 +572,7 @@ const app = {
     const list = document.getElementById("suppliersCards");
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando contatos estruturados...</div>';
     try {
-      const res = await fetch(`/api/suppliers?role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
       const data = await res.json();
       list.innerHTML = data.suppliers.map(s => {
         const v = s.vendedor || {};
@@ -633,7 +618,7 @@ const app = {
     box.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">⏳ Calculando previsão do fluxo financeiro...</div>';
     
     try {
-      const res = await fetch(`/api/financial/summary?role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/financial/summary?role=${this.currentUser.role}`);
       const data = await res.json();
       
       const kpis = data.kpis || {};
@@ -708,7 +693,7 @@ const app = {
   },
 
   async downloadExcel() {
-    const url = `/api/export/excel?role=${this.getCurrentRole()}`;
+    const url = `/api/export/excel?role=${this.currentUser.role}`;
     
     // Tenta abrir em nova aba primeiro (padrão iOS)
     const win = window.open(url, '_blank');
@@ -721,7 +706,7 @@ const app = {
   currentPdfName: "",
 
   viewPdf(pc) {
-    const url = `/api/order/${pc}/pdf?role=${this.getCurrentRole()}`;
+    const url = `/api/order/${pc}/pdf?role=${this.currentUser.role}`;
     this.currentPdfUrl = url;
     this.currentPdfName = `PC_${pc}.pdf`;
 
@@ -791,7 +776,7 @@ const app = {
   },
 
   async shareOrderPdf(pc) {
-    const url = `/api/order/${pc}/pdf?role=${this.getCurrentRole()}`;
+    const url = `/api/order/${pc}/pdf?role=${this.currentUser.role}`;
     const filename = `PedidoCompra_${pc}.pdf`;
     try {
       if (navigator.share) {
@@ -886,26 +871,19 @@ const app = {
       const res = await fetch(`/api/users/check_status?req_id=${reqId}`);
       const data = await res.json();
       if (data.status === "approved") {
-        // Autentica e entra direto sem pedir senha
-        const userObj = {
-          id: reqId,
-          nome: "Membro Autorizado",
-          role: data.role || "engenharia",
-          pin: data.pin
-        };
-        localStorage.setItem("mp_auth_user", JSON.stringify(userObj));
-        localStorage.removeItem("mp_pending_req_id");
-        this.currentUser = userObj;
-        alert("🎉 Acesso Aprovado pelo Administrador Paulo!
+        alert(`🎉 Parabéns! Seu acesso foi aprovado pelo Administrador.
 
-Entrando diretamente no App da Obra...");
-        this.showApp();
+Seu PIN de entrada é: ${data.pin}
+
+Faça login agora!`);
+        localStorage.removeItem("mp_pending_req_id");
+        window.location.href = "/";
       } else if (data.status === "rejected") {
         alert("Sua solicitação de acesso não foi aprovada pelo Administrador.");
         localStorage.removeItem("mp_pending_req_id");
         window.location.href = "/";
       } else {
-        alert("Sua solicitação ainda está em análise pelo Administrador Paulo. Aguarde a aprovação.");
+        alert("Sua solicitação ainda está em análise pelo Administrador Paulo. Aguarde.");
       }
     } catch(e) {
       alert("Erro ao verificar status.");
@@ -914,7 +892,7 @@ Entrando diretamente no App da Obra...");
 
   async openGenerateInviteModal() {
     try {
-      const res = await fetch(`/api/invites/generate?role=${this.getCurrentRole()}`, {
+      const res = await fetch(`/api/invites/generate?role=${this.currentUser.role}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role_sugerido: "engenharia" })
@@ -952,7 +930,7 @@ ${link}`;
     const list = document.getElementById("teamCards");
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando membros da equipe...</div>';
     try {
-      const res = await fetch(`/api/users?role=${this.getCurrentRole()}`);
+      const res = await fetch(`/api/users?role=${this.currentUser.role}`);
       const data = await res.json();
       list.innerHTML = data.users.map(u => `
         <div class="user-card">

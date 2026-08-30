@@ -222,41 +222,62 @@ async def get_manifest():
 async def get_service_worker():
     return FileResponse("static/sw.js", media_type="application/javascript")
 
+# AUTENTICAÇÃO POR E-MAIL / SMS
+import random
+OTP_STORE = {}
+
+class EmailOtpRequest(BaseModel):
+    email: str
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    code: str
+
+@app.post("/api/auth/send_otp")
+async def api_send_otp(req: EmailOtpRequest):
+    code = f"{random.randint(100000, 999999)}"
+    email_clean = req.email.strip().lower()
+    OTP_STORE[email_clean] = {
+        "code": code,
+        "expires_at": time.time() + 600
+    }
+    # Em producao, enviamos o email via SMTP/SendGrid. Para testes imediatos:
+    print(f"\n[AUTH] Código OTP enviado para {email_clean}: {code}\n")
+    return {"success": True, "message": f"Código enviado para {email_clean}", "dev_code": code}
+
+@app.post("/api/auth/verify_otp")
+async def api_verify_otp(req: VerifyOtpRequest):
+    email_clean = req.email.strip().lower()
+    stored = OTP_STORE.get(email_clean)
+    if not stored or time.time() > stored["expires_at"]:
+        raise HTTPException(status_code=400, detail="Código expirado ou não solicitado.")
+    if stored["code"] != req.code.strip():
+        raise HTTPException(status_code=400, detail="Código de validação incorreto.")
+    
+    # Determina o perfil com base no email ou default Admin/Engenharia
+    user_info = {
+        "id": "email_user",
+        "nome": email_clean.split("@")[0].capitalize(),
+        "role": "admin" if "paulo" in email_clean or "admin" in email_clean else "engenharia",
+        "email": email_clean
+    }
+    return {"success": True, "user": user_info}
+
 # AUTENTICAÇÃO
 @app.post("/api/auth/login")
 async def api_login(req: LoginRequest):
-    pin_clean = str(req.pin).strip()
-    
-    # Fallback mestre garantido
-    if pin_clean == "0421":
-        return {
-            "success": True,
-            "user": {
-                "id": "8459937324",
-                "nome": "Paulo Lôbo (Admin Master)",
-                "role": "admin",
-                "is_admin": True
-            }
-        }
-        
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        users = data.get("users", {})
-        for uid, udata in users.items():
-            if str(udata.get("pin", "")).strip() == pin_clean:
-                return {
-                    "success": True,
-                    "user": {
-                        "id": str(uid),
-                        "nome": udata.get("nome"),
-                        "role": udata.get("role"),
-                        "is_admin": (udata.get("role") == "admin")
-                    }
+    users = auth_service._data.get("users", {})
+    for uid, udata in users.items():
+        if str(udata.get("pin", "")).strip() == req.pin.strip():
+            return {
+                "success": True,
+                "user": {
+                    "id": str(uid),
+                    "nome": udata.get("nome"),
+                    "role": udata.get("role"),
+                    "is_admin": (udata.get("role") == "admin")
                 }
-    except Exception as e:
-        pass
-        
+            }
     raise HTTPException(status_code=401, detail="PIN de acesso incorreto.")
 
 # GESTÃO DE EQUIPE

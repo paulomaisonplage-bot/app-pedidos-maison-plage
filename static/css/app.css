@@ -17,9 +17,12 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
 
-/* TELA DE LOGIN 100% CENTRALIZADA */
-.login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%; padding: 20px; background: radial-gradient(circle at top, #1e293b, #0b0f19); box-sizing: border-box; }
-.login-box { background: var(--surface); border: 1px solid var(--surface-border); padding: 36px 24px; border-radius: 28px; width: 100%; max-width: 360px; margin: 0 auto; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+/* TELA DE LOGIN */
+.login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: radial-gradient(circle at top, #1e293b, #0b0f19); }
+.login-box { background: var(--surface); border: 1px solid var(--surface-border); padding: 32px 24px; border-radius: 28px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+.login-logo { font-size: 44px; margin-bottom: 8px; }
+.login-title { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 4px; }
+.login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
 
 .pin-display { display: flex; justify-content: center; gap: 16px; margin-bottom: 28px; }
 .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #475569; transition: all 0.2s; }
