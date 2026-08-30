@@ -59,24 +59,24 @@
   </div>
 
   <div id="loginScreen" class="login-screen">
-    <div class="login-box" style="max-width:340px;padding:32px 24px;">
+    <div class="login-box">
       <div class="login-logo">🏗️</div>
-      <h1 class="login-title" style="font-size:22px;">Maison Plage</h1>
-      <p class="login-sub" style="font-size:12px;margin-bottom:20px;">Acesso Exclusivo à Obra</p>
+      <h1 class="login-title">Maison Plage</h1>
+      <p class="login-sub">Digite seu PIN de 4 dígitos para entrar:</p>
 
-      <form onsubmit="event.preventDefault(); app.submitNativePin();" style="width:100%;">
-        <div style="margin-bottom:16px;">
-          <input type="tel" id="nativePinInput" maxlength="4" placeholder="• • • •" class="search-input" style="font-size:26px;letter-spacing:12px;text-align:center;font-weight:800;color:#60a5fa;padding:14px;background:rgba(0,0,0,0.35);border:1px solid #3b82f6;" oninput="if(this.value.length===4) app.submitNativePin()" autofocus>
+      <form onsubmit="event.preventDefault(); app.submitNativePin();" style="width:100%;display:flex;flex-direction:column;align-items:center;">
+        <div style="width:100%;max-width:240px;margin:0 auto 16px auto;">
+          <input type="tel" id="nativePinInput" maxlength="4" placeholder="• • • •" class="search-input" style="width:100%;font-size:24px;text-align:center;font-weight:800;color:#60a5fa;padding:12px;background:rgba(0,0,0,0.35);border:1px solid #3b82f6;border-radius:14px;outline:none;" oninput="if(this.value.length===4) app.submitNativePin()" autofocus>
         </div>
 
-        <button type="submit" id="btnEnterApp" class="btn-pdf-action" style="width:100%;padding:14px;font-size:14px;border:none;cursor:pointer;">
+        <button type="submit" id="btnEnterApp" class="btn-pdf-action" style="width:100%;max-width:240px;margin:0 auto;padding:14px;font-size:14px;border:none;cursor:pointer;">
           ➔ Entrar no App
         </button>
       </form>
 
       <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
         <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
-          🔒 <b>Acesso Restrito</b><br>
+          🔒 <b>Acesso Exclusivo à Obra</b><br>
           Novo na equipe? Solicite um link de convite ao Administrador Paulo.
         </div>
       </div>

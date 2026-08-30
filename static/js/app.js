@@ -65,44 +65,12 @@ const app = {
       administracao: "4411",
       campo: "1003"
     };
-    this.currentPin = pins[role] || "8459";
+    this.currentPin = pins[role] || "0421";
     this.submitPin();
   },
 
-  async promptEmailLogin() {
-    const email = prompt("Digite seu e-mail cadastrado para receber o código de acesso:");
-    if (!email) return;
-    try {
-      const res = await fetch('/api/auth/send_otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
-      });
-      const data = await res.json();
-      if (data.success) {
-        const code = prompt(`Digite o código de 6 dígitos enviado para ${email}:
-(Código de teste: ${data.dev_code})`);
-        if (!code) return;
-        const vRes = await fetch('/api/auth/verify_otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, code: code })
-        });
-        const vData = await vRes.json();
-        if (vData.success) {
-          this.currentUser = vData.user;
-          localStorage.setItem("mp_auth_user", JSON.stringify(vData.user));
-          this.showApp();
-        } else {
-          alert("Código inválido.");
-        }
-      }
-    } catch(e) {
-      alert("Erro ao processar autenticação por e-mail.");
-    }
-  },
-
   async submitNativePin() {
+
     const pinInput = document.getElementById("nativePinInput");
     const btn = document.getElementById("btnEnterApp");
     if (!pinInput) return;
