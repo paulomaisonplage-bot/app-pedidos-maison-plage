@@ -66,11 +66,11 @@
 
       <form onsubmit="event.preventDefault(); app.submitNativePin();" style="width:100%;display:flex;flex-direction:column;align-items:center;">
         <div style="width:100%;max-width:240px;margin:0 auto 16px auto;">
-          <input type="tel" id="nativePinInput" maxlength="4" placeholder="• • • •" class="search-input" style="width:100%;font-size:24px;text-align:center;font-weight:800;color:#60a5fa;padding:12px;background:rgba(0,0,0,0.35);border:1px solid #3b82f6;border-radius:14px;outline:none;" oninput="if(this.value.length===4) app.submitNativePin()" autofocus>
+          <input type="tel" id="nativePinInput" maxlength="4" placeholder="_ _ _ _" class="search-input" style="width:100%;font-size:28px;text-align:center;font-weight:800;color:#60a5fa;padding:14px;background:rgba(0,0,0,0.35);border:1px solid #3b82f6;border-radius:14px;outline:none;letter-spacing:8px;" oninput="if(this.value.replace(/\D/g,'').length>=4){this.value=this.value.replace(/\D/g,'').slice(0,4);app.submitNativePin();}">
         </div>
 
-        <button type="submit" id="btnEnterApp" class="btn-pdf-action" style="width:100%;max-width:240px;margin:0 auto;padding:14px;font-size:14px;border:none;cursor:pointer;">
-          ➔ Entrar no App
+        <button type="button" id="btnEnterApp" onclick="app.submitNativePin()" class="btn-pdf-action" style="width:100%;max-width:240px;margin:0 auto;padding:14px;font-size:15px;border:none;cursor:pointer;font-weight:800;">
+          Entrar no App
         </button>
       </form>
 
