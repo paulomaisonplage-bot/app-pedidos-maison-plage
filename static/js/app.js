@@ -676,23 +676,30 @@ const app = {
       const bars = data.monthly_bars || [];
       const groups = data.macro_groups || [];
 
+      const fmtKpi = (valStr) => {
+        const num = parseFloat((valStr || '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
+        if (num >= 1000000) return `R$ ${(num / 1000000).toFixed(2).replace('.', ',')}M`;
+        if (num >= 1000) return `R$ ${(num / 1000).toFixed(1).replace('.', ',')}k`;
+        return valStr || 'R$ 0';
+      };
+
       box.innerHTML = `
         <!-- 1. CARDS DE INDICADORES ULTRA-COMPACTOS (3 COLUNAS) -->
         <div class="fin-compact-grid">
           <div class="fin-mini-kpi border-blue">
             <div class="fin-mini-label">💰 Total Período</div>
-            <div class="fin-mini-value" style="color:#60a5fa;">${kpis.total_desembolso}</div>
-            <div class="fin-mini-sub">${kpis.periodo_label || 'Jul-Nov/26'}</div>
+            <div class="fin-mini-value" style="color:#60a5fa;" title="${kpis.total_desembolso || ''}">${fmtKpi(kpis.total_desembolso)}</div>
+            <div class="fin-mini-sub">${kpis.total_desembolso || (kpis.periodo_label || 'Jul-Nov/26')}</div>
           </div>
           <div class="fin-mini-kpi border-gold">
             <div class="fin-mini-label">🟡 ${kpis.mes_atual_nome || 'Agosto'} (Atual)</div>
-            <div class="fin-mini-value" style="color:#fbbf24;">${kpis.mes_atual}</div>
-            <div class="fin-mini-sub">Mês Vigente</div>
+            <div class="fin-mini-value" style="color:#fbbf24;" title="${kpis.mes_atual || ''}">${fmtKpi(kpis.mes_atual)}</div>
+            <div class="fin-mini-sub">${kpis.mes_atual || 'Mês Vigente'}</div>
           </div>
           <div class="fin-mini-kpi border-green">
             <div class="fin-mini-label">⏳ Futuro</div>
-            <div class="fin-mini-value" style="color:#34d399;">${kpis.futuro}</div>
-            <div class="fin-mini-sub">${kpis.futuro_label || 'Setembro+'}</div>
+            <div class="fin-mini-value" style="color:#34d399;" title="${kpis.futuro || ''}">${fmtKpi(kpis.futuro)}</div>
+            <div class="fin-mini-sub">${kpis.futuro || (kpis.futuro_label || 'Setembro+')}</div>
           </div>
         </div>
 

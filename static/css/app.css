@@ -205,40 +205,124 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .btn-profile-test:active { background: #334155; transform: scale(0.98); }
 .btn-email-otp { background: transparent; border: 1px solid #3b82f6; color: #60a5fa; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
-/* DASHBOARD FINANCEIRO ULTRA-COMPACTO */
-.fin-compact-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-.fin-mini-kpi { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; }
+/* DASHBOARD FINANCEIRO ULTRA-COMPACTO E 100% RESPONSIVO */
+.fin-compact-grid { 
+  display: grid; 
+  grid-template-columns: 1.15fr 1fr 1fr; 
+  gap: 6px; 
+  margin-bottom: 8px; 
+  width: 100%; 
+  box-sizing: border-box; 
+}
+@media (max-width: 440px) {
+  .fin-compact-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fin-compact-grid .fin-mini-kpi:first-child {
+    grid-column: span 2;
+  }
+}
+
+.fin-mini-kpi { 
+  background: var(--surface); 
+  border: 1px solid var(--surface-border); 
+  border-radius: 10px; 
+  padding: 8px 10px; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  min-width: 0; 
+  overflow: hidden; 
+  box-sizing: border-box; 
+}
 .fin-mini-kpi.border-blue { border-left: 3px solid #3b82f6; }
 .fin-mini-kpi.border-gold { border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.04); }
 .fin-mini-kpi.border-green { border-left: 3px solid #10b981; }
 .fin-mini-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fin-mini-value { font-size: 14px; font-weight: 800; margin: 2px 0 1px 0; white-space: nowrap; }
-.fin-mini-sub { font-size: 10px; color: #94a3b8; font-weight: 500; }
+.fin-mini-value { font-size: 14px; font-weight: 800; margin: 2px 0 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fin-mini-sub { font-size: 10px; color: #94a3b8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.fin-section-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
-.fin-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.fin-section-title { font-size: 12px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+.fin-section-box { 
+  background: var(--surface); 
+  border: 1px solid var(--surface-border); 
+  border-radius: var(--radius); 
+  padding: 10px 12px; 
+  margin-bottom: 8px; 
+  width: 100%; 
+  max-width: 100%; 
+  box-sizing: border-box; 
+  overflow: hidden; 
+}
+.fin-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; min-width: 0; }
+.fin-section-title { font-size: 12px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* GRÁFICO EM COLUNAS VERTICAIS EXECUTIVO */
-.fin-chart-columns-container { display: flex; justify-content: space-around; align-items: flex-end; height: 135px; padding: 12px 6px 6px 6px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
-.fin-col-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; max-width: 58px; margin: 0 2px; }
-.fin-col-val { font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 4px; white-space: nowrap; text-align: center; line-height: 1.1; }
-.fin-col-track { width: 100%; height: 75px; background: rgba(255,255,255,0.04); border-radius: 6px 6px 0 0; display: flex; align-items: flex-end; overflow: hidden; }
-.fin-col-bar { width: 100%; background: linear-gradient(180deg, #06b6d4, #0284c7); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; box-shadow: 0 -2px 8px rgba(6,182,212,0.3); }
+.fin-chart-columns-container { 
+  display: flex; 
+  justify-content: space-around; 
+  align-items: flex-end; 
+  height: 130px; 
+  padding: 10px 4px 4px 4px; 
+  background: rgba(0,0,0,0.3); 
+  border-radius: 10px; 
+  border: 1px solid rgba(255,255,255,0.05); 
+  width: 100%; 
+  max-width: 100%; 
+  box-sizing: border-box; 
+  overflow: hidden; 
+}
+.fin-col-wrapper { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: flex-end; 
+  height: 100%; 
+  flex: 1; 
+  min-width: 0; 
+  margin: 0 1px; 
+  box-sizing: border-box; 
+}
+.fin-col-val { font-size: 9px; font-weight: 800; color: #94a3b8; margin-bottom: 3px; white-space: nowrap; text-align: center; line-height: 1.1; overflow: hidden; }
+.fin-col-track { width: 100%; max-width: 28px; min-width: 12px; height: 75px; background: rgba(255,255,255,0.04); border-radius: 5px 5px 0 0; display: flex; align-items: flex-end; overflow: hidden; box-sizing: border-box; }
+.fin-col-bar { width: 100%; background: linear-gradient(180deg, #06b6d4, #0284c7); border-radius: 5px 5px 0 0; min-height: 4px; transition: height 0.5s ease; box-shadow: 0 -2px 8px rgba(6,182,212,0.3); }
 .fin-col-bar.bar-current { background: linear-gradient(180deg, #f59e0b, #fbbf24); box-shadow: 0 -2px 10px rgba(251,191,36,0.6); }
 .fin-col-bar.bar-past { background: linear-gradient(180deg, #10b981, #059669); opacity: 0.85; }
-.fin-col-label { font-size: 10px; font-weight: 700; color: #94a3b8; margin-top: 6px; white-space: nowrap; }
+.fin-col-label { font-size: 9px; font-weight: 700; color: #94a3b8; margin-top: 5px; white-space: nowrap; }
 .current-month-col .fin-col-val { color: #fbbf24; font-weight: 900; }
 .current-month-col .fin-col-label { color: #fbbf24; font-weight: 800; }
 
 /* BARRA SEGMENTADA MULTI-COR DO ORÇAMENTO (100% UNIFICADA) */
-.macro-stacked-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; width: 100%; background: rgba(255,255,255,0.06); margin-bottom: 8px; }
-.macro-segment { height: 100%; transition: width 0.4s ease; min-width: 4px; }
+.macro-stacked-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; width: 100%; max-width: 100%; background: rgba(255,255,255,0.06); margin-bottom: 8px; box-sizing: border-box; }
+.macro-segment { height: 100%; transition: width 0.4s ease; min-width: 3px; }
 
-/* MICRO-TABELA EM 2 COLUNAS DE MACRO-GRUPOS */
-.macro-micro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
-.macro-micro-item { display: flex; align-items: center; justify-content: space-between; font-size: 11px; padding: 4px 6px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.04); }
-.macro-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; flex-shrink: 0; }
-.macro-micro-title { color: #cbd5e1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.macro-micro-val { color: #fff; font-weight: 800; white-space: nowrap; font-size: 11px; }
+/* MICRO-TABELA EM 2 COLUNAS DE MACRO-GRUPOS COM AUTO-WRAP RESPONSIVO */
+.macro-micro-grid { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 4px 6px; 
+  width: 100%; 
+  max-width: 100%; 
+  box-sizing: border-box; 
+}
+@media (max-width: 360px) {
+  .macro-micro-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.macro-micro-item { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  font-size: 10px; 
+  padding: 4px 6px; 
+  background: rgba(0,0,0,0.2); 
+  border-radius: 6px; 
+  border: 1px solid rgba(255,255,255,0.04); 
+  min-width: 0; 
+  box-sizing: border-box; 
+  overflow: hidden; 
+}
+.macro-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; flex-shrink: 0; }
+.macro-micro-title { color: #cbd5e1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.macro-micro-val { color: #fff; font-weight: 800; white-space: nowrap; font-size: 10.5px; flex-shrink: 0; margin-left: 4px; }
 .macro-micro-sub { color: #64748b; font-size: 9px; font-weight: 500; }
