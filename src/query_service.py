@@ -273,7 +273,8 @@ class OrderQueryService:
 
         for inst in installments:
             dt_v = inst["_venc_dt"]
-            k = (dt_v.year, dt_v.month, inst["mes_ano"])
+            nome_m = NOMES_MESES.get(dt_v.month, f"Mês {dt_v.month}")
+            k = (dt_v.year, dt_v.month, nome_m)
             mes_map[k]["count"] += 1
             mes_map[k]["total_val"] += inst["valor_parcela"]
             mes_map[k]["pedidos"].add(inst["numero_pedido"])

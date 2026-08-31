@@ -7,6 +7,7 @@ import time
 import random
 import secrets
 from datetime import datetime, date, timedelta
+from collections import defaultdict
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from fastapi import FastAPI, Request, HTTPException, Response
@@ -749,44 +750,68 @@ async def api_financial_summary(role: str = "campo"):
     if not can_view_financial_schedule(role):
         raise HTTPException(status_code=403, detail="Acesso exclusivo para Engenharia e Administração.")
     
-    raw_dict, _ = get_cached_raw_records()
-    all_raw_records = list(raw_dict.values())
+    # 1. Registros ativos da obra (>= Junho/2026)
+    records = query_service._get_all_records()
     
-    all_insts = []
-    for r in all_raw_records:
-        all_insts.extend(calculate_installments_for_item(r))
-        
-    cutoff = get_previous_month_cutoff_date()
-    # Mapeia os meses a partir do mes anterior (Julho=7 ate Dezembro=12)
-    start_m = cutoff.month
-    monthly_vals = {m: 0.0 for m in range(start_m, 13)}
+    # 2. Parcelas a partir do corte do mês anterior
+    all_insts = query_service.get_all_installments(from_previous_month_only=True)
+    
+    hoje = date.today()
+    mes_atual_num = hoje.month
+    ano_atual = hoje.year
+    
     month_names = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
     
+    # Agrupa valores por (ano, mes)
+    meses_agg = defaultdict(lambda: {"total_val": 0.0, "count": 0, "pedidos": set()})
     total_desembolso_periodo = 0.0
+    val_mes_atual = 0.0
+    val_futuro = 0.0
+    
     for i in all_insts:
         dt_venc = i.get("_venc_dt")
         val = float(i.get("valor_parcela", 0.0) or 0.0)
-        if dt_venc and dt_venc.year == 2026 and dt_venc.month in monthly_vals:
-            monthly_vals[dt_venc.month] += val
+        if dt_venc:
+            k = (dt_venc.year, dt_venc.month)
+            meses_agg[k]["total_val"] += val
+            meses_agg[k]["count"] += 1
+            meses_agg[k]["pedidos"].add(str(i.get("numero_pedido", "")))
             total_desembolso_periodo += val
+            
+            if dt_venc.year == ano_atual and dt_venc.month == mes_atual_num:
+                val_mes_atual += val
+            elif (dt_venc.year > ano_atual) or (dt_venc.year == ano_atual and dt_venc.month > mes_atual_num):
+                val_futuro += val
 
-    val_ago = monthly_vals.get(8, 0.0)
-    val_futuro = sum(v for m, v in monthly_vals.items() if m >= 9)
-    max_month_val = max(monthly_vals.values()) or 1.0
+    max_month_val = max([v["total_val"] for v in meses_agg.values()], default=1.0) or 1.0
 
     bars = []
-    for m in range(start_m, 13):
-        v = monthly_vals[m]
+    sorted_meses = sorted(meses_agg.keys())
+    for (ano_m, m) in sorted_meses:
+        data_m = meses_agg[(ano_m, m)]
+        v = data_m["total_val"]
         pct = (v / total_desembolso_periodo * 100) if total_desembolso_periodo > 0 else 0
         bar_pct = (v / max_month_val * 100) if max_month_val > 0 else 0
+        is_cur = (ano_m == ano_atual and m == mes_atual_num)
         bars.append({
+            "ano": ano_m,
             "mes_num": m,
-            "mes_nome": month_names[m],
+            "mes_nome": month_names.get(m, f"Mês {m}"),
             "valor_fmt": f"R${v:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
             "pct": round(pct, 1),
             "bar_pct": round(bar_pct, 1),
-            "is_current": (m == 8)
+            "is_current": is_cur,
+            "pedidos_count": len(data_m["pedidos"])
         })
+
+    # Periodo label
+    if sorted_meses:
+        m_ini = month_names.get(sorted_meses[0][1], "Início")
+        m_fim = month_names.get(sorted_meses[-1][1], "Fim")
+        ano_fim = sorted_meses[-1][0]
+        periodo_label = f"{m_ini} a {m_fim}/{ano_fim}"
+    else:
+        periodo_label = "2026"
 
     # Macro-Grupos da Obra
     MACRO_GROUPS = [
@@ -797,10 +822,9 @@ async def api_financial_summary(role: str = "campo"):
         {"name": "Serviços & Equipamentos", "icon": "🚜", "sub": ["EQUIPAMENTOS", "SERVIÇOS", "ALUGUEL", "LOCAÇÃO", "ESQUADRIAS", "EMPREITADOS", "TAXAS", "VERBAS", "TERCEIRIZADOS"], "total": 0.0, "color": "#ec4899"}
     ]
 
-    records_pos_corte = [r for r in all_raw_records if ((parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None) or date.min) >= cutoff]
-    total_contratado_compras = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records_pos_corte)
+    total_contratado_compras = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records)
 
-    for r in records_pos_corte:
+    for r in records:
         fam_raw = str(r.get("familia_insumo", "") or "").upper()
         val = float(r.get("preco_total_item", 0.0) or 0.0)
         alloc = False
@@ -810,7 +834,7 @@ async def api_financial_summary(role: str = "campo"):
                 alloc = True
                 break
         if not alloc:
-            MACRO_GROUPS[3]["total"] += val # default apoio/diversos
+            MACRO_GROUPS[3]["total"] += val
 
     groups_res = []
     for g in MACRO_GROUPS:
@@ -823,11 +847,18 @@ async def api_financial_summary(role: str = "campo"):
             "pct": round(pct, 1)
         })
 
+    mes_atual_nome = month_names.get(mes_atual_num, "Mês Atual")
+    prox_mes_nome = month_names.get(mes_atual_num + 1 if mes_atual_num < 12 else 1, "Futuro")
+
     return {
         "kpis": {
             "total_desembolso": f"R${total_desembolso_periodo:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "mes_atual": f"R${val_ago:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "futuro": f"R${val_futuro:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            "total_contratado": f"R${total_contratado_compras:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "mes_atual": f"R${val_mes_atual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "futuro": f"R${val_futuro:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "periodo_label": periodo_label,
+            "mes_atual_nome": mes_atual_nome,
+            "futuro_label": f"{prox_mes_nome}+"
         },
         "monthly_bars": bars,
         "macro_groups": groups_res

@@ -680,15 +680,15 @@ const app = {
         <!-- 1. CARDS DE INDICADORES (KPIS DE PREVISÃO) -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
           <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">💰 Previsão Total de Desembolso (Jul a Dez/26)</div>
+            <div class="fin-kpi-label" style="font-size:11px;">💰 Previsão Total de Desembolso (${kpis.periodo_label || '2026'})</div>
             <div class="fin-kpi-value" style="color:#60a5fa;font-size:20px;">${kpis.total_desembolso}</div>
           </div>
           <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">📅 Previsão em Agosto (Mês Atual)</div>
+            <div class="fin-kpi-label" style="font-size:11px;">📅 ${kpis.mes_atual_nome || 'Agosto'} (Mês Atual)</div>
             <div class="fin-kpi-value" style="color:#fbbf24;font-size:17px;">${kpis.mes_atual}</div>
           </div>
           <div class="fin-kpi-card" style="border-left:4px solid #10b981;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">⏳ Previsão Futura (Setembro+)</div>
+            <div class="fin-kpi-label" style="font-size:11px;">⏳ Futuro (${kpis.futuro_label || 'Setembro+'})</div>
             <div class="fin-kpi-value" style="color:#34d399;font-size:17px;">${kpis.futuro}</div>
           </div>
         </div>
@@ -697,7 +697,7 @@ const app = {
         <div class="fin-section-box" style="padding:12px 14px;margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div class="fin-section-title" style="font-size:13px;">📈 Previsão de Desembolso Mensal</div>
-            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Entrega</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimento</div>
           </div>
           
           <div style="display:flex;flex-direction:column;gap:8px;">
@@ -705,7 +705,7 @@ const app = {
               <div class="fin-compact-row ${b.is_current ? 'compact-current-row' : ''}">
                 <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:4px;">
                   <span style="${b.is_current ? 'color:#fbbf24;font-size:12px;font-weight:800;' : 'color:#e2e8f0;'}">
-                    ${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/2026${b.is_current ? ' ⭐ (Mês Atual)' : ''}
+                    ${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/${b.ano || 2026}${b.is_current ? ' ⭐ (Mês Atual)' : ''}
                   </span>
                   <span style="${b.is_current ? 'color:#fbbf24;font-weight:800;' : 'color:#10b981;font-weight:700;'}">
                     ${b.valor_fmt} <span style="color:#94a3b8;font-size:10px;font-weight:500;">(${b.pct}%)</span>
