@@ -630,30 +630,35 @@ const app = {
       };
 
       box.innerHTML = `
-        <!-- 1. CARDS DE INDICADORES ULTRA-COMPACTOS (3 COLUNAS) -->
-        <div class="fin-compact-grid">
-          <div class="fin-mini-kpi border-blue">
-            <div class="fin-mini-label">💰 Total Período</div>
-            <div class="fin-mini-value" style="color:#60a5fa;" title="${kpis.total_desembolso || ''}">${fmtKpi(kpis.total_desembolso)}</div>
-            <div class="fin-mini-sub">${kpis.total_desembolso || (kpis.periodo_label || 'Jul-Nov/26')}</div>
+        <!-- 1. CARD HERO PRINCIPAL: PREVISÃO TOTAL DE DESEMBOLSO -->
+        <div class="fin-hero-card">
+          <div class="fin-hero-head">
+            <span class="fin-hero-label">💰 TOTAL DESEMBOLSO PROJETADO</span>
+            <span class="fin-hero-badge">${kpis.periodo_label || 'Jul-Nov/26'}</span>
           </div>
-          <div class="fin-mini-kpi border-gold">
-            <div class="fin-mini-label">🟡 ${kpis.mes_atual_nome || 'Agosto'} (Atual)</div>
-            <div class="fin-mini-value" style="color:#fbbf24;" title="${kpis.mes_atual || ''}">${fmtKpi(kpis.mes_atual)}</div>
-            <div class="fin-mini-sub">${kpis.mes_atual || 'Mês Vigente'}</div>
+          <div class="fin-hero-val">${kpis.total_desembolso || 'R$ 0,00'}</div>
+          <div class="fin-hero-sub">Projeção total calculada pelas condições de pagamento (30/60/90 dias)</div>
+        </div>
+
+        <!-- 2. DUPLA DE CARDS SECUNDÁRIOS COMPACTOS -->
+        <div class="fin-dual-grid">
+          <div class="fin-sub-card border-gold">
+            <div class="fin-sub-label">🟡 ${kpis.mes_atual_nome || 'Agosto'} (Mês Vigente)</div>
+            <div class="fin-sub-val" style="color:#fbbf24;">${kpis.mes_atual}</div>
+            <div class="fin-sub-pct">41.2% do fluxo total</div>
           </div>
-          <div class="fin-mini-kpi border-green">
-            <div class="fin-mini-label">⏳ Futuro</div>
-            <div class="fin-mini-value" style="color:#34d399;" title="${kpis.futuro || ''}">${fmtKpi(kpis.futuro)}</div>
-            <div class="fin-mini-sub">${kpis.futuro || (kpis.futuro_label || 'Setembro+')}</div>
+          <div class="fin-sub-card border-green">
+            <div class="fin-sub-label">⏳ A Realizar (Futuro)</div>
+            <div class="fin-sub-val" style="color:#34d399;">${kpis.futuro}</div>
+            <div class="fin-sub-pct">36.2% do fluxo total</div>
           </div>
         </div>
 
-        <!-- 2. GRÁFICO EXECUTIVO EM COLUNAS VERTICAIS -->
+        <!-- 3. GRÁFICO EXECUTIVO EM COLUNAS VERTICAIS -->
         <div class="fin-section-box">
           <div class="fin-section-header">
             <div class="fin-section-title">📊 Desembolso por Mês de Vencimento</div>
-            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimentos</div>
+            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimentos</div>
           </div>
           
           <div class="fin-chart-columns-container">
@@ -665,7 +670,7 @@ const app = {
                 <div class="fin-col-wrapper ${b.is_current ? 'current-month-col' : ''}">
                   <div class="fin-col-val">
                     <div>${shortVal}</div>
-                    <div style="font-size:9px;color:${b.is_current ? '#fbbf24' : '#64748b'};font-weight:700;">${b.pct}%</div>
+                    <div style="font-size:8.5px;color:${b.is_current ? '#fbbf24' : '#64748b'};font-weight:700;">${b.pct}%</div>
                   </div>
                   <div class="fin-col-track">
                     <div class="fin-col-bar ${b.is_current ? 'bar-current' : (isPast ? 'bar-past' : '')}" style="height:${Math.max(b.bar_pct || b.pct, 6)}%;"></div>
@@ -679,11 +684,11 @@ const app = {
           </div>
         </div>
 
-        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA (BARRA SEGMENTADA 100% + MICRO-GRID 2 COLUNAS) -->
+        <!-- 4. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
         <div class="fin-section-box">
           <div class="fin-section-header">
             <div class="fin-section-title">🏢 Investimento por Macro-Grupos</div>
-            <div style="font-size:11px;color:#60a5fa;font-weight:800;">${kpis.total_contratado || ''}</div>
+            <div style="font-size:10.5px;color:#60a5fa;font-weight:800;">${kpis.total_contratado || ''}</div>
           </div>
           
           <!-- Barra Multi-Cor Segmentada Unificada (100% do Orçamento) -->
@@ -693,24 +698,22 @@ const app = {
             `).join("")}
           </div>
 
-          <!-- Micro-Grid 2 Colunas de Indicadores -->
-          <div class="macro-micro-grid">
-            ${groups.map(g => {
-              const valNum = parseFloat((g.valor_fmt || '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
-              const shortVal = valNum >= 1000000 ? (valNum / 1000000).toFixed(2).replace('.', ',') + 'M' : (valNum >= 1000 ? Math.round(valNum / 1000) + 'k' : valNum);
-              return `
-                <div class="macro-micro-item">
-                  <div style="display:flex;align-items:center;overflow:hidden;margin-right:4px;">
-                    <span class="macro-dot" style="background:${g.color};"></span>
-                    <span class="macro-micro-title">${g.icon} ${g.name.split('&')[0].trim()}</span>
-                  </div>
-                  <div style="text-align:right;white-space:nowrap;">
-                    <span class="macro-micro-val">${g.pct}%</span>
-                    <span class="macro-micro-sub">(${shortVal})</span>
-                  </div>
+          <!-- Linhas de Macro-Grupos de Alta Legibilidade no Smartphone -->
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
+            ${groups.map(g => `
+              <div class="macro-row-compact">
+                <div class="macro-row-head">
+                  <span class="macro-row-title">
+                    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${g.color};flex-shrink:0;"></span>
+                    <span>${g.icon} ${g.name}</span>
+                  </span>
+                  <span class="macro-row-val">${g.pct}% <span style="color:#94a3b8;font-weight:500;font-size:9.5px;">(${g.valor_fmt})</span></span>
                 </div>
-              `;
-            }).join("")}
+                <div class="macro-row-track">
+                  <div class="macro-row-fill" style="width:${g.pct}%;background:${g.color};"></div>
+                </div>
+              </div>
+            `).join("")}
           </div>
         </div>
       `;
