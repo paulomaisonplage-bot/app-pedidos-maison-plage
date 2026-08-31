@@ -206,7 +206,7 @@ const app = {
       this.clientTabLoaded[mod] = true;
       if (mod === "week") this.loadWeek();
       else if (mod === "month") this.loadMonth();
-      else if (mod === "search") this.loadSearch();
+      else if (mod === "search") this.loadCatalogAZ();
       else if (mod === "groups") this.loadGroups();
       else if (mod === "recent") this.loadRecent();
       else if (mod === "suppliers") this.loadSuppliers();
@@ -417,68 +417,120 @@ const app = {
   },
 
   currentLetter: "TODOS",
-  async loadSearch() {
-    const input = document.getElementById("moduleSearchInput");
-    const query = (input ? input.value : "") || this.searchQuery || "";
-    if (query) {
-      this.performMaterialSearch(query);
-    } else {
-      const container = document.getElementById("searchCards");
-      if (container && container.innerHTML.trim() === "") {
-        container.innerHTML = `
-          <div style="padding: 24px; text-align: center; color: #94a3b8;">
-            🔍 Digite o nome de um material ou clique em uma sugestão acima para buscar pedidos de compra.
-          </div>
-        `;
+  catalogQuery: "",
+  allInsumosCache: null,
+  totalInsumosCadastrados: 0,
+
+  renderLettersBar() {
+    const bar = document.getElementById("lettersBar");
+    if (!bar) return;
+    const letters = ["TODOS", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+    bar.innerHTML = letters.map(l => `
+      <button class="letter-pill ${this.currentLetter === l ? 'active' : ''}" onclick="app.selectLetter('${l}')">${l}</button>
+    `).join("");
+  },
+
+  selectLetter(l) {
+    this.currentLetter = l;
+    this.renderLettersBar();
+    this.renderCatalogList();
+  },
+
+  filterCatalog(val) {
+    this.catalogQuery = val.trim();
+    this.renderCatalogList();
+  },
+
+  async loadCatalogAZ() {
+    this.renderLettersBar();
+    const list = document.getElementById("materialsLeanList");
+    
+    if (!this.allInsumosCache || this.allInsumosCache.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando catálogo de insumos...</div>';
+      try {
+        const res = await fetch(`/api/materials/catalog?role=${this.currentUser.role}`);
+        const data = await res.json();
+        this.allInsumosCache = data.insumos || [];
+        this.totalInsumosCadastrados = data.total_cadastrados || this.allInsumosCache.length;
+      } catch(e) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar catálogo de insumos.</div>';
+        return;
       }
     }
+
+    this.renderCatalogList();
   },
 
-  searchByChip(keyword) {
-    const input = document.getElementById("moduleSearchInput");
-    if (input) input.value = keyword;
-    this.performMaterialSearch(keyword);
-  },
+  renderCatalogList() {
+    const list = document.getElementById("materialsLeanList");
+    if (!list) return;
 
-  async performMaterialSearch(overrideQuery) {
-    const input = document.getElementById("moduleSearchInput");
-    const q = (overrideQuery || (input ? input.value : "") || "").trim();
-    const container = document.getElementById("searchCards");
-    if (!container) return;
-
-    if (!q) {
-      container.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: #94a3b8;">
-          🔍 Digite o nome de um material ou clique em uma sugestão acima para buscar pedidos de compra.
-        </div>
-      `;
+    if (!this.allInsumosCache) {
+      this.loadCatalogAZ();
       return;
     }
 
-    container.innerHTML = `<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Buscando pedidos para "<b>${q}</b>"...</div>`;
+    let filtered = this.allInsumosCache;
+
+    if (this.currentLetter && this.currentLetter !== "TODOS") {
+      const l = this.currentLetter.toUpperCase();
+      filtered = filtered.filter(m => m.nome.toUpperCase().startsWith(l));
+    }
+
+    if (this.catalogQuery) {
+      const q = this.catalogQuery.toLowerCase();
+      filtered = filtered.filter(m => 
+        m.nome.toLowerCase().includes(q) || 
+        (m.codigo && m.codigo.toLowerCase().includes(q)) || 
+        (m.familia && m.familia.toLowerCase().includes(q))
+      );
+    }
+
+    const metricsElem = document.getElementById("catalogMetrics");
+    if (metricsElem) {
+      metricsElem.innerHTML = `📋 <b>${filtered.length}</b> de <b>${this.totalInsumosCadastrados}</b> insumos cadastrados`;
+    }
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum insumo localizado com este filtro.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.slice(0, 300).map(m => `
+      <div class="material-lean-row" onclick="app.openMaterialOrders('${encodeURIComponent(m.nome)}')">
+        <div class="mat-lean-name">${m.nome}</div>
+        <div class="mat-lean-badge">${m.qtd_formatada} • ${m.pedidos_count} PC</div>
+      </div>
+    `).join("");
+  },
+
+  async openMaterialOrders(encodedName) {
+    const name = decodeURIComponent(encodedName);
+    document.getElementById("matModalTitle").innerText = name;
+    document.getElementById("matModalSub").innerText = "Carregando pedidos...";
+    const cardsDiv = document.getElementById("matOrdersCards");
+    cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Buscando pedidos...</div>';
+    document.getElementById("matOrdersModal").classList.add("show");
+    document.body.style.overflow = "hidden";
 
     try {
-      const res = await fetch(`/api/materials/search?q=${encodeURIComponent(q)}&role=${this.currentUser.role}`);
+      const res = await fetch(`/api/materials/orders?nome=${encodeURIComponent(name)}&role=${this.currentUser.role}`);
       const data = await res.json();
-      
+      document.getElementById("matModalSub").innerText = `${data.total_pedidos} Pedido(s) de Compra`;
       if (!data.cards || data.cards.length === 0) {
-        container.innerHTML = `
-          <div style="padding: 24px; text-align: center; color: #94a3b8;">
-            Nenhum pedido de compra localizado para <b>"${q}"</b>.
-          </div>
-        `;
+        cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido encontrado.</div>';
         return;
       }
-
-      container.innerHTML = `
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">
-          📍 Encontrado(s) <b>${data.total_pedidos}</b> pedido(s) de compra para <b>"${q}"</b>:
-        </div>
-        ${data.cards.map(c => this.renderOrderCard(c)).join("")}
-      `;
+      cardsDiv.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
     } catch(e) {
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao realizar a busca de insumos.</div>';
+      cardsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar pedidos deste insumo.</div>';
     }
+  },
+
+  closeMatOrdersModal(e) {
+    if (e && e.target && e.target.id !== "matOrdersModal" && !e.target.classList.contains("btn-close")) return;
+    document.getElementById("matOrdersModal").classList.remove("show");
+    document.body.style.overflow = "";
   },
 
   async loadGroups() {

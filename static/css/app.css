@@ -306,24 +306,75 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
   box-sizing: border-box; 
 }
 
-/* CHIPS DE SUGESTÃO DE INSUMOS */
-.chip-pill { 
-  background: #1e293b; 
-  border: 1px solid var(--surface-border); 
-  color: #94a3b8; 
-  padding: 6px 12px; 
-  border-radius: 20px; 
-  font-size: 11px; 
-  font-weight: 700; 
-  cursor: pointer; 
-  white-space: nowrap; 
-  flex-shrink: 0; 
-  transition: all 0.15s; 
+/* CATÁLOGO ALFABÉTICO A-Z DE INSUMOS */
+.letters-bar {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
 }
-.chip-pill:hover, .chip-pill:active { 
-  background: #2563eb; 
-  color: #fff; 
-  border-color: #3b82f6; 
+.letters-bar::-webkit-scrollbar { display: none; }
+.letter-pill {
+  background: #1e293b;
+  border: 1px solid var(--surface-border);
+  color: #94a3b8;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.letter-pill:hover, .letter-pill.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 10px rgba(37,99,235,0.4);
+}
+.materials-lean-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.material-lean-row {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+}
+.material-lean-row:active {
+  transform: scale(0.985);
+  border-color: #3b82f6;
+}
+.mat-lean-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 8px;
+}
+.mat-lean-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #60a5fa;
+  background: rgba(37,99,235,0.12);
+  border: 1px solid rgba(59,130,246,0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 /* DASHBOARD FINANCEIRO SMARTPHONE-NATIVE (100% ENQUADRADO SEM OVERFLOW) */
 .fin-hero-card { 
