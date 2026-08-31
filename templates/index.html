@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Maison Plage">
-  <link rel="stylesheet" href="/static/css/app.css?v=20260831_1720">
+  <link rel="stylesheet" href="/static/css/app.css?v=20260831_1725">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -191,6 +191,10 @@
 
       <!-- MÓDULO 6: FORNECEDORES -->
       <section id="modSuppliers" class="module-section">
+        <div class="search-head-box" style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px;">
+          <div class="letters-bar" id="supplierLettersBar"></div>
+          <div id="supplierMetrics" style="font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:600;">Carregando fornecedores...</div>
+        </div>
         <div class="cards-list" id="suppliersCards"></div>
       </section>
 
@@ -330,7 +334,7 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=20260831_1720"></script>
+  <script src="/static/js/app.js?v=20260831_1725"></script>
 
   <!-- MODAL DE VISUALIZADOR DE PDF INTEGRADO -->
   <div id="pdfViewerModal" class="modal-backdrop">

@@ -441,10 +441,14 @@ const app = {
     const btn = document.getElementById("clearSearchBtn");
     if (btn) btn.style.display = q ? "block" : "none";
 
-    if (this.activeModule !== "search") {
-      this.setModule("search");
+    if (this.activeModule === "suppliers") {
+      this.filterSuppliers(q);
+    } else {
+      if (this.activeModule !== "search") {
+        this.setModule("search");
+      }
+      this.filterCatalog(q);
     }
-    this.filterCatalog(q);
   },
 
   clearSearch() {
@@ -452,7 +456,11 @@ const app = {
     if (input) input.value = "";
     const btn = document.getElementById("clearSearchBtn");
     if (btn) btn.style.display = "none";
-    this.filterCatalog("");
+    if (this.activeModule === "suppliers") {
+      this.filterSuppliers("");
+    } else {
+      this.filterCatalog("");
+    }
   },
 
   filterCatalog(val) {
@@ -651,49 +659,121 @@ const app = {
     }
   },
 
+  currentSupplierLetter: "TODOS",
+  supplierQuery: "",
+  allSuppliersCache: null,
+  totalSuppliersCadastrados: 0,
+
+  renderSupplierLettersBar() {
+    const bar = document.getElementById("supplierLettersBar");
+    if (!bar) return;
+    const letters = ["TODOS", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+    bar.innerHTML = letters.map(l => `
+      <button class="letter-pill ${this.currentSupplierLetter === l ? 'active' : ''}" onclick="app.selectSupplierLetter('${l}')">${l}</button>
+    `).join("");
+  },
+
+  selectSupplierLetter(l) {
+    this.currentSupplierLetter = l;
+    this.renderSupplierLettersBar();
+    this.renderSuppliersList();
+  },
+
+  filterSuppliers(val) {
+    this.supplierQuery = (val || "").trim();
+    this.renderSuppliersList();
+  },
+
   async loadSuppliers() {
+    this.renderSupplierLettersBar();
     const list = document.getElementById("suppliersCards");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando contatos estruturados...</div>';
-    try {
-      const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
-      const data = await res.json();
-      list.innerHTML = data.suppliers.map(s => {
-        const v = s.vendedor || {};
-        const emp = s.empresa || {};
-        
-        return `
-          <div class="supplier-card">
-            <div class="sup-name">${s.razao_social}</div>
-            
-            <!-- BLOCO 1: VENDEDOR DIRETO -->
-            <div class="contact-sub-box">
-              <div class="contact-box-header">👤 <b>Vendedor Responsável:</b> ${v.nome}</div>
-              ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+    
+    if (!this.allSuppliersCache || this.allSuppliersCache.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando fornecedores homologados...</div>';
+      try {
+        const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
+        const data = await res.json();
+        this.allSuppliersCache = data.suppliers || [];
+        this.totalSuppliersCadastrados = this.allSuppliersCache.length;
+      } catch(e) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar fornecedores.</div>';
+        return;
+      }
+    }
+
+    this.renderSuppliersList();
+  },
+
+  renderSuppliersList() {
+    const list = document.getElementById("suppliersCards");
+    if (!list) return;
+
+    if (!this.allSuppliersCache) {
+      this.loadSuppliers();
+      return;
+    }
+
+    let filtered = this.allSuppliersCache;
+
+    if (this.currentSupplierLetter && this.currentSupplierLetter !== "TODOS") {
+      const l = this.currentSupplierLetter.toUpperCase();
+      filtered = filtered.filter(s => (s.razao_social || "").toUpperCase().startsWith(l));
+    }
+
+    if (this.supplierQuery) {
+      const q = this.supplierQuery.toLowerCase();
+      filtered = filtered.filter(s => {
+        const r = (s.razao_social || "").toLowerCase();
+        const v = (s.vendedor?.nome || "").toLowerCase();
+        const e = (s.empresa?.email || "").toLowerCase();
+        return r.includes(q) || v.includes(q) || e.includes(q);
+      });
+    }
+
+    const metricsElem = document.getElementById("supplierMetrics");
+    if (metricsElem) {
+      metricsElem.innerHTML = `📋 <b>${filtered.length}</b> de <b>${this.totalSuppliersCadastrados}</b> fornecedores homologados`;
+    }
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum fornecedor localizado com este filtro.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(s => {
+      const v = s.vendedor || {};
+      const emp = s.empresa || {};
+      
+      return `
+        <div class="supplier-card">
+          <div class="sup-name">${s.razao_social}</div>
+          
+          <!-- BLOCO 1: VENDEDOR DIRETO -->
+          <div class="contact-sub-box">
+            <div class="contact-box-header">👤 <b>Vendedor Responsável:</b> ${v.nome || 'Atendimento Comercial'}</div>
+            ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+            <div class="sup-actions">
+              ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
+              ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome || '')}%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+
+          <!-- BLOCO 2: CENTRAL DA EMPRESA -->
+          ${(emp.telefone || emp.email) ? `
+            <div class="contact-sub-box" style="margin-top:8px;background:rgba(255,255,255,0.02);">
+              <div class="contact-box-header">🏢 <b>Central da Empresa / Loja</b></div>
+              ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
+              ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
               <div class="sup-actions">
-                ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
-                ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome)}%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+                ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
+                ${emp.email ? `<a href="mailto:${emp.email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
               </div>
             </div>
+          ` : ''}
 
-            <!-- BLOCO 2: CENTRAL DA EMPRESA -->
-            ${(emp.telefone || emp.email) ? `
-              <div class="contact-sub-box" style="margin-top:8px;background:rgba(255,255,255,0.02);">
-                <div class="contact-box-header">🏢 <b>Central da Empresa / Loja</b></div>
-                ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
-                ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
-                <div class="sup-actions">
-                  ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
-                  ${emp.email ? `<a href="mailto:${emp.email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
-                </div>
-              </div>
-            ` : ''}
-
-          </div>
-        `;
-      }).join("");
-    } catch(e) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar fornecedores.</div>';
-    }
+        </div>
+      `;
+    }).join("");
   },
 
   async loadFinancial() {
