@@ -726,24 +726,38 @@ const app = {
           </div>
         </div>
 
-        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA (COMPACTO) -->
+        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA (BARRA SEGMENTADA 100% + MICRO-GRID 2 COLUNAS) -->
         <div class="fin-section-box">
           <div class="fin-section-header">
             <div class="fin-section-title">🏢 Investimento por Macro-Grupos</div>
-            <div style="font-size:10px;color:#60a5fa;font-weight:800;">${kpis.total_contratado || ''}</div>
+            <div style="font-size:11px;color:#60a5fa;font-weight:800;">${kpis.total_contratado || ''}</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+          
+          <!-- Barra Multi-Cor Segmentada Unificada (100% do Orçamento) -->
+          <div class="macro-stacked-bar">
             ${groups.map(g => `
-              <div class="macro-group-row">
-                <div class="macro-group-head">
-                  <span>${g.icon} ${g.name}</span>
-                  <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:10px;">(${g.valor_fmt})</span></span>
-                </div>
-                <div class="macro-track">
-                  <div class="macro-fill" style="width:${Math.max(g.pct, 2)}%;background:${g.color};"></div>
-                </div>
-              </div>
+              <div class="macro-segment" style="width:${g.pct}%;background:${g.color};" title="${g.name}: ${g.pct}% (${g.valor_fmt})"></div>
             `).join("")}
+          </div>
+
+          <!-- Micro-Grid 2 Colunas de Indicadores -->
+          <div class="macro-micro-grid">
+            ${groups.map(g => {
+              const valNum = parseFloat((g.valor_fmt || '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
+              const shortVal = valNum >= 1000000 ? (valNum / 1000000).toFixed(2).replace('.', ',') + 'M' : (valNum >= 1000 ? Math.round(valNum / 1000) + 'k' : valNum);
+              return `
+                <div class="macro-micro-item">
+                  <div style="display:flex;align-items:center;overflow:hidden;margin-right:4px;">
+                    <span class="macro-dot" style="background:${g.color};"></span>
+                    <span class="macro-micro-title">${g.icon} ${g.name.split('&')[0].trim()}</span>
+                  </div>
+                  <div style="text-align:right;white-space:nowrap;">
+                    <span class="macro-micro-val">${g.pct}%</span>
+                    <span class="macro-micro-sub">(${shortVal})</span>
+                  </div>
+                </div>
+              `;
+            }).join("")}
           </div>
         </div>
       `;

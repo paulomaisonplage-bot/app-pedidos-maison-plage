@@ -231,8 +231,14 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .current-month-col .fin-col-val { color: #fbbf24; font-weight: 900; }
 .current-month-col .fin-col-label { color: #fbbf24; font-weight: 800; }
 
-/* LINHAS ENXUTAS DE MACRO-GRUPOS */
-.macro-group-row { padding: 4px 0; }
-.macro-group-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; margin-bottom: 3px; }
-.macro-track { background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden; width: 100%; }
-.macro-fill { height: 100%; border-radius: 3px; }
+/* BARRA SEGMENTADA MULTI-COR DO ORÇAMENTO (100% UNIFICADA) */
+.macro-stacked-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; width: 100%; background: rgba(255,255,255,0.06); margin-bottom: 8px; }
+.macro-segment { height: 100%; transition: width 0.4s ease; min-width: 4px; }
+
+/* MICRO-TABELA EM 2 COLUNAS DE MACRO-GRUPOS */
+.macro-micro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.macro-micro-item { display: flex; align-items: center; justify-content: space-between; font-size: 11px; padding: 4px 6px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.04); }
+.macro-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; flex-shrink: 0; }
+.macro-micro-title { color: #cbd5e1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.macro-micro-val { color: #fff; font-weight: 800; white-space: nowrap; font-size: 11px; }
+.macro-micro-sub { color: #64748b; font-size: 9px; font-weight: 500; }

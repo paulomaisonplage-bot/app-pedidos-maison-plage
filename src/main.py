@@ -836,6 +836,9 @@ async def api_financial_summary(role: str = "campo"):
         if not alloc:
             MACRO_GROUPS[3]["total"] += val
 
+    # Ordena por valor decrescente
+    MACRO_GROUPS.sort(key=lambda x: x["total"], reverse=True)
+
     groups_res = []
     for g in MACRO_GROUPS:
         pct = (g["total"] / total_contratado_compras * 100) if total_contratado_compras > 0 else 0
@@ -844,6 +847,7 @@ async def api_financial_summary(role: str = "campo"):
             "icon": g["icon"],
             "color": g["color"],
             "valor_fmt": f"R${g['total']:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "total_raw": g["total"],
             "pct": round(pct, 1)
         })
 
