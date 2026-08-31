@@ -677,60 +677,69 @@ const app = {
       const groups = data.macro_groups || [];
 
       box.innerHTML = `
-        <!-- 1. CARDS DE INDICADORES (KPIS DE PREVISÃO) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-          <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">💰 Previsão Total de Desembolso (${kpis.periodo_label || '2026'})</div>
-            <div class="fin-kpi-value" style="color:#60a5fa;font-size:20px;">${kpis.total_desembolso}</div>
+        <!-- 1. CARDS DE INDICADORES ULTRA-COMPACTOS (3 COLUNAS) -->
+        <div class="fin-compact-grid">
+          <div class="fin-mini-kpi border-blue">
+            <div class="fin-mini-label">💰 Total Período</div>
+            <div class="fin-mini-value" style="color:#60a5fa;">${kpis.total_desembolso}</div>
+            <div class="fin-mini-sub">${kpis.periodo_label || 'Jul-Nov/26'}</div>
           </div>
-          <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">📅 ${kpis.mes_atual_nome || 'Agosto'} (Mês Atual)</div>
-            <div class="fin-kpi-value" style="color:#fbbf24;font-size:17px;">${kpis.mes_atual}</div>
+          <div class="fin-mini-kpi border-gold">
+            <div class="fin-mini-label">🟡 ${kpis.mes_atual_nome || 'Agosto'} (Atual)</div>
+            <div class="fin-mini-value" style="color:#fbbf24;">${kpis.mes_atual}</div>
+            <div class="fin-mini-sub">Mês Vigente</div>
           </div>
-          <div class="fin-kpi-card" style="border-left:4px solid #10b981;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">⏳ Futuro (${kpis.futuro_label || 'Setembro+'})</div>
-            <div class="fin-kpi-value" style="color:#34d399;font-size:17px;">${kpis.futuro}</div>
+          <div class="fin-mini-kpi border-green">
+            <div class="fin-mini-label">⏳ Futuro</div>
+            <div class="fin-mini-value" style="color:#34d399;">${kpis.futuro}</div>
+            <div class="fin-mini-sub">${kpis.futuro_label || 'Setembro+'}</div>
           </div>
         </div>
 
-        <!-- 2. PAINEL COMPACTO EM BARRAS HORIZONTAIS NEON (PINTADAS NO SAFARI/IOS) -->
-        <div class="fin-section-box" style="padding:12px 14px;margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div class="fin-section-title" style="font-size:13px;">📈 Previsão de Desembolso Mensal</div>
-            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimento</div>
+        <!-- 2. GRÁFICO EXECUTIVO EM COLUNAS VERTICAIS -->
+        <div class="fin-section-box">
+          <div class="fin-section-header">
+            <div class="fin-section-title">📊 Desembolso por Mês de Vencimento</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimentos</div>
           </div>
           
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${bars.map(b => `
-              <div class="fin-compact-row ${b.is_current ? 'compact-current-row' : ''}">
-                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:4px;">
-                  <span style="${b.is_current ? 'color:#fbbf24;font-size:12px;font-weight:800;' : 'color:#e2e8f0;'}">
-                    ${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/${b.ano || 2026}${b.is_current ? ' ⭐ (Mês Atual)' : ''}
-                  </span>
-                  <span style="${b.is_current ? 'color:#fbbf24;font-weight:800;' : 'color:#10b981;font-weight:700;'}">
-                    ${b.valor_fmt} <span style="color:#94a3b8;font-size:10px;font-weight:500;">(${b.pct}%)</span>
-                  </span>
+          <div class="fin-chart-columns-container">
+            ${bars.map(b => {
+              const shortVal = (b.valor_fmt || '').replace('R$', '').trim();
+              const isPast = b.mes_num < 8;
+              return `
+                <div class="fin-col-wrapper ${b.is_current ? 'current-month-col' : ''}">
+                  <div class="fin-col-val">
+                    <div>${shortVal.split(',')[0]}</div>
+                    <div style="font-size:9px;color:${b.is_current ? '#fbbf24' : '#64748b'};font-weight:700;">${b.pct}%</div>
+                  </div>
+                  <div class="fin-col-track">
+                    <div class="fin-col-bar ${b.is_current ? 'bar-current' : (isPast ? 'bar-past' : '')}" style="height:${Math.max(b.bar_pct || b.pct, 6)}%;"></div>
+                  </div>
+                  <div class="fin-col-label">
+                    ${b.is_current ? '⭐ ' : ''}${b.mes_nome.substring(0, 3)}
+                  </div>
                 </div>
-                <div class="fin-compact-track">
-                  <div class="fin-compact-fill ${b.is_current ? 'fill-gold' : 'fill-cyan'}" style="width:${Math.max(b.bar_pct || b.pct, 6)}%;"></div>
-                </div>
-              </div>
-            `).join("")}
+              `;
+            }).join("")}
           </div>
         </div>
 
-        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
-        <div class="fin-section-box" style="padding:12px 14px;">
-          <div class="fin-section-title" style="font-size:13px;">🏢 Onde está o Investimento da Obra (Macro-Grupos)</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA (COMPACTO) -->
+        <div class="fin-section-box">
+          <div class="fin-section-header">
+            <div class="fin-section-title">🏢 Investimento por Macro-Grupos</div>
+            <div style="font-size:10px;color:#60a5fa;font-weight:800;">${kpis.total_contratado || ''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
             ${groups.map(g => `
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;">
+              <div class="macro-group-row">
+                <div class="macro-group-head">
                   <span>${g.icon} ${g.name}</span>
                   <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:10px;">(${g.valor_fmt})</span></span>
                 </div>
-                <div class="fin-progress-track" style="height:8px;">
-                  <div class="fin-progress-fill" style="width:${Math.max(g.pct, 2)}%;background:${g.color};height:8px;"></div>
+                <div class="macro-track">
+                  <div class="macro-fill" style="width:${Math.max(g.pct, 2)}%;background:${g.color};"></div>
                 </div>
               </div>
             `).join("")}

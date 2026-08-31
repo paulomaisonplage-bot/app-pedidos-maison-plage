@@ -205,49 +205,34 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .btn-profile-test:active { background: #334155; transform: scale(0.98); }
 .btn-email-otp { background: transparent; border: 1px solid #3b82f6; color: #60a5fa; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
-/* DASHBOARD FINANCEIRO INTERATIVO */
-.fin-kpi-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 12px 14px; }
-.fin-kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.fin-kpi-value { font-size: 16px; font-weight: 800; }
-.fin-section-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; }
-.fin-section-title { font-size: 13px; font-weight: 800; color: #fff; }
-.fin-progress-track { background: rgba(0,0,0,0.3); border-radius: 6px; height: 10px; overflow: hidden; width: 100%; }
-.fin-progress-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+/* DASHBOARD FINANCEIRO ULTRA-COMPACTO */
+.fin-compact-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.fin-mini-kpi { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; }
+.fin-mini-kpi.border-blue { border-left: 3px solid #3b82f6; }
+.fin-mini-kpi.border-gold { border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.04); }
+.fin-mini-kpi.border-green { border-left: 3px solid #10b981; }
+.fin-mini-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fin-mini-value { font-size: 14px; font-weight: 800; margin: 2px 0 1px 0; white-space: nowrap; }
+.fin-mini-sub { font-size: 10px; color: #94a3b8; font-weight: 500; }
 
-/* CATÁLOGO ALFABÉTICO ENXUTO A-Z */
-.search-head-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
-.letters-bar { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 4px 0; -webkit-overflow-scrolling: touch; }
-.letter-pill { background: #1e293b; color: #94a3b8; border: 1px solid var(--surface-border); padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-.letter-pill.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
-.materials-lean-list { display: flex; flex-direction: column; gap: 6px; }
-.material-lean-row { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.15s; }
-.material-lean-row:active { background: rgba(37,99,235,0.2); transform: scale(0.99); }
-.mat-lean-name { font-size: 13px; font-weight: 700; color: #fff; flex: 1; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mat-lean-badge { background: rgba(37,99,235,0.15); color: #60a5fa; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
+.fin-section-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+.fin-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.fin-section-title { font-size: 12px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
 
 /* GRÁFICO EM COLUNAS VERTICAIS EXECUTIVO */
-.fin-chart-columns-container { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; padding: 10px 4px 4px 4px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-.fin-col-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; margin: 0 3px; }
-.fin-col-val { font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 6px; white-space: nowrap; }
-.fin-col-track { width: 100%; max-width: 32px; height: 100px; background: rgba(255,255,255,0.04); border-radius: 6px 6px 0 0; display: flex; align-items: flex-end; overflow: hidden; }
-.fin-col-bar { width: 100%; background: linear-gradient(180deg, #3b82f6, #1d4ed8); border-radius: 6px 6px 0 0; transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 -2px 10px rgba(59,130,246,0.3); }
-.fin-col-bar.bar-current { background: linear-gradient(180deg, #fbbf24, #d97706); box-shadow: 0 -2px 12px rgba(251,191,36,0.5); }
-.current-month-col .fin-col-val { color: #fbbf24; font-weight: 900; font-size: 11px; }
-.fin-col-label { font-size: 11px; font-weight: 700; color: #94a3b8; margin-top: 8px; }
+.fin-chart-columns-container { display: flex; justify-content: space-around; align-items: flex-end; height: 135px; padding: 12px 6px 6px 6px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+.fin-col-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; max-width: 58px; margin: 0 2px; }
+.fin-col-val { font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 4px; white-space: nowrap; text-align: center; line-height: 1.1; }
+.fin-col-track { width: 100%; height: 75px; background: rgba(255,255,255,0.04); border-radius: 6px 6px 0 0; display: flex; align-items: flex-end; overflow: hidden; }
+.fin-col-bar { width: 100%; background: linear-gradient(180deg, #06b6d4, #0284c7); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; box-shadow: 0 -2px 8px rgba(6,182,212,0.3); }
+.fin-col-bar.bar-current { background: linear-gradient(180deg, #f59e0b, #fbbf24); box-shadow: 0 -2px 10px rgba(251,191,36,0.6); }
+.fin-col-bar.bar-past { background: linear-gradient(180deg, #10b981, #059669); opacity: 0.85; }
+.fin-col-label { font-size: 10px; font-weight: 700; color: #94a3b8; margin-top: 6px; white-space: nowrap; }
+.current-month-col .fin-col-val { color: #fbbf24; font-weight: 900; }
 .current-month-col .fin-col-label { color: #fbbf24; font-weight: 800; }
 
-/* BARRAS HORIZONTAIS NEON (OPÇÃO 01) */
-.fin-neon-row { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; }
-.fin-neon-row.neon-current-row { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.04); }
-.fin-neon-track { background: rgba(255,255,255,0.05); height: 8px; border-radius: 6px; overflow: hidden; width: 100%; }
-.fin-neon-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease-out; }
-.fin-neon-fill.fill-cyan { background: linear-gradient(90deg, #06b6d4, #3b82f6); box-shadow: 0 0 10px rgba(6,182,212,0.4); }
-.fin-neon-fill.fill-gold { background: linear-gradient(90deg, #f59e0b, #fbbf24); box-shadow: 0 0 12px rgba(251,191,36,0.6); }
-
-/* BARRAS HORIZONTAIS COMPACTAS IOS/SAFARI (100% PINTADAS) */
-.fin-compact-row { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 10px; }
-.fin-compact-row.compact-current-row { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.06); }
-.fin-compact-track { background: rgba(255,255,255,0.08); height: 10px; border-radius: 5px; overflow: hidden; width: 100%; display: block; position: relative; }
-.fin-compact-fill { height: 10px; min-width: 6px; border-radius: 5px; display: block; }
-.fin-compact-fill.fill-cyan { background-color: #06b6d4 !important; background: linear-gradient(90deg, #06b6d4, #3b82f6) !important; box-shadow: 0 0 8px rgba(6,182,212,0.6); }
-.fin-compact-fill.fill-gold { background-color: #fbbf24 !important; background: linear-gradient(90deg, #f59e0b, #fbbf24) !important; box-shadow: 0 0 10px rgba(251,191,36,0.8); }
+/* LINHAS ENXUTAS DE MACRO-GRUPOS */
+.macro-group-row { padding: 4px 0; }
+.macro-group-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+.macro-track { background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden; width: 100%; }
+.macro-fill { height: 100%; border-radius: 3px; }
