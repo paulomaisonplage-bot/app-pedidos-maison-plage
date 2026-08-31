@@ -309,13 +309,28 @@ const app = {
       this.renderOrderModal(this.orderDetailCache[pc]);
       return;
     }
+
+    // Abertura instantânea (0ms) com transição suave e esqueleto de carregamento
+    document.getElementById("mOrderNum").innerText = `PC ${pc}`;
+    document.getElementById("mFornec").innerText = "Carregando fornecedor...";
+    document.getElementById("mOrderMeta").innerHTML = `
+      <div style="color:#94a3b8;padding:6px 0;font-size:11.5px;">⏳ Buscando dados de entrega, contatos e financeiro...</div>
+    `;
+    document.getElementById("mItemsList").innerHTML = `
+      <div style="padding:14px;text-align:center;color:#94a3b8;font-size:11.5px;">Carregando itens do pedido...</div>
+    `;
+    document.getElementById("mModalActions").innerHTML = "";
+    document.getElementById("orderModal").classList.add("show");
+    document.body.style.overflow = "hidden";
+
     try {
       const res = await fetch(`/api/order/${pc}?role=${this.currentUser.role}`);
       const data = await res.json();
       this.orderDetailCache[pc] = data;
       this.renderOrderModal(data);
     } catch(e) {
-      alert("Erro ao abrir detalhes do pedido.");
+      document.getElementById("mFornec").innerText = "Erro de conexão";
+      document.getElementById("mItemsList").innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar detalhes deste pedido.</div>';
     }
   },
 
