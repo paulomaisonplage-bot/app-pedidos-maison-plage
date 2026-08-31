@@ -436,8 +436,27 @@ const app = {
     this.renderCatalogList();
   },
 
+  handleSearch(val) {
+    const q = (val || "").trim();
+    const btn = document.getElementById("clearSearchBtn");
+    if (btn) btn.style.display = q ? "block" : "none";
+
+    if (this.activeModule !== "search") {
+      this.setModule("search");
+    }
+    this.filterCatalog(q);
+  },
+
+  clearSearch() {
+    const input = document.getElementById("searchInput");
+    if (input) input.value = "";
+    const btn = document.getElementById("clearSearchBtn");
+    if (btn) btn.style.display = "none";
+    this.filterCatalog("");
+  },
+
   filterCatalog(val) {
-    this.catalogQuery = val.trim();
+    this.catalogQuery = (val || "").trim();
     this.renderCatalogList();
   },
 
