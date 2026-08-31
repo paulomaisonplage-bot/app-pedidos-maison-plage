@@ -800,10 +800,10 @@ const app = {
         <div class="fin-hero-card">
           <div class="fin-hero-head">
             <span class="fin-hero-label">💰 TOTAL DESEMBOLSO PROJETADO</span>
-            <span class="fin-hero-badge">${kpis.periodo_label || 'Jul-Nov/26'}</span>
+            <span class="fin-hero-badge">${kpis.periodo_label || 'Jun-Nov/26'}</span>
           </div>
           <div class="fin-hero-val">${kpis.total_desembolso || 'R$ 0,00'}</div>
-          <div class="fin-hero-sub">Projeção total calculada pelas condições de pagamento (30/60/90 dias)</div>
+          <div class="fin-hero-sub">Projeção calculada pelas condições de parcelamento (30/60/90 dias)</div>
         </div>
 
         <!-- 2. DUPLA DE CARDS SECUNDÁRIOS COMPACTOS -->
@@ -816,33 +816,36 @@ const app = {
           <div class="fin-sub-card border-green">
             <div class="fin-sub-label">⏳ A Realizar (Futuro)</div>
             <div class="fin-sub-val" style="color:#34d399;">${kpis.futuro}</div>
-            <div class="fin-sub-pct">36.2% do fluxo total</div>
+            <div class="fin-sub-pct">36.2% (Set a Nov)</div>
           </div>
         </div>
 
-        <!-- 3. GRÁFICO EXECUTIVO EM COLUNAS VERTICAIS -->
+        <!-- 3. CRONOGRAMA DE DESEMBOLSO POR MÊS DE VENCIMENTO -->
         <div class="fin-section-box">
           <div class="fin-section-header">
             <div class="fin-section-title">📊 Desembolso por Mês de Vencimento</div>
             <div style="font-size:9.5px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimentos</div>
           </div>
           
-          <div class="fin-chart-columns-container">
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
             ${bars.map(b => {
-              const valNum = parseFloat((b.valor_fmt || '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
-              const shortVal = valNum >= 1000000 ? (valNum / 1000000).toFixed(2).replace('.', ',') + 'M' : (valNum >= 1000 ? Math.round(valNum / 1000) + 'k' : valNum);
               const isPast = b.mes_num < 8;
+              const statusTag = b.is_current ? '⭐ Mês Atual' : (isPast ? 'Realizado' : 'Futuro');
+              const barColor = b.is_current ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : (isPast ? '#10b981' : '#3b82f6');
+              const textHighlight = b.is_current ? 'color:#fbbf24;font-weight:900;' : 'color:#e2e8f0;';
+              
               return `
-                <div class="fin-col-wrapper ${b.is_current ? 'current-month-col' : ''}">
-                  <div class="fin-col-val">
-                    <div>${shortVal}</div>
-                    <div style="font-size:8.5px;color:${b.is_current ? '#fbbf24' : '#64748b'};font-weight:700;">${b.pct}%</div>
+                <div style="${b.is_current ? 'background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:6px 8px;' : ''}">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:3px;">
+                    <span style="${textHighlight}">
+                      ${b.mes_nome}/2026 <span style="font-size:9px;font-weight:600;color:${b.is_current ? '#fbbf24' : (isPast ? '#10b981' : '#60a5fa')};">(${statusTag})</span>
+                    </span>
+                    <span style="color:#fff;font-weight:800;">
+                      ${b.valor_fmt} <span style="font-size:9.5px;color:#94a3b8;font-weight:600;">(${b.pct}%)</span>
+                    </span>
                   </div>
-                  <div class="fin-col-track">
-                    <div class="fin-col-bar ${b.is_current ? 'bar-current' : (isPast ? 'bar-past' : '')}" style="height:${Math.max(b.bar_pct || b.pct, 6)}%;"></div>
-                  </div>
-                  <div class="fin-col-label">
-                    ${b.is_current ? '⭐ ' : ''}${b.mes_nome.substring(0, 3)}
+                  <div style="background:rgba(255,255,255,0.06);height:6px;border-radius:3px;overflow:hidden;width:100%;">
+                    <div style="height:100%;border-radius:3px;width:${Math.max(b.pct, 2)}%;background:${barColor};"></div>
                   </div>
                 </div>
               `;
@@ -864,16 +867,16 @@ const app = {
             `).join("")}
           </div>
 
-          <!-- Linhas de Macro-Grupos de Alta Legibilidade no Smartphone -->
-          <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
+          <!-- Linhas de Macro-Grupos Claras e Enquadradas -->
+          <div style="display:flex;flex-direction:column;gap:6px;padding-top:4px;">
             ${groups.map(g => `
               <div class="macro-row-compact">
                 <div class="macro-row-head">
                   <span class="macro-row-title">
-                    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${g.color};flex-shrink:0;"></span>
+                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${g.color};flex-shrink:0;"></span>
                     <span>${g.icon} ${g.name}</span>
                   </span>
-                  <span class="macro-row-val">${g.pct}% <span style="color:#94a3b8;font-weight:500;font-size:9.5px;">(${g.valor_fmt})</span></span>
+                  <span class="macro-row-val">${g.valor_fmt} <span style="color:#94a3b8;font-weight:600;font-size:9.5px;">(${g.pct}%)</span></span>
                 </div>
                 <div class="macro-row-track">
                   <div class="macro-row-fill" style="width:${g.pct}%;background:${g.color};"></div>
