@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Maison Plage">
-  <link rel="stylesheet" href="/static/css/app.css?v=20260831_1655">
+  <link rel="stylesheet" href="/static/css/app.css?v=20260831_1700">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -167,15 +167,35 @@
         <div class="cards-list" id="monthCards"></div>
       </section>
 
-      <!-- MÓDULO 3: CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (A-Z) -->
+      <!-- MÓDULO 3: BUSCA POR INSUMO / MATERIAL -->
       <section id="modSearch" class="module-section">
-        <div class="search-head-box">
-          <div class="letters-bar" id="lettersBar"></div>
-          <div id="catalogMetrics" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Carregando insumos...</div>
+        <div class="search-box-container" style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px;">
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <input type="text" id="moduleSearchInput" placeholder="🔍 Digite o nome do material (ex: cimento, areia, tubo, ferro, bloco...)" 
+                   style="flex:1; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 12px; padding: 10px 14px; color: #fff; font-size: 13px; outline: none;"
+                   onkeyup="if(event.key==='Enter') app.performMaterialSearch()">
+            <button onclick="app.performMaterialSearch()" style="background: var(--primary); border: none; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer;">
+              Buscar
+            </button>
+          </div>
+          <!-- CHIPS DE SUGESTÃO DE INSUMOS -->
+          <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch;">
+            <button class="chip-pill" onclick="app.searchByChip('Cimento')">🏗️ Cimento</button>
+            <button class="chip-pill" onclick="app.searchByChip('Areia')">🏖️ Areia</button>
+            <button class="chip-pill" onclick="app.searchByChip('Bloco')">🧱 Blocos</button>
+            <button class="chip-pill" onclick="app.searchByChip('Tubo')">🚿 Tubos</button>
+            <button class="chip-pill" onclick="app.searchByChip('Cabo')">⚡ Cabos</button>
+            <button class="chip-pill" onclick="app.searchByChip('Ferro')">🔩 Ferro</button>
+            <button class="chip-pill" onclick="app.searchByChip('Tinta')">🛡️ Tintas</button>
+            <button class="chip-pill" onclick="app.searchByChip('EPI')">🦺 EPIs</button>
+            <button class="chip-pill" onclick="app.searchByChip('Argamassa')">🧱 Argamassa</button>
+          </div>
         </div>
 
-        <div class="materials-lean-list" id="materialsLeanList">
-          <div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando catálogo alfabético...</div>
+        <div class="cards-list" id="searchCards">
+          <div style="padding: 24px; text-align: center; color: #94a3b8;">
+            🔍 Digite o nome de um material ou clique em uma sugestão acima para buscar pedidos de compra.
+          </div>
         </div>
       </section>
 
@@ -315,7 +335,7 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=20260831_1655"></script>
+  <script src="/static/js/app.js?v=20260831_1700"></script>
 
   <!-- MODAL DE VISUALIZADOR DE PDF INTEGRADO -->
   <div id="pdfViewerModal" class="modal-backdrop">

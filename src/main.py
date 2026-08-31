@@ -15,7 +15,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from src.query_service import OrderQueryService, load_all_suppliers_contacts
+from src.query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
 from src.excel_manager import calculate_installments_for_item, parse_date
 from src.auth_service import AuthService
 
@@ -593,7 +593,69 @@ def get_cached_catalog_materials():
         CACHE_STORE["catalog_materials"] = formatted_catalog
     return CACHE_STORE["catalog_materials"]
 
-# 3. CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (DO MÊS ANTERIOR EM DIANTE)
+# 3. BUSCA DIRETA DE INSUMOS & PEDIDOS
+@app.get("/api/materials/search")
+async def api_materials_search(q: str = "", role: str = "campo"):
+    hide_fin = not can_view_monetary(role)
+    cutoff = get_previous_month_cutoff_date()
+    raw_dict, pc_items_map = get_cached_raw_records()
+    
+    q_clean = q.lower().strip()
+    if not q_clean:
+        return {"query": q, "total_pedidos": 0, "cards": []}
+        
+    tokens = q_clean.split()
+    tokens_exp = set(tokens)
+    for t in tokens:
+        if t in SINONIMOS_OBRA:
+            tokens_exp.update(SINONIMOS_OBRA[t])
+            
+    matching_pcs = set()
+    for pc, items in pc_items_map.items():
+        it0 = items[0] if items else {}
+        dt_ent = (parse_date(it0.get("data_entrega_prevista")).date() if parse_date(it0.get("data_entrega_prevista")) else None) or (parse_date(it0.get("data_pedido")).date() if parse_date(it0.get("data_pedido")) else None)
+        if dt_ent and dt_ent < cutoff:
+            continue
+            
+        for it in items:
+            desc = str(it.get("descricao_material", "") or "").lower()
+            cod = str(it.get("codigo_insumo", "") or "").lower()
+            fam = str(it.get("familia_insumo", "") or "").lower()
+            
+            if any(t in desc or t in cod or t in fam for t in tokens_exp):
+                matching_pcs.add(pc)
+                break
+                
+    cards = []
+    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
+        items = pc_items_map[pc]
+        it0 = items[0]
+        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+        
+        top_3 = []
+        for it in items[:3]:
+            desc = str(it.get("descricao_material", "") or "").strip()
+            qtd = it.get("quantidade", 0)
+            un = str(it.get("unidade", "UN")).strip()
+            top_3.append(f"• {qtd} {un} - {desc}")
+            
+        extra_count = len(items) - 3 if len(items) > 3 else 0
+        
+        cards.append({
+            "pc": pc,
+            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
+            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
+            "data_emissao": it0.get("data_pedido", "-"),
+            "total_itens": len(items),
+            "itens_resumo": top_3,
+            "extra_itens_count": extra_count,
+            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+            "can_pdf": can_download_files(role)
+        })
+        
+    return {"query": q, "total_pedidos": len(cards), "cards": cards}
+
 @app.get("/api/materials/catalog")
 async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] = None):
     all_materials = get_cached_catalog_materials()

@@ -214,6 +214,26 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
   width: 100%; 
   box-sizing: border-box; 
 }
+
+/* CHIPS DE SUGESTÃO DE INSUMOS */
+.chip-pill { 
+  background: #1e293b; 
+  border: 1px solid var(--surface-border); 
+  color: #94a3b8; 
+  padding: 6px 12px; 
+  border-radius: 20px; 
+  font-size: 11px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  white-space: nowrap; 
+  flex-shrink: 0; 
+  transition: all 0.15s; 
+}
+.chip-pill:hover, .chip-pill:active { 
+  background: #2563eb; 
+  color: #fff; 
+  border-color: #3b82f6; 
+}
 @media (max-width: 440px) {
   .fin-compact-grid {
     grid-template-columns: 1fr 1fr;
