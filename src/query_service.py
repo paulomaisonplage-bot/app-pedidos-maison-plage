@@ -176,13 +176,24 @@ def format_mini_card(
     return "\n".join(linhas) + "\n\n"
 
 
-def load_all_suppliers_contacts() -> List[Dict[str, Any]]:
+_SUPPLIERS_CACHE: Optional[List[Dict[str, Any]]] = None
+_SUPPLIERS_CACHE_MTIME: float = 0
 
+def load_all_suppliers_contacts() -> List[Dict[str, Any]]:
+    global _SUPPLIERS_CACHE, _SUPPLIERS_CACHE_MTIME
     path = os.path.abspath("data/fornecedores_contatos.json")
+    if not os.path.exists(path) and os.path.exists("../data/fornecedores_contatos.json"):
+        path = os.path.abspath("../data/fornecedores_contatos.json")
+
     if os.path.exists(path):
         try:
+            mtime = os.path.getmtime(path)
+            if _SUPPLIERS_CACHE is not None and mtime <= _SUPPLIERS_CACHE_MTIME:
+                return _SUPPLIERS_CACHE
             with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                _SUPPLIERS_CACHE = json.load(f)
+                _SUPPLIERS_CACHE_MTIME = mtime
+                return _SUPPLIERS_CACHE
         except Exception:
             pass
     return []

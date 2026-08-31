@@ -4,130 +4,29 @@
   ],
   "users": {
     "8459937324": {
-      "nome": "Paulo Lôbo (Admin Master)",
+      "nome": "Paulo Lôbo",
       "username": "@paulolobo",
-      "pin": "8459",
       "role": "admin",
       "data_autorizacao": "28/08/2026 20:00:00"
     },
     "1001": {
       "nome": "Carlos Eduardo",
       "username": "@carlos_eng",
-      "pin": "1001",
       "role": "engenharia",
       "data_autorizacao": "28/08/2026 20:10:00"
     },
     "1002": {
       "nome": "Roberto Silva",
       "username": "@roberto_almx",
-      "pin": "1002",
       "role": "administracao",
       "data_autorizacao": "28/08/2026 20:15:00"
     },
     "1003": {
-      "nome": "Marcos Souza (Mestre de Obras)",
+      "nome": "Marcos Souza",
       "username": "@marcos_mestre",
-      "pin": "1003",
       "role": "campo",
       "data_autorizacao": "28/08/2026 20:20:00"
     }
   },
-  "pending_requests": {},
-  "invites": {
-    "mp_inv_38d35e80cad8": {
-      "created_at": "29/08/2026 19:48",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_a41b12586223": {
-      "created_at": "29/08/2026 19:48",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_2f2d122bd2e1": {
-      "created_at": "29/08/2026 19:48",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_fdd6e344f79f": {
-      "created_at": "29/08/2026 19:50",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_e5280d448577": {
-      "created_at": "29/08/2026 19:50",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_960cc8229e20": {
-      "created_at": "29/08/2026 20:24",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_eb7448aa52fc": {
-      "created_at": "29/08/2026 20:24",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_2fcc33209963": {
-      "created_at": "29/08/2026 20:35",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_16270c87e75b": {
-      "created_at": "29/08/2026 20:35",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_afe9c9836631": {
-      "created_at": "29/08/2026 22:16",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_fa9b9282f1a6": {
-      "created_at": "29/08/2026 22:16",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_1b5b7d9fb01a": {
-      "created_at": "29/08/2026 22:20",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_dee84c4c4af2": {
-      "created_at": "29/08/2026 22:20",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_06b75f4b713e": {
-      "created_at": "29/08/2026 22:27",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_ffe2caf20d7c": {
-      "created_at": "29/08/2026 22:27",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_e20c576879f1": {
-      "created_at": "29/08/2026 22:37",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_c050718c3487": {
-      "created_at": "29/08/2026 22:37",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_7a50c64f815e": {
-      "created_at": "29/08/2026 22:44",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_71ce3d9ea01c": {
-      "created_at": "29/08/2026 22:44",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    }
-  }
+  "pending_requests": {}
 }
