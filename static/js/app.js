@@ -705,12 +705,13 @@ const app = {
           
           <div class="fin-chart-columns-container">
             ${bars.map(b => {
-              const shortVal = (b.valor_fmt || '').replace('R$', '').trim();
+              const valNum = parseFloat((b.valor_fmt || '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
+              const shortVal = valNum >= 1000000 ? (valNum / 1000000).toFixed(2).replace('.', ',') + 'M' : (valNum >= 1000 ? Math.round(valNum / 1000) + 'k' : valNum);
               const isPast = b.mes_num < 8;
               return `
                 <div class="fin-col-wrapper ${b.is_current ? 'current-month-col' : ''}">
                   <div class="fin-col-val">
-                    <div>${shortVal.split(',')[0]}</div>
+                    <div>${shortVal}</div>
                     <div style="font-size:9px;color:${b.is_current ? '#fbbf24' : '#64748b'};font-weight:700;">${b.pct}%</div>
                   </div>
                   <div class="fin-col-track">
