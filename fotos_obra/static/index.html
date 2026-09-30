@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fotos de Obra · Maison Plage</title>
+<style>
+:root{--navy:#1E2A3A;--gold:#B28A4A;--bg:#F4F6F8;--card:#fff;--ink:#20304A;--mut:#6B7789;--bd:#E4E7EC}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;flex:1}header button{background:none;border:1px solid #ffffff55;color:#fff;border-radius:6px;padding:5px 10px}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;display:block;margin-bottom:3px}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:6px;font-size:15px;background:#fff;color:var(--ink)}
+button.p{background:var(--gold);color:#fff;border:0;border-radius:8px;padding:11px 16px;font-weight:700;font-size:14px}
+button.s{background:#fff;color:var(--navy);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ph{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#ddd;cursor:pointer}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph span{position:absolute;left:0;right:0;bottom:0;background:#000a;color:#fff;font-size:10px;padding:3px 5px}
+h3{margin:14px 0 8px;font-size:13px;color:var(--navy)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+#login{max-width:340px;margin:12vh auto}
+#viewer{display:none;position:fixed;inset:0;background:#000e;z-index:20;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}
+#viewer img{max-width:100%;max-height:75vh}#viewer .bar{justify-content:center}#viewer p{color:#fff;font-size:13px;margin:0;text-align:center}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="login" class="card">
+  <h2 style="margin-top:0">Fotos de Obra</h2>
+  <label>Usuário</label><input id="lu" autocomplete="username"><br><br>
+  <label>Senha</label><input id="ls" type="password" autocomplete="current-password"><br><br>
+  <button class="p" style="width:100%" onclick="entrar()">Entrar</button>
+  <p id="lerr" style="color:#b00;font-size:13px"></p>
+</div>
+
+<div id="app" class="hide">
+<header><h1>📷 Fotos de Obra · Maison Plage</h1><span id="who" style="font-size:12px"></span><button onclick="sair()">Sair</button></header>
+<main>
+  <div class="card">
+    <strong>Enviar fotos</strong>
+    <div class="row" style="margin-top:10px">
+      <div><label>Pavimento *</label><input id="up_pav" list="dl_pav" placeholder="Ex.: 5º pavimento"></div>
+      <div><label>Serviço *</label><input id="up_srv" list="dl_srv" placeholder="Ex.: Alvenaria"></div>
+      <div><label>Dia</label><input id="up_dia" type="date"></div>
+    </div>
+    <div style="margin-top:10px"><label>Observação</label><input id="up_obs" placeholder="Opcional"></div>
+    <div class="bar">
+      <input id="f_cam" type="file" accept="image/*" capture="environment" class="hide">
+      <input id="f_up" type="file" accept="image/*" multiple class="hide">
+      <button class="s" onclick="f_cam.click()">📸 Tirar foto</button>
+      <button class="s" onclick="f_up.click()">🖼️ Escolher arquivos</button>
+      <span id="sel" style="font-size:12px;color:var(--mut)"></span>
+      <button class="p" id="btnEnv" onclick="enviar()">Enviar</button>
+    </div>
+    <div id="msg" style="font-size:13px;margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <strong>Galeria</strong>
+    <div class="row" style="margin-top:10px">
+      <div><label>Pavimento</label><select id="fl_pav" onchange="carregar()"></select></div>
+      <div><label>Serviço</label><select id="fl_srv" onchange="carregar()"></select></div>
+      <div><label>De</label><input id="fl_de" type="date" onchange="carregar()"></div>
+      <div><label>Até</label><input id="fl_ate" type="date" onchange="carregar()"></div>
+    </div>
+    <div class="bar"><button class="s" onclick="baixarZip()">⬇ Baixar ZIP (filtro atual)</button><span id="cnt" style="font-size:12px;color:var(--mut)"></span></div>
+    <div id="gal"></div>
+  </div>
+</main>
+<datalist id="dl_pav"></datalist><datalist id="dl_srv"></datalist>
+</div>
+
+<div id="viewer" onclick="if(event.target===this)fechar()">
+  <img id="vimg"><p id="vinfo"></p>
+  <div class="bar"><a id="vdl"><button class="s">⬇ Baixar</button></a><button class="s" onclick="apagar()">🗑 Apagar</button><button class="s" onclick="fechar()">Fechar</button></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let fotos=[],atual=null,selecionados=[];
+const api=async(u,o={})=>{const r=await fetch(u,o);if(r.status===401){mostrarLogin();throw new Error('401')}if(!r.ok){let d='';try{d=(await r.json()).detail}catch(e){}throw new Error(d||r.statusText)}return r};
+function mostrarLogin(){$('login').classList.remove('hide');$('app').classList.add('hide')}
+async function entrar(){const fd=new FormData();fd.append('usuario',$('lu').value);fd.append('senha',$('ls').value);
+  try{await api('/api/login',{method:'POST',body:fd});iniciar()}catch(e){$('lerr').textContent=e.message}}
+async function sair(){await fetch('/api/logout',{method:'POST'});mostrarLogin()}
+async function iniciar(){
+  try{const me=await (await api('/api/me')).json();$('who').textContent=me.usuario}catch(e){return}
+  $('login').classList.add('hide');$('app').classList.remove('hide');
+  $('up_dia').value=new Date().toISOString().slice(0,10);
+  await opcoes();carregar();
+}
+async function opcoes(){
+  const o=await (await api('/api/opcoes')).json();
+  const fill=(id,arr,todos)=>{const s=$(id),v=s.value;s.innerHTML=`<option value="">${todos}</option>`+arr.map(x=>`<option>${x}</option>`).join('');s.value=v};
+  fill('fl_pav',o.pavimentos,'Todos');fill('fl_srv',o.servicos,'Todos');
+  $('dl_pav').innerHTML=o.pavimentos.map(x=>`<option value="${x}">`).join('');
+  $('dl_srv').innerHTML=o.servicos.map(x=>`<option value="${x}">`).join('');
+}
+const filtro=()=>new URLSearchParams({pavimento:$('fl_pav').value,servico:$('fl_srv').value,de:$('fl_de').value,ate:$('fl_ate').value});
+async function carregar(){
+  fotos=await (await api('/api/fotos?'+filtro())).json();
+  $('cnt').textContent=fotos.length+' foto(s)';
+  const g={};fotos.forEach(f=>{((g[f.pavimento+' · '+f.dia]??={})[f.servico]??=[]).push(f)});
+  $('gal').innerHTML=Object.entries(g).map(([k,srvs])=>`<h3>${k}</h3>`+Object.entries(srvs).map(([s,l])=>
+    `<div style="font-size:12px;color:var(--mut);margin:6px 0 4px">${s} (${l.length})</div><div class="grid">`+
+    l.map(f=>`<div class="ph" onclick="abrir('${f.id}')"><img loading="lazy" src="${f.thumb}"><span>${f.autor}</span></div>`).join('')+'</div>').join('')).join('')
+    ||'<p style="color:var(--mut)">Nenhuma foto ainda.</p>';
+}
+function abrir(id){atual=fotos.find(f=>f.id===id);$('vimg').src=atual.url;
+  $('vinfo').textContent=`${atual.pavimento} · ${atual.servico} · ${atual.dia} · ${atual.autor}`+(atual.observacao?' — '+atual.observacao:'');
+  $('vdl').href=atual.url+'?download=true';$('viewer').style.display='flex'}
+function fechar(){$('viewer').style.display='none'}
+async function apagar(){if(!confirm('Apagar esta foto?'))return;await api('/api/fotos/'+atual.id,{method:'DELETE'});fechar();await opcoes();carregar()}
+function baixarZip(){location.href='/api/zip?'+filtro()}
+function juntar(e){selecionados=selecionados.concat([...e.target.files]);e.target.value='';$('sel').textContent=selecionados.length+' selecionada(s)'}
+$('f_cam').onchange=juntar;$('f_up').onchange=juntar;
+async function enviar(){
+  if(!selecionados.length)return $('msg').textContent='Selecione ao menos uma foto.';
+  if(!$('up_pav').value.trim()||!$('up_srv').value.trim())return $('msg').textContent='Informe pavimento e serviço.';
+  $('btnEnv').disabled=true;let ok=0;
+  for(const f of selecionados){
+    $('msg').textContent=`Enviando ${ok+1} de ${selecionados.length}...`;
+    const fd=new FormData();fd.append('arquivos',f);fd.append('pavimento',$('up_pav').value);fd.append('servico',$('up_srv').value);
+    fd.append('dia',$('up_dia').value);fd.append('observacao',$('up_obs').value);
+    try{await api('/api/fotos',{method:'POST',body:fd});ok++}catch(e){$('msg').textContent='Erro: '+e.message;break}
+  }
+  if(ok===selecionados.length){$('msg').textContent=ok+' foto(s) enviada(s) ✔';selecionados=[];$('sel').textContent='';$('up_obs').value=''}
+  $('btnEnv').disabled=false;await opcoes();carregar();
+}
+iniciar();
+</script>
+</body>
+</html>
