@@ -153,13 +153,170 @@ const app = {
     return r === "admin";
   },
 
+  currentVariant: 'A',
+  variants: [
+    { key: 'A', name: 'Variante A (Lado a Lado Split)' },
+    { key: 'B', name: 'Variante B (Glass Institucional)' },
+    { key: 'C', name: 'Variante C (Executivo Compacto)' },
+    { key: 'D', name: 'Variante D (Card Oficial Nobre)' }
+  ],
+
+  initPrototype() {
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('variant');
+    if (v && ['A', 'B', 'C', 'D'].includes(v.toUpperCase())) {
+      this.currentVariant = v.toUpperCase();
+    } else {
+      const saved = localStorage.getItem('mp_header_variant');
+      if (saved && ['A', 'B', 'C', 'D'].includes(saved)) {
+        this.currentVariant = saved;
+      }
+    }
+    this.renderHeader();
+    
+    // Suporte ao teclado (setas <- e ->) conforme a skill prototype
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      if (e.key === 'ArrowLeft') this.cycleVariant(-1);
+      if (e.key === 'ArrowRight') this.cycleVariant(1);
+    });
+  },
+
+  cycleVariant(dir) {
+    const keys = this.variants.map(v => v.key);
+    let idx = keys.indexOf(this.currentVariant);
+    idx = (idx + dir + keys.length) % keys.length;
+    this.setVariant(keys[idx]);
+  },
+
+  setVariant(key) {
+    this.currentVariant = key;
+    localStorage.setItem('mp_header_variant', key);
+    
+    const url = new URL(window.location);
+    url.searchParams.set('variant', key);
+    window.history.replaceState({}, '', url);
+    
+    this.renderHeader();
+  },
+
+  renderHeader() {
+    const container = document.getElementById('headerTopContainer');
+    if (!container) return;
+
+    const variantObj = this.variants.find(v => v.key === this.currentVariant) || this.variants[0];
+    const lbl = document.getElementById('protoVariantLabel');
+    if (lbl) lbl.innerText = variantObj.name;
+
+    const userName = (this.currentUser && this.currentUser.nome) ? this.currentUser.nome.split(" ")[0] : "Paulo";
+    const userRole = (this.currentUser && this.currentUser.role) ? this.currentUser.role : "admin";
+    const roleEmoji = {
+      'admin': '👑 Admin',
+      'engenharia': '🏗️ Eng',
+      'administracao': '📦 Adm',
+      'campo': '👷 Campo',
+      'suporte': '🔧 Apoio'
+    }[userRole] || '👤 Membro';
+
+    if (this.currentVariant === 'A') {
+      container.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);">
+            <img src="/static/img/logo_maison_plage.png" alt="Maison Plage" style="height:32px;object-fit:contain;">
+            <div style="height:20px;width:1px;background:rgba(255,255,255,0.18);margin:0 8px;"></div>
+            <img src="/static/img/logo_conenge.png" alt="Conenge" style="height:24px;object-fit:contain;">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;font-weight:800;color:#fff;">Olá, ${userName}</span>
+              <span class="role-tag" style="font-size:9.5px;padding:2px 6px;">${roleEmoji}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:9.5px;color:#10b981;font-weight:700;background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;">🟢 1.306 itens</span>
+              <button class="logout-btn" onclick="app.logout()" title="Sair" style="padding:3px 7px;font-size:11px;">🚪</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (this.currentVariant === 'B') {
+      container.innerHTML = `
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 12px;width:100%;box-sizing:border-box;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <img src="/static/img/logo_maison_plage.png" alt="Maison Plage" style="height:28px;object-fit:contain;">
+              <span style="color:rgba(255,255,255,0.25);font-size:14px;">|</span>
+              <img src="/static/img/logo_conenge.png" alt="Conenge" style="height:22px;object-fit:contain;">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="role-tag" style="font-size:9.5px;padding:2px 6px;">${roleEmoji}</span>
+              <button class="logout-btn" onclick="app.logout()" title="Sair" style="padding:2px 6px;font-size:11px;">🚪</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:10.5px;">
+            <span style="color:#94a3b8;font-weight:600;">👤 ${this.currentUser?.nome || 'Paulo Lôbo'}</span>
+            <span style="color:#60a5fa;font-weight:700;font-size:9.5px;">⚡ Sincronizado Hoje</span>
+          </div>
+        </div>
+      `;
+    } else if (this.currentVariant === 'C') {
+      container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:2px 0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <img src="/static/img/logo_maison_plage.png" alt="Maison Plage" style="height:26px;object-fit:contain;">
+            <img src="/static/img/logo_conenge.png" alt="Conenge" style="height:19px;object-fit:contain;opacity:0.95;">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="text-align:right;">
+              <div style="font-size:11px;font-weight:800;color:#fff;line-height:1.1;">Olá, ${userName}</div>
+              <div style="font-size:9px;color:#10b981;font-weight:700;">1.306 pedidos</div>
+            </div>
+            <span class="role-tag" style="font-size:9px;padding:2px 5px;">${roleEmoji}</span>
+            <button class="logout-btn" onclick="app.logout()" title="Sair" style="padding:2px 5px;font-size:11px;">🚪</button>
+          </div>
+        </div>
+      `;
+    } else if (this.currentVariant === 'D') {
+      container.innerHTML = `
+        <div style="background:linear-gradient(135deg, rgba(30,41,59,0.7), rgba(15,23,42,0.9));border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:8px 12px;width:100%;box-sizing:border-box;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.8px;color:#94a3b8;text-transform:uppercase;">RESIDENCIAL MAISON PLAGE</span>
+            <img src="/static/img/logo_conenge.png" alt="Conenge" style="height:18px;object-fit:contain;">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <img src="/static/img/logo_maison_plage.png" alt="Maison Plage" style="height:28px;object-fit:contain;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;display:flex;align-items:center;gap:3px;">
+                📦 <span>Suprimentos</span>
+              </div>
+              <button class="logout-btn" onclick="app.logout()" title="Sair" style="padding:2px 6px;font-size:11px;">🚪</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  openShortcutIconsModal() {
+    const m = document.getElementById('shortcutIconsModal');
+    if (m) m.classList.add('show');
+  },
+
+  closeShortcutIconsModal(e) {
+    if (e && e.target !== e.currentTarget && !e.target.classList.contains('btn-close')) return;
+    const m = document.getElementById('shortcutIconsModal');
+    if (m) m.classList.remove('show');
+  },
+
+  selectActiveIcon(num) {
+    alert("✅ Opção " + num + " selecionada como ícone de atalho! Para fixar na tela inicial do celular, use o menu do navegador: Compartilhar -> Adicionar à Tela de Início.");
+    this.closeShortcutIconsModal();
+  },
+
   showApp() {
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("appContainer").style.display = "block";
     
-    document.getElementById("userGreeting").innerText = `Olá, ${this.currentUser.nome.split(" ")[0]}`;
-    const roleLabels = { admin: "👑 Admin Master", engenharia: "🏗️ Engenharia", administracao: "📦 Administração", campo: "👷 Campo" };
-    document.getElementById("roleTag").innerText = roleLabels[this.currentUser.role] || "👷 Campo";
+    this.initPrototype();
 
     // Permissões das abas
     document.getElementById("tabSuppliers").style.display = this.isMonetaryAllowed() ? "block" : "none";
