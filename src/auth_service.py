@@ -87,10 +87,6 @@ class AuthService:
         if user_id in DEFAULT_ADMIN_IDS or user_id in self._data.get("admin_ids", []):
             return True
         uid_str = str(user_id)
-    def is_authorized(self, user_id: int) -> bool:
-        if user_id in DEFAULT_ADMIN_IDS or user_id in self._data.get("admin_ids", []):
-            return True
-        uid_str = str(user_id)
         user = self._data.get("users", {}).get(uid_str)
         return user is not None and user.get("role") in ["admin", "engenharia", "administracao", "adm", "campo", "almoxarifado", "mestre", "suporte"]
 
