@@ -15,4 +15,6 @@ except ImportError:
 
 # Handler para Vercel Serverless
 handler = app
+app = app
+
 
