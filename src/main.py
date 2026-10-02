@@ -7,6 +7,7 @@ import time
 import random
 import secrets
 from datetime import datetime, date, timedelta
+from collections import defaultdict
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from fastapi import FastAPI, Request, HTTPException, Response
@@ -14,17 +15,30 @@ from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from src.query_service import OrderQueryService, load_all_suppliers_contacts
-from src.excel_manager import calculate_installments_for_item, parse_date
-from src.auth_service import AuthService
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
+try:
+    from src.query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
+    from src.excel_manager import calculate_installments_for_item, parse_date
+    from src.auth_service import AuthService
+except ImportError:
+    from query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
+    from excel_manager import calculate_installments_for_item, parse_date
+    from auth_service import AuthService
 
+EXCEL_PATH = os.getenv("EXCEL_PATH", os.path.join(BASE_DIR, "data", "pedidos_compra_consolidado.xlsx"))
+USERS_FILE = os.path.join(BASE_DIR, "data", "usuarios_autorizados.json")
+query_service = OrderQueryService(EXCEL_PATH)
+auth_service = AuthService(USERS_FILE)
 
 # ==========================================
 # FAST IN-MEMORY CACHE ENGINE (RESPOSTA < 2ms)
 # ==========================================
 CACHE_STORE = {
     "last_load": 0,
+    "last_mtime": 0,
     "raw_records": {},
     "orders_by_pc": {},
     "recent_cards": None,
@@ -34,9 +48,17 @@ CACHE_STORE = {
 
 def get_cached_raw_records(force_reload: bool = False):
     now = time.time()
-    if force_reload or (now - CACHE_STORE["last_load"] > 180) or not CACHE_STORE["raw_records"]:
+    try:
+        current_mtime = os.path.getmtime(EXCEL_PATH) if os.path.exists(EXCEL_PATH) else 0
+    except OSError:
+        current_mtime = 0
+
+    mtime_changed = current_mtime > CACHE_STORE["last_mtime"]
+
+    if force_reload or mtime_changed or (now - CACHE_STORE["last_load"] > 180) or not CACHE_STORE["raw_records"]:
         raw = query_service.manager.load_existing_records()
         CACHE_STORE["raw_records"] = raw
+        CACHE_STORE["last_mtime"] = current_mtime
         
         # Indexa pedidos por PC
         by_pc = {}
@@ -63,12 +85,12 @@ async def startup_event():
     # Pré-aquece o cache na inicialização do servidor
     get_cached_raw_records(force_reload=True)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-EXCEL_PATH = os.getenv("EXCEL_PATH", "data/pedidos_compra_consolidado.xlsx")
-if not os.path.exists(EXCEL_PATH) and os.path.exists("../data/pedidos_compra_consolidado.xlsx"):
-    EXCEL_PATH = "../data/pedidos_compra_consolidado.xlsx"
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 def get_previous_month_cutoff_date() -> date:
     hoje = date.today()
@@ -77,13 +99,22 @@ def get_previous_month_cutoff_date() -> date:
     else:
         return date(hoje.year, hoje.month - 1, 1)
 
-USERS_FILE = "data/usuarios_autorizados.json"
-query_service = OrderQueryService(EXCEL_PATH)
-auth_service = AuthService(USERS_FILE)
+
+def can_view_monetary(role: str) -> bool:
+    canonical = (role or "").strip().lower()
+    return canonical in ["admin", "engenharia", "administracao", "adm"]
+
+def can_view_financial_schedule(role: str) -> bool:
+    canonical = (role or "").strip().lower()
+    return canonical in ["admin", "engenharia"]
+
+def can_download_files(role: str) -> bool:
+    canonical = (role or "").strip().lower()
+    return canonical in ["admin", "engenharia", "administracao", "adm"]
 
 
 def build_order_card_data(pc: str, role: str) -> Optional[dict]:
-    hide_fin = (role == "campo")
+    hide_fin = not can_view_monetary(role)
     items = query_service.get_order_by_number(pc)
     if not items:
         return None
@@ -110,7 +141,7 @@ def build_order_card_data(pc: str, role: str) -> Optional[dict]:
         "itens_resumo": top_3_items,
         "extra_itens_count": extra_count,
         "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-        "can_pdf": (role in ["admin", "engenharia", "administracao"])
+        "can_pdf": can_download_files(role)
     }
 
 
@@ -491,7 +522,7 @@ async def api_check_req_status(req_id: str):
 # 1. ENTREGAS DA SEMANA
 @app.get("/api/deliveries/week")
 async def api_deliveries_week(offset: int = 0, role: str = "campo"):
-    hide_fin = (role == "campo")
+    hide_fin = not can_view_monetary(role)
     msg, pcs = query_service.get_deliveries_summary_for_week(offset=offset, hide_financials=hide_fin, item_offset=0, page_size=100)
     
     hoje = date.today()
@@ -509,7 +540,7 @@ async def api_deliveries_week(offset: int = 0, role: str = "campo"):
 # 2. ENTREGAS DO MÊS
 @app.get("/api/deliveries/month")
 async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo"):
-    hide_fin = (role == "campo")
+    hide_fin = not can_view_monetary(role)
     msg, pcs = query_service.get_delivery_summary_for_month(mes=mes, ano=ano, hide_financials=hide_fin, item_offset=0, page_size=100)
     cards = []
     for pc in pcs:
@@ -518,94 +549,153 @@ async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo
             cards.append(c)
     return {"mes": mes, "ano": ano, "cards": cards}
 
-# 3. CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (DO MÊS ANTERIOR EM DIANTE)
+def get_cached_catalog_materials():
+    get_cached_raw_records()
+    if CACHE_STORE["catalog_materials"] is None:
+        raw = CACHE_STORE["raw_records"]
+        cutoff = get_previous_month_cutoff_date()
+        insumos_map = {}
+        for r in raw.values():
+            dt_ent = (parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None)
+            if not dt_ent or dt_ent < cutoff:
+                continue
+                
+            desc = str(r.get("descricao_material", "") or "").strip()
+            cod = str(r.get("codigo_insumo", "") or "").strip()
+            fam = str(r.get("familia_insumo", "04 DIVERSOS") or "04 DIVERSOS").strip()
+            pc = str(r.get("numero_pedido", "")).strip()
+            qtd = float(r.get("quantidade", 0) or 0.0)
+            unid = str(r.get("unidade", "UN") or "UN").strip()
+            
+            if not desc and not cod:
+                continue
+                
+            key = desc.upper() if desc else f"COD_{cod}"
+            if key not in insumos_map:
+                insumos_map[key] = {
+                    "nome": desc if desc else f"Insumo Cód. {cod}",
+                    "codigo": cod,
+                    "familia": fam,
+                    "unidade": unid,
+                    "qtd_total": 0.0,
+                    "pedidos": set()
+                }
+                
+            insumos_map[key]["qtd_total"] += qtd
+            if pc:
+                insumos_map[key]["pedidos"].add(pc)
+
+        sorted_items = sorted(insumos_map.values(), key=lambda x: x["nome"].upper())
+        formatted_catalog = []
+        for it in sorted_items:
+            qtd_fmt = f"{it['qtd_total']:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".").rstrip('0').rstrip(',')
+            formatted_catalog.append({
+                "nome": it["nome"],
+                "codigo": it["codigo"],
+                "familia": it["familia"],
+                "unidade": it["unidade"],
+                "qtd_formatada": f"{qtd_fmt} {it['unidade'].lower()}",
+                "pedidos_count": len(it["pedidos"]),
+                "pedidos": sorted(list(it["pedidos"]), reverse=True)
+            })
+        CACHE_STORE["catalog_materials"] = formatted_catalog
+    return CACHE_STORE["catalog_materials"]
+
+# 3. BUSCA DIRETA DE INSUMOS & PEDIDOS
+@app.get("/api/materials/search")
+async def api_materials_search(q: str = "", role: str = "campo"):
+    hide_fin = not can_view_monetary(role)
+    cutoff = get_previous_month_cutoff_date()
+    raw_dict, pc_items_map = get_cached_raw_records()
+    
+    q_clean = q.lower().strip()
+    if not q_clean:
+        return {"query": q, "total_pedidos": 0, "cards": []}
+        
+    tokens = q_clean.split()
+    tokens_exp = set(tokens)
+    for t in tokens:
+        if t in SINONIMOS_OBRA:
+            tokens_exp.update(SINONIMOS_OBRA[t])
+            
+    matching_pcs = set()
+    for pc, items in pc_items_map.items():
+        it0 = items[0] if items else {}
+        dt_ent = (parse_date(it0.get("data_entrega_prevista")).date() if parse_date(it0.get("data_entrega_prevista")) else None) or (parse_date(it0.get("data_pedido")).date() if parse_date(it0.get("data_pedido")) else None)
+        if dt_ent and dt_ent < cutoff:
+            continue
+            
+        for it in items:
+            desc = str(it.get("descricao_material", "") or "").lower()
+            cod = str(it.get("codigo_insumo", "") or "").lower()
+            fam = str(it.get("familia_insumo", "") or "").lower()
+            
+            if any(t in desc or t in cod or t in fam for t in tokens_exp):
+                matching_pcs.add(pc)
+                break
+                
+    cards = []
+    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
+        items = pc_items_map[pc]
+        it0 = items[0]
+        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
+        
+        top_3 = []
+        for it in items[:3]:
+            desc = str(it.get("descricao_material", "") or "").strip()
+            qtd = it.get("quantidade", 0)
+            un = str(it.get("unidade", "UN")).strip()
+            top_3.append(f"• {qtd} {un} - {desc}")
+            
+        extra_count = len(items) - 3 if len(items) > 3 else 0
+        
+        cards.append({
+            "pc": pc,
+            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
+            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
+            "data_emissao": it0.get("data_pedido", "-"),
+            "total_itens": len(items),
+            "itens_resumo": top_3,
+            "extra_itens_count": extra_count,
+            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+            "can_pdf": can_download_files(role)
+        })
+        
+    return {"query": q, "total_pedidos": len(cards), "cards": cards}
+
 @app.get("/api/materials/catalog")
 async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] = None):
-    cutoff = get_previous_month_cutoff_date()
-    raw_dict = query_service.manager.load_existing_records()
-    
-    insumos_map = {}
-    for r in raw_dict.values():
-        dt_ent = (parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None)
-        if not dt_ent or dt_ent < cutoff:
-            continue
-            
-        desc = str(r.get("descricao_material", "") or "").strip()
-        cod = str(r.get("codigo_insumo", "") or "").strip()
-        fam = str(r.get("familia_insumo", "04 DIVERSOS") or "04 DIVERSOS").strip()
-        pc = str(r.get("numero_pedido", "")).strip()
-        qtd = float(r.get("quantidade", 0) or 0.0)
-        unid = str(r.get("unidade", "UN") or "UN").strip()
-        
-        if not desc and not cod:
-            continue
-            
-        key = desc.upper() if desc else f"COD_{cod}"
-        if key not in insumos_map:
-            insumos_map[key] = {
-                "nome": desc if desc else f"Insumo Cód. {cod}",
-                "codigo": cod,
-                "familia": fam,
-                "unidade": unid,
-                "qtd_total": 0.0,
-                "pedidos": set()
-            }
-            
-        insumos_map[key]["qtd_total"] += qtd
-        if pc:
-            insumos_map[key]["pedidos"].add(pc)
-
-    sorted_items = sorted(insumos_map.values(), key=lambda x: x["nome"].upper())
+    all_materials = get_cached_catalog_materials()
+    filtered = all_materials
 
     if letter and letter.upper() != "TODOS":
         l_upper = letter.upper()
-        sorted_items = [i for i in sorted_items if i["nome"].upper().startswith(l_upper)]
+        filtered = [i for i in filtered if i["nome"].upper().startswith(l_upper)]
 
     if q:
         q_l = q.lower().strip()
-        sorted_items = [i for i in sorted_items if q_l in i["nome"].lower() or q_l in i["codigo"].lower() or q_l in i["familia"].lower()]
-
-    result = []
-    for it in sorted_items[:300]:
-        qtd_fmt = f"{it['qtd_total']:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".").rstrip('0').rstrip(',')
-        result.append({
-            "nome": it["nome"],
-            "codigo": it["codigo"],
-            "familia": it["familia"],
-            "unidade": it["unidade"],
-            "qtd_formatada": f"{qtd_fmt} {it['unidade'].lower()}",
-            "pedidos_count": len(it["pedidos"]),
-            "pedidos": sorted(list(it["pedidos"]), reverse=True)
-        })
+        filtered = [i for i in filtered if q_l in i["nome"].lower() or q_l in i["codigo"].lower() or q_l in i["familia"].lower()]
 
     return {
-        "total_cadastrados": len(insumos_map),
-        "total_filtrados": len(sorted_items),
-        "insumos": result
+        "total_cadastrados": len(all_materials),
+        "total_filtrados": len(filtered),
+        "insumos": filtered[:300]
     }
 
 @app.get("/api/materials/orders")
 async def api_material_orders(nome: str, role: str = "campo"):
-    hide_fin = (role == "campo")
+    hide_fin = not can_view_monetary(role)
     cutoff = get_previous_month_cutoff_date()
-    raw_dict = query_service.manager.load_existing_records()
+    raw_dict, pc_items_map = get_cached_raw_records()
     mat_upper = nome.upper().strip()
     
-    pc_items_map = {}
-    for r in raw_dict.values():
-        dt_ent = (parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None)
-        if not dt_ent or dt_ent < cutoff:
-            continue
-            
-        pc = str(r.get("numero_pedido", "")).strip()
-        if not pc:
-            continue
-        if pc not in pc_items_map:
-            pc_items_map[pc] = []
-        pc_items_map[pc].append(r)
-        
     matching_pcs = []
     for pc, items in pc_items_map.items():
+        it0 = items[0] if items else {}
+        dt_ent = (parse_date(it0.get("data_entrega_prevista")).date() if parse_date(it0.get("data_entrega_prevista")) else None) or (parse_date(it0.get("data_pedido")).date() if parse_date(it0.get("data_pedido")) else None)
+        if dt_ent and dt_ent < cutoff:
+            continue
         if any(mat_upper == str(i.get("descricao_material", "") or "").strip().upper() for i in items):
             matching_pcs.append(pc)
             
@@ -634,7 +724,7 @@ async def api_material_orders(nome: str, role: str = "campo"):
             "itens_resumo": top_3,
             "extra_itens_count": extra_count,
             "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-            "can_pdf": (role in ["admin", "engenharia", "administracao"])
+            "can_pdf": can_download_files(role)
         })
         
     return {"material": nome, "total_pedidos": len(cards), "cards": cards}
@@ -647,20 +737,10 @@ async def api_groups():
 
 @app.get("/api/groups/orders")
 async def api_group_orders(familia: str, role: str = "campo"):
-    hide_fin = (role == "campo")
-    raw_dict = query_service.manager.load_existing_records()
+    hide_fin = not can_view_monetary(role)
+    raw_dict, pc_items_map = get_cached_raw_records()
     fam_upper = familia.upper().strip()
     
-    # Mapeia pedidos que contenham itens desta familia
-    pc_items_map = {}
-    for r in raw_dict.values():
-        pc = str(r.get("numero_pedido", "")).strip()
-        if not pc:
-            continue
-        if pc not in pc_items_map:
-            pc_items_map[pc] = []
-        pc_items_map[pc].append(r)
-        
     matching_pcs = []
     for pc, items in pc_items_map.items():
         if any(fam_upper in str(i.get("familia_insumo", "") or "").upper() for i in items):
@@ -691,7 +771,7 @@ async def api_group_orders(familia: str, role: str = "campo"):
             "itens_resumo": top_3,
             "extra_itens_count": extra_count,
             "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-            "can_pdf": (role in ["admin", "engenharia", "administracao"])
+            "can_pdf": can_download_files(role)
         })
         
     return {"familia": familia, "total_pedidos": len(cards), "cards": cards}
@@ -699,7 +779,7 @@ async def api_group_orders(familia: str, role: str = "campo"):
 # 5. COMPRAS RECENTES
 @app.get("/api/recent_purchases")
 async def api_recent_purchases(role: str = "campo"):
-    hide_fin = (role == "campo")
+    hide_fin = not can_view_monetary(role)
     msg, pcs = query_service.get_recent_orders_summary(max_orders=40, hide_financials=hide_fin, item_offset=0, page_size=40)
     cards = []
     for pc in pcs:
@@ -708,12 +788,10 @@ async def api_recent_purchases(role: str = "campo"):
             cards.append(c)
     return {"cards": cards}
 
-
-
 # 6. FORNECEDORES
 @app.get("/api/suppliers")
 async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
-    if role == "campo":
+    if not can_view_monetary(role):
         raise HTTPException(status_code=403, detail="Acesso reservado para Engenharia e Administração")
     
     catalog = load_all_suppliers_contacts()
@@ -739,59 +817,84 @@ async def api_suppliers(q: Optional[str] = None, role: str = "campo"):
 # 7. FLUXO FINANCEIRO INTELIGENTE (PREVISÃO DO MÊS ANTERIOR EM DIANTE)
 @app.get("/api/financial/summary")
 async def api_financial_summary(role: str = "campo"):
-    if role not in ["admin", "engenharia"]:
+    if not can_view_financial_schedule(role):
         raise HTTPException(status_code=403, detail="Acesso exclusivo para Engenharia e Administração.")
     
-    raw_dict = query_service.manager.load_existing_records()
-    all_raw_records = list(raw_dict.values())
+    # 1. Registros ativos da obra (>= Junho/2026)
+    records = query_service._get_all_records()
     
-    all_insts = []
-    for r in all_raw_records:
-        all_insts.extend(calculate_installments_for_item(r))
-        
-    cutoff = get_previous_month_cutoff_date()
-    # Mapeia os meses a partir do mes anterior (Julho=7 ate Dezembro=12)
-    start_m = cutoff.month
-    monthly_vals = {m: 0.0 for m in range(start_m, 13)}
+    # 2. Parcelas a partir do corte do mês anterior
+    all_insts = query_service.get_all_installments(from_previous_month_only=True)
+    
+    hoje = date.today()
+    mes_atual_num = hoje.month
+    ano_atual = hoje.year
+    
     month_names = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
     
+    # Agrupa valores por (ano, mes)
+    meses_agg = defaultdict(lambda: {"total_val": 0.0, "count": 0, "pedidos": set()})
     total_desembolso_periodo = 0.0
+    val_mes_atual = 0.0
+    val_futuro = 0.0
+    
     for i in all_insts:
         dt_venc = i.get("_venc_dt")
         val = float(i.get("valor_parcela", 0.0) or 0.0)
-        if dt_venc and dt_venc.year == 2026 and dt_venc.month in monthly_vals:
-            monthly_vals[dt_venc.month] += val
+        if dt_venc:
+            k = (dt_venc.year, dt_venc.month)
+            meses_agg[k]["total_val"] += val
+            meses_agg[k]["count"] += 1
+            meses_agg[k]["pedidos"].add(str(i.get("numero_pedido", "")))
             total_desembolso_periodo += val
+            
+            if dt_venc.year == ano_atual and dt_venc.month == mes_atual_num:
+                val_mes_atual += val
+            elif (dt_venc.year > ano_atual) or (dt_venc.year == ano_atual and dt_venc.month > mes_atual_num):
+                val_futuro += val
 
-    val_ago = monthly_vals.get(8, 0.0)
-    val_futuro = sum(v for m, v in monthly_vals.items() if m >= 9)
-    max_month_val = max(monthly_vals.values()) or 1.0
+    max_month_val = max([v["total_val"] for v in meses_agg.values()], default=1.0) or 1.0
 
     bars = []
-    for m in range(start_m, 13):
-        v = monthly_vals[m]
+    sorted_meses = sorted(meses_agg.keys())
+    for (ano_m, m) in sorted_meses:
+        data_m = meses_agg[(ano_m, m)]
+        v = data_m["total_val"]
         pct = (v / total_desembolso_periodo * 100) if total_desembolso_periodo > 0 else 0
+        bar_pct = (v / max_month_val * 100) if max_month_val > 0 else 0
+        is_cur = (ano_m == ano_atual and m == mes_atual_num)
         bars.append({
+            "ano": ano_m,
             "mes_num": m,
-            "mes_nome": month_names[m],
+            "mes_nome": month_names.get(m, f"Mês {m}"),
             "valor_fmt": f"R${v:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
             "pct": round(pct, 1),
-            "is_current": (m == 8)
+            "bar_pct": round(bar_pct, 1),
+            "is_current": is_cur,
+            "pedidos_count": len(data_m["pedidos"])
         })
 
-    # Macro-Grupos
+    # Periodo label
+    if sorted_meses:
+        m_ini = month_names.get(sorted_meses[0][1], "Início")
+        m_fim = month_names.get(sorted_meses[-1][1], "Fim")
+        ano_fim = sorted_meses[-1][0]
+        periodo_label = f"{m_ini} a {m_fim}/{ano_fim}"
+    else:
+        periodo_label = "2026"
+
+    # Macro-Grupos da Obra
     MACRO_GROUPS = [
-        {"name": "Obra Grossa & Estrutura", "icon": "🏗️", "sub": ["01 AGREGADOS", "02 ARTEFATOS", "03 BLOCOS", "15 MADEIRA", "18 MISTURAS", "20 PAVIMENTA", "23 PRODUTOS METALICOS", "34 ARGAMASSAS", "36 TELHAS", "39 VEDA"], "total": 0.0, "color": "#3b82f6"},
-        {"name": "Instalações Prediais", "icon": "⚡", "sub": ["07 ENERGIA", "12 INSTAL.HIDRAULICA", "13 INSTALA", "14 LOU", "24 PVC", "28 INST. DE INCENDIO", "42 INST. DE REFRIGERA", "43 INST. DE G"], "total": 0.0, "color": "#10b981"},
-        {"name": "Acabamentos & Pintura", "icon": "🛡️", "sub": ["11 IMPERMEABILIZANTE", "16 MATERIAL BETUMINOSO", "25 REVESTIMENTO", "29 FERRAGENS", "30 MOVEIS", "37 TINTAS", "19 PAISAGISMO", "38 URBANISMO"], "total": 0.0, "color": "#f59e0b"},
-        {"name": "Segurança, EPIs & Apoio", "icon": "🦺", "sub": ["10 EPI", "33 MATERIAL DE LIMPEZA", "35 SINALIZA", "44 FERRAMENTAS", "45 COMBUSTIVEIS", "47 MATERIAL DE EXPEDIENTE", "04 DIVERSOS", "05 ALIMENTACAO", "21 PRODUTOS INDUSTRIALIZADOS"], "total": 0.0, "color": "#8b5cf6"},
-        {"name": "Serviços & Equipamentos", "icon": "🚜", "sub": ["06 ALUGUEL", "08 ESQUADRIAS METALICAS", "26 SERVI", "31 ESQUADRIAS DE MADEIRA", "01 Equipamentos Aluguel", "02 Equipamentos", "01 Verbas", "02 Servi"], "total": 0.0, "color": "#ec4899"}
+        {"name": "Obra Grossa & Estrutura", "icon": "🏗️", "sub": ["AGREGADOS", "BLOCOS", "TIJOLOS", "MADEIRA", "PRODUTOS METÁLICOS", "ARGAMASSAS", "TELHAS", "PRÉ-MOLDADOS", "ESTRUTURA", "MISTURAS"], "total": 0.0, "color": "#3b82f6"},
+        {"name": "Instalações Prediais", "icon": "⚡", "sub": ["HIDRÁULICAS", "ELÉTRICAS", "INCÊNDIO", "GÁS", "PVC", "TUBOS", "CONEXÕES", "REFRIGERAÇÃO", "ENERGIA"], "total": 0.0, "color": "#10b981"},
+        {"name": "Acabamentos & Pintura", "icon": "🛡️", "sub": ["IMPERMEABILIZANTE", "TINTAS", "VERNIZ", "REVESTIMENTO", "FERRAGENS", "LOUÇAS", "METAIS", "PAVIMENTAÇÃO", "DRENAGEM", "PAISAGISMO", "URBANISMO", "MÓVEIS"], "total": 0.0, "color": "#f59e0b"},
+        {"name": "Segurança, EPIs & Apoio", "icon": "🦺", "sub": ["EPI", "EPC", "LIMPEZA", "EXPEDIENTE", "FERRAMENTAS", "MATERIAIS AUXILIARES", "ALIMENTAÇÃO", "COMBUSTÍVEIS", "SINALIZAÇÃO", "DIVERSOS"], "total": 0.0, "color": "#8b5cf6"},
+        {"name": "Serviços & Equipamentos", "icon": "🚜", "sub": ["EQUIPAMENTOS", "SERVIÇOS", "ALUGUEL", "LOCAÇÃO", "ESQUADRIAS", "EMPREITADOS", "TAXAS", "VERBAS", "TERCEIRIZADOS"], "total": 0.0, "color": "#ec4899"}
     ]
 
-    records_pos_corte = [r for r in all_raw_records if ((parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None) or date.min) >= cutoff]
-    total_contratado_compras = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records_pos_corte)
+    total_contratado_compras = sum(float(r.get("preco_total_item", 0.0) or 0.0) for r in records)
 
-    for r in records_pos_corte:
+    for r in records:
         fam_raw = str(r.get("familia_insumo", "") or "").upper()
         val = float(r.get("preco_total_item", 0.0) or 0.0)
         alloc = False
@@ -801,7 +904,10 @@ async def api_financial_summary(role: str = "campo"):
                 alloc = True
                 break
         if not alloc:
-            MACRO_GROUPS[0]["total"] += val
+            MACRO_GROUPS[3]["total"] += val
+
+    # Ordena por valor decrescente
+    MACRO_GROUPS.sort(key=lambda x: x["total"], reverse=True)
 
     groups_res = []
     for g in MACRO_GROUPS:
@@ -811,14 +917,22 @@ async def api_financial_summary(role: str = "campo"):
             "icon": g["icon"],
             "color": g["color"],
             "valor_fmt": f"R${g['total']:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "total_raw": g["total"],
             "pct": round(pct, 1)
         })
+
+    mes_atual_nome = month_names.get(mes_atual_num, "Mês Atual")
+    prox_mes_nome = month_names.get(mes_atual_num + 1 if mes_atual_num < 12 else 1, "Futuro")
 
     return {
         "kpis": {
             "total_desembolso": f"R${total_desembolso_periodo:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "mes_atual": f"R${val_ago:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "futuro": f"R${val_futuro:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            "total_contratado": f"R${total_contratado_compras:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "mes_atual": f"R${val_mes_atual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "futuro": f"R${val_futuro:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "periodo_label": periodo_label,
+            "mes_atual_nome": mes_atual_nome,
+            "futuro_label": f"{prox_mes_nome}+"
         },
         "monthly_bars": bars,
         "macro_groups": groups_res
@@ -827,7 +941,7 @@ async def api_financial_summary(role: str = "campo"):
 # 8. EXPORTAR PLANILHAS EM EXCEL (.xlsx)
 @app.get("/api/export/excel")
 async def api_export_excel(tipo: str = "geral", role: str = "campo"):
-    if role not in ["admin", "engenharia"]:
+    if not can_view_financial_schedule(role):
         raise HTTPException(status_code=403, detail="Download reservado para Engenharia e Administração.")
     
     import pandas as pd
@@ -897,7 +1011,7 @@ async def api_export_excel(tipo: str = "geral", role: str = "campo"):
 # DETALHES DO PEDIDO (RESPOSTA INSTANTÂNEA EM MEMÓRIA RAM)
 @app.get("/api/order/{pc_num}")
 async def api_order_detail(pc_num: str, role: str = "campo"):
-    hide_fin = (role == "campo")
+    hide_fin = not can_view_monetary(role)
     _, orders_by_pc = get_cached_raw_records()
     
     items = orders_by_pc.get(str(pc_num).strip(), [])
@@ -936,12 +1050,12 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
         "condicao_pagamento": it0.get("condicao_pagamento", "Conforme Pedido") if not hide_fin else None,
         "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
         "itens": itens_formatados,
-        "can_pdf": (role in ["admin", "engenharia", "administracao"])
+        "can_pdf": can_download_files(role)
     }
 
 @app.get("/api/order/{pc_num}/pdf")
 async def api_order_pdf(pc_num: str, role: str = "campo"):
-    if role == "campo":
+    if not can_download_files(role):
         raise HTTPException(status_code=403, detail="Visualização de PDF reservada para Engenharia e Administração.")
     
     local_pdf = f"data/pdfs/PC_{pc_num}.pdf"

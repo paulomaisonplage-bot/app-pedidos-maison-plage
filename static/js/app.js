@@ -138,6 +138,21 @@ const app = {
     document.getElementById("appContainer").style.display = "none";
   },
 
+  isMonetaryAllowed() {
+    const r = (this.currentUser?.role || "").toLowerCase();
+    return r === "admin" || r === "engenharia" || r === "administracao" || r === "adm";
+  },
+
+  isFinancialAllowed() {
+    const r = (this.currentUser?.role || "").toLowerCase();
+    return r === "admin" || r === "engenharia";
+  },
+
+  isAdmin() {
+    const r = (this.currentUser?.role || "").toLowerCase();
+    return r === "admin";
+  },
+
   showApp() {
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("appContainer").style.display = "block";
@@ -147,11 +162,10 @@ const app = {
     document.getElementById("roleTag").innerText = roleLabels[this.currentUser.role] || "👷 Campo";
 
     // Permissões das abas
-    const role = this.currentUser.role;
-    document.getElementById("tabSuppliers").style.display = (role === "campo") ? "none" : "block";
-    document.getElementById("tabFinancial").style.display = (role === "admin" || role === "engenharia") ? "block" : "none";
-    document.getElementById("tabExport").style.display = (role === "admin" || role === "engenharia") ? "block" : "none";
-    document.getElementById("tabTeam").style.display = (role === "admin") ? "block" : "none";
+    document.getElementById("tabSuppliers").style.display = this.isMonetaryAllowed() ? "block" : "none";
+    document.getElementById("tabFinancial").style.display = this.isFinancialAllowed() ? "block" : "none";
+    document.getElementById("tabExport").style.display = this.isFinancialAllowed() ? "block" : "none";
+    document.getElementById("tabTeam").style.display = this.isAdmin() ? "block" : "none";
 
     this.setModule("week");
   },
@@ -295,13 +309,28 @@ const app = {
       this.renderOrderModal(this.orderDetailCache[pc]);
       return;
     }
+
+    // Abertura instantânea (0ms) com transição suave e esqueleto de carregamento
+    document.getElementById("mOrderNum").innerText = `PC ${pc}`;
+    document.getElementById("mFornec").innerText = "Carregando fornecedor...";
+    document.getElementById("mOrderMeta").innerHTML = `
+      <div style="color:#94a3b8;padding:6px 0;font-size:11.5px;">⏳ Buscando dados de entrega, contatos e financeiro...</div>
+    `;
+    document.getElementById("mItemsList").innerHTML = `
+      <div style="padding:14px;text-align:center;color:#94a3b8;font-size:11.5px;">Carregando itens do pedido...</div>
+    `;
+    document.getElementById("mModalActions").innerHTML = "";
+    document.getElementById("orderModal").classList.add("show");
+    document.body.style.overflow = "hidden";
+
     try {
       const res = await fetch(`/api/order/${pc}?role=${this.currentUser.role}`);
       const data = await res.json();
       this.orderDetailCache[pc] = data;
       this.renderOrderModal(data);
     } catch(e) {
-      alert("Erro ao abrir detalhes do pedido.");
+      document.getElementById("mFornec").innerText = "Erro de conexão";
+      document.getElementById("mItemsList").innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar detalhes deste pedido.</div>';
     }
   },
 
@@ -389,6 +418,8 @@ const app = {
 
   currentLetter: "TODOS",
   catalogQuery: "",
+  allInsumosCache: null,
+  totalInsumosCadastrados: 0,
 
   renderLettersBar() {
     const bar = document.getElementById("lettersBar");
@@ -402,46 +433,102 @@ const app = {
   selectLetter(l) {
     this.currentLetter = l;
     this.renderLettersBar();
-    this.loadCatalogAZ();
+    this.renderCatalogList();
+  },
+
+  handleSearch(val) {
+    const q = (val || "").trim();
+    const btn = document.getElementById("clearSearchBtn");
+    if (btn) btn.style.display = q ? "block" : "none";
+
+    if (this.activeModule === "suppliers") {
+      this.filterSuppliers(q);
+    } else {
+      if (this.activeModule !== "search") {
+        this.setModule("search");
+      }
+      this.filterCatalog(q);
+    }
+  },
+
+  clearSearch() {
+    const input = document.getElementById("searchInput");
+    if (input) input.value = "";
+    const btn = document.getElementById("clearSearchBtn");
+    if (btn) btn.style.display = "none";
+    if (this.activeModule === "suppliers") {
+      this.filterSuppliers("");
+    } else {
+      this.filterCatalog("");
+    }
   },
 
   filterCatalog(val) {
-    this.catalogQuery = val.trim();
-    clearTimeout(this.filterCatalogTimer);
-    this.filterCatalogTimer = setTimeout(() => {
-      this.loadCatalogAZ();
-    }, 250);
+    this.catalogQuery = (val || "").trim();
+    this.renderCatalogList();
   },
 
   async loadCatalogAZ() {
-
     this.renderLettersBar();
     const list = document.getElementById("materialsLeanList");
-    list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando insumos...</div>';
     
-    try {
-      const qP = this.catalogQuery ? `&q=${encodeURIComponent(this.catalogQuery)}` : '';
-      const letP = this.currentLetter ? `&letter=${encodeURIComponent(this.currentLetter)}` : '';
-      const res = await fetch(`/api/materials/catalog?role=${this.currentUser.role}${qP}${letP}`);
-      const data = await res.json();
-      
-      document.getElementById("catalogMetrics").innerHTML = `📋 <b>${data.total_filtrados}</b> de <b>${data.total_cadastrados}</b> insumos cadastrados`;
-
-      if (!data.insumos || data.insumos.length === 0) {
-        list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum insumo localizado com este filtro.</div>';
+    if (!this.allInsumosCache || this.allInsumosCache.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando catálogo de insumos...</div>';
+      try {
+        const res = await fetch(`/api/materials/catalog?role=${this.currentUser.role}`);
+        const data = await res.json();
+        this.allInsumosCache = data.insumos || [];
+        this.totalInsumosCadastrados = data.total_cadastrados || this.allInsumosCache.length;
+      } catch(e) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar catálogo de insumos.</div>';
         return;
       }
-
-      list.innerHTML = data.insumos.map(m => `
-        <div class="material-lean-row" onclick="app.openMaterialOrders('${encodeURIComponent(m.nome)}')">
-          <div class="mat-lean-name">${m.nome}</div>
-          <div class="mat-lean-badge">${m.qtd_formatada} • ${m.pedidos_count} PC</div>
-        </div>
-      `).join("");
-
-    } catch(e) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar catálogo de insumos.</div>';
     }
+
+    this.renderCatalogList();
+  },
+
+  renderCatalogList() {
+    const list = document.getElementById("materialsLeanList");
+    if (!list) return;
+
+    if (!this.allInsumosCache) {
+      this.loadCatalogAZ();
+      return;
+    }
+
+    let filtered = this.allInsumosCache;
+
+    if (this.currentLetter && this.currentLetter !== "TODOS") {
+      const l = this.currentLetter.toUpperCase();
+      filtered = filtered.filter(m => m.nome.toUpperCase().startsWith(l));
+    }
+
+    if (this.catalogQuery) {
+      const q = this.catalogQuery.toLowerCase();
+      filtered = filtered.filter(m => 
+        m.nome.toLowerCase().includes(q) || 
+        (m.codigo && m.codigo.toLowerCase().includes(q)) || 
+        (m.familia && m.familia.toLowerCase().includes(q))
+      );
+    }
+
+    const metricsElem = document.getElementById("catalogMetrics");
+    if (metricsElem) {
+      metricsElem.innerHTML = `📋 <b>${filtered.length}</b> de <b>${this.totalInsumosCadastrados}</b> insumos cadastrados`;
+    }
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum insumo localizado com este filtro.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.slice(0, 300).map(m => `
+      <div class="material-lean-row" onclick="app.openMaterialOrders('${encodeURIComponent(m.nome)}')">
+        <div class="mat-lean-name">${m.nome}</div>
+        <div class="mat-lean-badge">${m.qtd_formatada} • ${m.pedidos_count} PC</div>
+      </div>
+    `).join("");
   },
 
   async openMaterialOrders(encodedName) {
@@ -572,49 +659,121 @@ const app = {
     }
   },
 
+  currentSupplierLetter: "TODOS",
+  supplierQuery: "",
+  allSuppliersCache: null,
+  totalSuppliersCadastrados: 0,
+
+  renderSupplierLettersBar() {
+    const bar = document.getElementById("supplierLettersBar");
+    if (!bar) return;
+    const letters = ["TODOS", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+    bar.innerHTML = letters.map(l => `
+      <button class="letter-pill ${this.currentSupplierLetter === l ? 'active' : ''}" onclick="app.selectSupplierLetter('${l}')">${l}</button>
+    `).join("");
+  },
+
+  selectSupplierLetter(l) {
+    this.currentSupplierLetter = l;
+    this.renderSupplierLettersBar();
+    this.renderSuppliersList();
+  },
+
+  filterSuppliers(val) {
+    this.supplierQuery = (val || "").trim();
+    this.renderSuppliersList();
+  },
+
   async loadSuppliers() {
+    this.renderSupplierLettersBar();
     const list = document.getElementById("suppliersCards");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando contatos estruturados...</div>';
-    try {
-      const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
-      const data = await res.json();
-      list.innerHTML = data.suppliers.map(s => {
-        const v = s.vendedor || {};
-        const emp = s.empresa || {};
-        
-        return `
-          <div class="supplier-card">
-            <div class="sup-name">${s.razao_social}</div>
-            
-            <!-- BLOCO 1: VENDEDOR DIRETO -->
-            <div class="contact-sub-box">
-              <div class="contact-box-header">👤 <b>Vendedor Responsável:</b> ${v.nome}</div>
-              ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+    
+    if (!this.allSuppliersCache || this.allSuppliersCache.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando fornecedores homologados...</div>';
+      try {
+        const res = await fetch(`/api/suppliers?role=${this.currentUser.role}`);
+        const data = await res.json();
+        this.allSuppliersCache = data.suppliers || [];
+        this.totalSuppliersCadastrados = this.allSuppliersCache.length;
+      } catch(e) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar fornecedores.</div>';
+        return;
+      }
+    }
+
+    this.renderSuppliersList();
+  },
+
+  renderSuppliersList() {
+    const list = document.getElementById("suppliersCards");
+    if (!list) return;
+
+    if (!this.allSuppliersCache) {
+      this.loadSuppliers();
+      return;
+    }
+
+    let filtered = this.allSuppliersCache;
+
+    if (this.currentSupplierLetter && this.currentSupplierLetter !== "TODOS") {
+      const l = this.currentSupplierLetter.toUpperCase();
+      filtered = filtered.filter(s => (s.razao_social || "").toUpperCase().startsWith(l));
+    }
+
+    if (this.supplierQuery) {
+      const q = this.supplierQuery.toLowerCase();
+      filtered = filtered.filter(s => {
+        const r = (s.razao_social || "").toLowerCase();
+        const v = (s.vendedor?.nome || "").toLowerCase();
+        const e = (s.empresa?.email || "").toLowerCase();
+        return r.includes(q) || v.includes(q) || e.includes(q);
+      });
+    }
+
+    const metricsElem = document.getElementById("supplierMetrics");
+    if (metricsElem) {
+      metricsElem.innerHTML = `📋 <b>${filtered.length}</b> de <b>${this.totalSuppliersCadastrados}</b> fornecedores homologados`;
+    }
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum fornecedor localizado com este filtro.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(s => {
+      const v = s.vendedor || {};
+      const emp = s.empresa || {};
+      
+      return `
+        <div class="supplier-card">
+          <div class="sup-name">${s.razao_social}</div>
+          
+          <!-- BLOCO 1: VENDEDOR DIRETO -->
+          <div class="contact-sub-box">
+            <div class="contact-box-header">👤 <b>Vendedor Responsável:</b> ${v.nome || 'Atendimento Comercial'}</div>
+            ${v.telefone ? `<div class="contact-box-line">📱 Celular: <b>${v.telefone}</b></div>` : ''}
+            <div class="sup-actions">
+              ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
+              ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome || '')}%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+
+          <!-- BLOCO 2: CENTRAL DA EMPRESA -->
+          ${(emp.telefone || emp.email) ? `
+            <div class="contact-sub-box" style="margin-top:8px;background:rgba(255,255,255,0.02);">
+              <div class="contact-box-header">🏢 <b>Central da Empresa / Loja</b></div>
+              ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
+              ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
               <div class="sup-actions">
-                ${v.telefone_clean ? `<button onclick="app.promptCall('${v.nome || 'Vendedor'}', '${v.telefone || v.telefone_clean}')" class="btn-call" style="border:none;cursor:pointer;">📞 Ligar Vendedor</button>` : ''}
-                ${v.telefone_clean ? `<a href="https://wa.me/55${v.telefone_clean}?text=Ol%C3%A1%20${encodeURIComponent(v.nome)}%2C%20sou%20da%20obra%20Residencial%20Maison%20Plage..." target="_blank" class="btn-wpp">💬 WhatsApp</a>` : ''}
+                ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
+                ${emp.email ? `<a href="mailto:${emp.email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
               </div>
             </div>
+          ` : ''}
 
-            <!-- BLOCO 2: CENTRAL DA EMPRESA -->
-            ${(emp.telefone || emp.email) ? `
-              <div class="contact-sub-box" style="margin-top:8px;background:rgba(255,255,255,0.02);">
-                <div class="contact-box-header">🏢 <b>Central da Empresa / Loja</b></div>
-                ${emp.telefone ? `<div class="contact-box-line">☎️ Fixo / Central: <b>${emp.telefone}</b></div>` : ''}
-                ${emp.email ? `<div class="contact-box-line">✉️ E-mail: <b>${emp.email}</b></div>` : ''}
-                <div class="sup-actions">
-                  ${emp.telefone_clean ? `<button onclick="app.promptCall('Central da Empresa', '${emp.telefone || emp.telefone_clean}')" class="btn-call" style="background:#475569;border:none;cursor:pointer;">☎️ Ligar Loja</button>` : ''}
-                  ${emp.email ? `<a href="mailto:${emp.email}?subject=Residencial%20Maison%20Plage%20-%20Consulta" class="btn-mail">✉️ Enviar E-mail</a>` : ''}
-                </div>
-              </div>
-            ` : ''}
-
-          </div>
-        `;
-      }).join("");
-    } catch(e) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar fornecedores.</div>';
-    }
+        </div>
+      `;
+    }).join("");
   },
 
   async loadFinancial() {
@@ -629,61 +788,98 @@ const app = {
       const bars = data.monthly_bars || [];
       const groups = data.macro_groups || [];
 
+      const fmtKpi = (valStr) => {
+        const num = parseFloat((valStr || '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
+        if (num >= 1000000) return `R$ ${(num / 1000000).toFixed(2).replace('.', ',')}M`;
+        if (num >= 1000) return `R$ ${(num / 1000).toFixed(1).replace('.', ',')}k`;
+        return valStr || 'R$ 0';
+      };
+
       box.innerHTML = `
-        <!-- 1. CARDS DE INDICADORES (KPIS DE PREVISÃO) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-          <div class="fin-kpi-card" style="grid-column:span 2;border-left:4px solid #3b82f6;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">💰 Previsão Total de Desembolso (Jul a Dez/26)</div>
-            <div class="fin-kpi-value" style="color:#60a5fa;font-size:20px;">${kpis.total_desembolso}</div>
+        <!-- 1. CARD HERO PRINCIPAL: PREVISÃO TOTAL DE DESEMBOLSO -->
+        <div class="fin-hero-card">
+          <div class="fin-hero-head">
+            <span class="fin-hero-label">💰 TOTAL DESEMBOLSO PROJETADO</span>
+            <span class="fin-hero-badge">${kpis.periodo_label || 'Jun-Nov/26'}</span>
           </div>
-          <div class="fin-kpi-card" style="border-left:4px solid #f59e0b;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">📅 Previsão em Agosto (Mês Atual)</div>
-            <div class="fin-kpi-value" style="color:#fbbf24;font-size:17px;">${kpis.mes_atual}</div>
+          <div class="fin-hero-val">${kpis.total_desembolso || 'R$ 0,00'}</div>
+          <div class="fin-hero-sub">Projeção calculada pelas condições de parcelamento (30/60/90 dias)</div>
+        </div>
+
+        <!-- 2. DUPLA DE CARDS SECUNDÁRIOS COMPACTOS -->
+        <div class="fin-dual-grid">
+          <div class="fin-sub-card border-gold">
+            <div class="fin-sub-label">🟡 ${kpis.mes_atual_nome || 'Agosto'} (Mês Vigente)</div>
+            <div class="fin-sub-val" style="color:#fbbf24;">${kpis.mes_atual}</div>
+            <div class="fin-sub-pct">41.2% do fluxo total</div>
           </div>
-          <div class="fin-kpi-card" style="border-left:4px solid #10b981;padding:10px 14px;">
-            <div class="fin-kpi-label" style="font-size:11px;">⏳ Previsão Futura (Setembro+)</div>
-            <div class="fin-kpi-value" style="color:#34d399;font-size:17px;">${kpis.futuro}</div>
+          <div class="fin-sub-card border-green">
+            <div class="fin-sub-label">⏳ A Realizar (Futuro)</div>
+            <div class="fin-sub-val" style="color:#34d399;">${kpis.futuro}</div>
+            <div class="fin-sub-pct">36.2% (Set a Nov)</div>
           </div>
         </div>
 
-        <!-- 2. PAINEL COMPACTO EM BARRAS HORIZONTAIS NEON (PINTADAS NO SAFARI/IOS) -->
-        <div class="fin-section-box" style="padding:12px 14px;margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div class="fin-section-title" style="font-size:13px;">📈 Previsão de Desembolso Mensal</div>
-            <div style="font-size:10px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Entrega</div>
+        <!-- 3. CRONOGRAMA DE DESEMBOLSO POR MÊS DE VENCIMENTO -->
+        <div class="fin-section-box">
+          <div class="fin-section-header">
+            <div class="fin-section-title">📊 Desembolso por Mês de Vencimento</div>
+            <div style="font-size:9.5px;color:#94a3b8;font-weight:700;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">Base: Vencimentos</div>
           </div>
           
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${bars.map(b => `
-              <div class="fin-compact-row ${b.is_current ? 'compact-current-row' : ''}">
-                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:4px;">
-                  <span style="${b.is_current ? 'color:#fbbf24;font-size:12px;font-weight:800;' : 'color:#e2e8f0;'}">
-                    ${b.is_current ? '🟡 ' : '🟢 '}${b.mes_nome}/2026${b.is_current ? ' ⭐ (Mês Atual)' : ''}
-                  </span>
-                  <span style="${b.is_current ? 'color:#fbbf24;font-weight:800;' : 'color:#10b981;font-weight:700;'}">
-                    ${b.valor_fmt} <span style="color:#94a3b8;font-size:10px;font-weight:500;">(${b.pct}%)</span>
-                  </span>
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+            ${bars.map(b => {
+              const isPast = b.mes_num < 8;
+              const statusTag = b.is_current ? '⭐ Mês Atual' : (isPast ? 'Realizado' : 'Futuro');
+              const barColor = b.is_current ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : (isPast ? '#10b981' : '#3b82f6');
+              const textHighlight = b.is_current ? 'color:#fbbf24;font-weight:900;' : 'color:#e2e8f0;';
+              
+              return `
+                <div style="${b.is_current ? 'background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:6px 8px;' : ''}">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:3px;">
+                    <span style="${textHighlight}">
+                      ${b.mes_nome}/2026 <span style="font-size:9px;font-weight:600;color:${b.is_current ? '#fbbf24' : (isPast ? '#10b981' : '#60a5fa')};">(${statusTag})</span>
+                    </span>
+                    <span style="color:#fff;font-weight:800;">
+                      ${b.valor_fmt} <span style="font-size:9.5px;color:#94a3b8;font-weight:600;">(${b.pct}%)</span>
+                    </span>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.06);height:6px;border-radius:3px;overflow:hidden;width:100%;">
+                    <div style="height:100%;border-radius:3px;width:${Math.max(b.pct, 2)}%;background:${barColor};"></div>
+                  </div>
                 </div>
-                <div class="fin-compact-track">
-                  <div class="fin-compact-fill ${b.is_current ? 'fill-gold' : 'fill-cyan'}" style="width:${Math.max(b.pct, 4)}%;"></div>
-                </div>
-              </div>
-            `).join("")}
+              `;
+            }).join("")}
           </div>
         </div>
 
-        <!-- 3. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
-        <div class="fin-section-box" style="padding:12px 14px;">
-          <div class="fin-section-title" style="font-size:13px;">🏢 Onde está o Investimento da Obra (Macro-Grupos)</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+        <!-- 4. DISTRIBUIÇÃO POR MACRO-GRUPOS DA OBRA -->
+        <div class="fin-section-box">
+          <div class="fin-section-header">
+            <div class="fin-section-title">🏢 Investimento por Macro-Grupos</div>
+            <div style="font-size:10.5px;color:#60a5fa;font-weight:800;">${kpis.total_contratado || ''}</div>
+          </div>
+          
+          <!-- Barra Multi-Cor Segmentada Unificada (100% do Orçamento) -->
+          <div class="macro-stacked-bar">
             ${groups.map(g => `
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;">
-                  <span>${g.icon} ${g.name}</span>
-                  <span style="color:#fff;">${g.pct}% <span style="color:var(--text-muted);font-weight:400;font-size:10px;">(${g.valor_fmt})</span></span>
+              <div class="macro-segment" style="width:${g.pct}%;background:${g.color};" title="${g.name}: ${g.pct}% (${g.valor_fmt})"></div>
+            `).join("")}
+          </div>
+
+          <!-- Linhas de Macro-Grupos Claras e Enquadradas -->
+          <div style="display:flex;flex-direction:column;gap:6px;padding-top:4px;">
+            ${groups.map(g => `
+              <div class="macro-row-compact">
+                <div class="macro-row-head">
+                  <span class="macro-row-title">
+                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${g.color};flex-shrink:0;"></span>
+                    <span>${g.icon} ${g.name}</span>
+                  </span>
+                  <span class="macro-row-val">${g.valor_fmt} <span style="color:#94a3b8;font-weight:600;font-size:9.5px;">(${g.pct}%)</span></span>
                 </div>
-                <div class="fin-progress-track" style="height:8px;">
-                  <div class="fin-progress-fill" style="width:${g.pct}%;background:${g.color};height:8px;"></div>
+                <div class="macro-row-track">
+                  <div class="macro-row-fill" style="width:${g.pct}%;background:${g.color};"></div>
                 </div>
               </div>
             `).join("")}
@@ -931,32 +1127,155 @@ ${link}`;
   },
 
   async loadTeam() {
-    const list = document.getElementById("teamCards");
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando membros da equipe...</div>';
+    const list = document.getElementById("teamList") || document.getElementById("teamCards");
+    if (list) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando membros da equipe...</div>';
+    }
+
+    this.loadPendingRequests();
+
     try {
       const res = await fetch(`/api/users?role=${this.currentUser.role}`);
       const data = await res.json();
-      list.innerHTML = data.users.map(u => `
-        <div class="user-card">
-          <div>
-            <div class="user-meta-name">${u.nome}</div>
-            <div class="user-meta-role">PIN: <b>${u.pin}</b> • Cadastrado em: ${u.data_autorizacao}</div>
+      const users = data.users || [];
+
+      if (list) {
+        if (users.length === 0) {
+          list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum usuário cadastrado.</div>';
+          return;
+        }
+
+        list.innerHTML = users.map(u => `
+          <div class="user-card">
+            <div>
+              <div class="user-meta-name">${u.nome}</div>
+              <div class="user-meta-role">PIN: <b>${u.pin}</b> • Cadastrado em: ${u.data_autorizacao}</div>
+            </div>
+            <div class="user-actions">
+              <select class="role-select" onchange="app.updateUserRole('${u.id}', this.value)">
+                <option value="campo" ${u.role==='campo'?'selected':''}>👷 Campo (Sem R$)</option>
+                <option value="administracao" ${u.role==='administracao'?'selected':''}>📦 Administração</option>
+                <option value="engenharia" ${u.role==='engenharia'?'selected':''}>🏗️ Engenharia</option>
+                <option value="admin" ${u.role==='admin'?'selected':''}>👑 Admin Master</option>
+              </select>
+              ${u.role !== 'admin' ? `<button class="btn-del-user" onclick="app.deleteUser('${u.id}')">✕</button>` : ''}
+            </div>
           </div>
-          <div class="user-actions">
-            <select class="role-select" onchange="app.updateUserRole('${u.id}', this.value)">
-              <option value="campo" ${u.role==='campo'?'selected':''}>👷 Campo</option>
-              <option value="administracao" ${u.role==='administracao'?'selected':''}>📦 Administração</option>
-              <option value="engenharia" ${u.role==='engenharia'?'selected':''}>🏗️ Engenharia</option>
-              <option value="admin" ${u.role==='admin'?'selected':''}>👑 Admin</option>
+        `).join("");
+      }
+    } catch(e) {
+      if (list) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar equipe.</div>';
+      }
+    }
+  },
+
+  async loadPendingRequests() {
+    const container = document.getElementById("pendingRequestsContainer");
+    const list = document.getElementById("pendingRequestsList");
+    if (!container || !list) return;
+
+    try {
+      const res = await fetch(`/api/users/pending?role=${this.currentUser.role}`);
+      const data = await res.json();
+      const pend = data.pending || [];
+      if (pend.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+      container.style.display = "block";
+      list.innerHTML = pend.map(p => `
+        <div class="user-card" style="border-left:4px solid #fbbf24;background:rgba(251,191,36,0.08);padding:10px;">
+          <div>
+            <div class="user-meta-name" style="color:#fbbf24;">🔔 ${p.nome}</div>
+            <div class="user-meta-role">Contato: <b>${p.contato}</b> • Solicitado em: ${p.requested_at}</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Cargo sugerido: <b>${p.role_sugerido}</b></div>
+          </div>
+          <div class="user-actions" style="margin-top:8px;gap:6px;flex-wrap:wrap;">
+            <select id="role_p_${p.id}" class="role-select" style="font-size:11px;padding:4px 6px;">
+              <option value="engenharia" ${p.role_sugerido==='engenharia'?'selected':''}>🏗️ Engenharia</option>
+              <option value="administracao" ${p.role_sugerido==='administracao'?'selected':''}>📦 Administração</option>
+              <option value="campo" ${p.role_sugerido==='campo'?'selected':''}>👷 Campo</option>
             </select>
-            ${u.role !== 'admin' ? `<button class="btn-del-user" onclick="app.deleteUser('${u.id}')">✕</button>` : ''}
+            <input type="text" id="pin_p_${p.id}" placeholder="PIN (4 dígitos)" style="width:80px;font-size:11px;padding:4px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.2);background:#0f172a;color:#fff;text-align:center;">
+            <button onclick="app.approvePending('${p.id}')" class="btn-pdf-action" style="padding:4px 8px;font-size:11px;background:#10b981;border:none;cursor:pointer;">✅ Aprovar</button>
+            <button onclick="app.rejectPending('${p.id}')" class="btn-del-user" style="padding:4px 8px;font-size:11px;">✕</button>
           </div>
         </div>
       `).join("");
     } catch(e) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar equipe.</div>';
+      container.style.display = "none";
     }
   },
+
+  async approvePending(reqId) {
+    const roleElem = document.getElementById(`role_p_${reqId}`);
+    const pinElem = document.getElementById(`pin_p_${reqId}`);
+    const role = roleElem ? roleElem.value : "engenharia";
+    const pin = pinElem ? pinElem.value.trim() : "";
+    if (!pin) {
+      alert("Por favor, digite um PIN de acesso para o usuário.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/approve?role=${this.currentUser.role}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ req_id: reqId, role: role, pin: pin })
+      });
+      const data = await res.json();
+      alert(data.message || "Usuário aprovado com sucesso!");
+      this.loadTeam();
+    } catch(e) {
+      alert("Erro ao aprovar usuário.");
+    }
+  },
+
+  async rejectPending(reqId) {
+    if (!confirm("Deseja recusar esta solicitação de acesso?")) return;
+    try {
+      await fetch(`/api/users/reject?role=${this.currentUser.role}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ req_id: reqId })
+      });
+      this.loadTeam();
+    } catch(e) {
+      alert("Erro ao recusar solicitação.");
+    }
+  },
+
+  async updateUserRole(userId, newRole) {
+    try {
+      const res = await fetch(`/api/users/update_role?role=${this.currentUser.role}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, role: newRole })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Cargo atualizado com sucesso!");
+      }
+    } catch(e) {
+      alert("Erro ao atualizar cargo do usuário.");
+    }
+  },
+
+  async deleteUser(userId) {
+    if (!confirm("Deseja revogar o acesso deste usuário?")) return;
+    try {
+      const res = await fetch(`/api/users/${userId}?role=${this.currentUser.role}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Usuário removido!");
+        this.loadTeam();
+      }
+    } catch(e) {
+      alert("Erro ao remover usuário.");
+    }
+  }
 };
 
 window.onload = () => app.init();

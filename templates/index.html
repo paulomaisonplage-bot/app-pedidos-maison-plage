@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Maison Plage">
-  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/app.css?v=20260831_1750">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -167,15 +167,15 @@
         <div class="cards-list" id="monthCards"></div>
       </section>
 
-      <!-- MÓDULO 3: CATÁLOGO ALFABÉTICO ENXUTO DE INSUMOS (A-Z) -->
+      <!-- MÓDULO 3: CATÁLOGO ALFABÉTICO DE INSUMOS (A-Z) -->
       <section id="modSearch" class="module-section">
-        <div class="search-head-box">
+        <div class="search-head-box" style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px;">
           <div class="letters-bar" id="lettersBar"></div>
-          <div id="catalogMetrics" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Carregando insumos...</div>
+          <div id="catalogMetrics" style="font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:600;">Carregando insumos...</div>
         </div>
 
         <div class="materials-lean-list" id="materialsLeanList">
-          <div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando catálogo alfabético...</div>
+          <div style="padding:24px;text-align:center;color:#94a3b8">⏳ Carregando catálogo de insumos...</div>
         </div>
       </section>
 
@@ -191,6 +191,10 @@
 
       <!-- MÓDULO 6: FORNECEDORES -->
       <section id="modSuppliers" class="module-section">
+        <div class="search-head-box" style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px;">
+          <div class="letters-bar" id="supplierLettersBar"></div>
+          <div id="supplierMetrics" style="font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:600;">Carregando fornecedores...</div>
+        </div>
         <div class="cards-list" id="suppliersCards"></div>
       </section>
 
@@ -286,6 +290,21 @@
     </div>
   </div>
 
+  <!-- MODAL DE PEDIDOS DO INSUMO SELECIONADO -->
+  <div class="modal-backdrop" id="matOrdersModal" onclick="app.closeMatOrdersModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="modal-head">
+        <div>
+          <h2 class="order-number" id="matModalTitle" style="font-size:15px;line-height:1.2;">Nome do Insumo</h2>
+          <p class="order-fornec" id="matModalSub" style="color:#60a5fa;font-size:12px;margin-top:2px;">Pedidos de Compra</p>
+        </div>
+        <button class="btn-close" onclick="app.closeMatOrdersModal()">✕</button>
+      </div>
+      <div class="cards-list" id="matOrdersCards" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
   <!-- MODAL DE ADICIONAR NOVO USUÁRIO -->
   <div class="modal-backdrop" id="addUserModal" onclick="app.closeAddUserModal(event)">
     <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -315,7 +334,7 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=20260831_1750"></script>
 
   <!-- MODAL DE VISUALIZADOR DE PDF INTEGRADO -->
   <div id="pdfViewerModal" class="modal-backdrop">
