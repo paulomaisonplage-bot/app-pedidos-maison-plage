@@ -100,22 +100,29 @@ def get_previous_month_cutoff_date() -> date:
         return date(hoje.year, hoje.month - 1, 1)
 
 
+def format_currency_brl(val: float) -> str:
+    """Formata valor monetário no padrão brasileiro (R$ 1.234,56)."""
+    return f"R${float(val or 0.0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
 def can_view_monetary(role: str) -> bool:
     canonical = (role or "").strip().lower()
     return canonical in ["admin", "engenharia", "administracao", "adm"]
+
 
 def can_view_financial_schedule(role: str) -> bool:
     canonical = (role or "").strip().lower()
     return canonical in ["admin", "engenharia"]
 
+
 def can_download_files(role: str) -> bool:
-    canonical = (role or "").strip().lower()
-    return canonical in ["admin", "engenharia", "administracao", "adm"]
+    return can_view_monetary(role)
 
 
-def build_order_card_data(pc: str, role: str) -> Optional[dict]:
+def build_order_card_data(pc: str, role: str, items: Optional[List[dict]] = None) -> Optional[dict]:
     hide_fin = not can_view_monetary(role)
-    items = query_service.get_order_by_number(pc)
+    if items is None:
+        items = query_service.get_order_by_number(pc)
     if not items:
         return None
     it0 = items[0]
@@ -140,7 +147,7 @@ def build_order_card_data(pc: str, role: str) -> Optional[dict]:
         "total_itens": len(items),
         "itens_resumo": top_3_items,
         "extra_itens_count": extra_count,
-        "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+        "valor_total_formatado": format_currency_brl(total_val) if not hide_fin else None,
         "can_pdf": can_download_files(role)
     }
 
@@ -636,31 +643,9 @@ async def api_materials_search(q: str = "", role: str = "campo"):
                 
     cards = []
     for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
-        items = pc_items_map[pc]
-        it0 = items[0]
-        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-        
-        top_3 = []
-        for it in items[:3]:
-            desc = str(it.get("descricao_material", "") or "").strip()
-            qtd = it.get("quantidade", 0)
-            un = str(it.get("unidade", "UN")).strip()
-            top_3.append(f"• {qtd} {un} - {desc}")
-            
-        extra_count = len(items) - 3 if len(items) > 3 else 0
-        
-        cards.append({
-            "pc": pc,
-            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
-            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
-            "data_emissao": it0.get("data_pedido", "-"),
-            "total_itens": len(items),
-            "itens_resumo": top_3,
-            "extra_itens_count": extra_count,
-            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-            "can_pdf": can_download_files(role)
-        })
+        c = build_order_card_data(pc, role, items=pc_items_map[pc])
+        if c:
+            cards.append(c)
         
     return {"query": q, "total_pedidos": len(cards), "cards": cards}
 
@@ -701,31 +686,9 @@ async def api_material_orders(nome: str, role: str = "campo"):
             
     cards = []
     for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
-        items = pc_items_map[pc]
-        it0 = items[0]
-        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-        
-        top_3 = []
-        for it in items[:3]:
-            desc = str(it.get("descricao_material", "") or "").strip()
-            qtd = it.get("quantidade", 0)
-            un = str(it.get("unidade", "UN")).strip()
-            top_3.append(f"• {qtd} {un} - {desc}")
-            
-        extra_count = len(items) - 3 if len(items) > 3 else 0
-        
-        cards.append({
-            "pc": pc,
-            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
-            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
-            "data_emissao": it0.get("data_pedido", "-"),
-            "total_itens": len(items),
-            "itens_resumo": top_3,
-            "extra_itens_count": extra_count,
-            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-            "can_pdf": can_download_files(role)
-        })
+        c = build_order_card_data(pc, role, items=pc_items_map.get(pc))
+        if c:
+            cards.append(c)
         
     return {"material": nome, "total_pedidos": len(cards), "cards": cards}
 
@@ -748,31 +711,9 @@ async def api_group_orders(familia: str, role: str = "campo"):
             
     cards = []
     for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
-        items = pc_items_map[pc]
-        it0 = items[0]
-        total_val = sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
-        fornec = str(it0.get("fornecedor_nome") or it0.get("fornecedor", "Fornecedor da Obra")).strip()
-        
-        top_3 = []
-        for it in items[:3]:
-            desc = str(it.get("descricao_material", "") or "").strip()
-            qtd = it.get("quantidade", 0)
-            un = str(it.get("unidade", "UN")).strip()
-            top_3.append(f"• {qtd} {un} - {desc}")
-            
-        extra_count = len(items) - 3 if len(items) > 3 else 0
-        
-        cards.append({
-            "pc": pc,
-            "fornecedor": fornec if not hide_fin else "Fornecedor Homologado",
-            "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
-            "data_emissao": it0.get("data_pedido", "-"),
-            "total_itens": len(items),
-            "itens_resumo": top_3,
-            "extra_itens_count": extra_count,
-            "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-            "can_pdf": can_download_files(role)
-        })
+        c = build_order_card_data(pc, role, items=pc_items_map.get(pc))
+        if c:
+            cards.append(c)
         
     return {"familia": familia, "total_pedidos": len(cards), "cards": cards}
 
@@ -867,7 +808,7 @@ async def api_financial_summary(role: str = "campo"):
             "ano": ano_m,
             "mes_num": m,
             "mes_nome": month_names.get(m, f"Mês {m}"),
-            "valor_fmt": f"R${v:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "valor_fmt": format_currency_brl(v),
             "pct": round(pct, 1),
             "bar_pct": round(bar_pct, 1),
             "is_current": is_cur,
@@ -916,7 +857,7 @@ async def api_financial_summary(role: str = "campo"):
             "name": g["name"],
             "icon": g["icon"],
             "color": g["color"],
-            "valor_fmt": f"R${g['total']:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "valor_fmt": format_currency_brl(g['total']),
             "total_raw": g["total"],
             "pct": round(pct, 1)
         })
@@ -926,10 +867,10 @@ async def api_financial_summary(role: str = "campo"):
 
     return {
         "kpis": {
-            "total_desembolso": f"R${total_desembolso_periodo:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "total_contratado": f"R${total_contratado_compras:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "mes_atual": f"R${val_mes_atual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "futuro": f"R${val_futuro:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "total_desembolso": format_currency_brl(total_desembolso_periodo),
+            "total_contratado": format_currency_brl(total_contratado_compras),
+            "mes_atual": format_currency_brl(val_mes_atual),
+            "futuro": format_currency_brl(val_futuro),
             "periodo_label": periodo_label,
             "mes_atual_nome": mes_atual_nome,
             "futuro_label": f"{prox_mes_nome}+"
@@ -1037,8 +978,8 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
             "descricao": str(it.get("descricao_material", "") or it.get("descricao_completa", "")),
             "quantidade": it.get("quantidade", 0),
             "unidade": str(it.get("unidade", "UN")).strip(),
-            "valor_unitario": f"R${float(it.get('preco_unitario', 0.0) or 0.0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
-            "valor_total": f"R${float(it.get('preco_total_item', 0.0) or 0.0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None
+            "valor_unitario": format_currency_brl(float(it.get('preco_unitario', 0.0) or 0.0)) if not hide_fin else None,
+            "valor_total": format_currency_brl(float(it.get('preco_total_item', 0.0) or 0.0)) if not hide_fin else None
         })
 
     return {
@@ -1048,7 +989,7 @@ async def api_order_detail(pc_num: str, role: str = "campo"):
         "data_emissao": it0.get("data_pedido", "-"),
         "data_entrega": it0.get("data_entrega_prevista", "A Confirmar"),
         "condicao_pagamento": it0.get("condicao_pagamento", "Conforme Pedido") if not hide_fin else None,
-        "valor_total_formatado": f"R${total_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if not hide_fin else None,
+        "valor_total_formatado": format_currency_brl(total_val) if not hide_fin else None,
         "itens": itens_formatados,
         "can_pdf": can_download_files(role)
     }
