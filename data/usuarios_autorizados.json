@@ -1,63 +1,44 @@
 {
-  "admin_ids": [
-    8459937324
-  ],
-  "users": {
-    "8459937324": {
-      "nome": "Paulo Lôbo (Admin Master)",
-      "username": "@paulolobo",
-      "role": "admin",
-      "pin": "8459",
-      "data_autorizacao": "28/08/2026 20:00:00"
-    },
-    "1001": {
+  "master_pin": "admpgi1204",
+  "master_user": {
+    "id": "paulo_lobo_master",
+    "nome": "Paulo Lôbo (Admin Master)",
+    "role": "admin",
+    "is_master": true
+  },
+  "collaborator_tokens": {
+    "mp_tok_carlos_eng": {
+      "token": "mp_tok_carlos_eng",
       "nome": "Carlos Eduardo",
-      "username": "@carlos_eng",
       "role": "engenharia",
-      "pin": "1001",
-      "data_autorizacao": "28/08/2026 20:10:00"
+      "whatsapp": "",
+      "created_at": "03/10/2026 10:00",
+      "status": "active",
+      "last_login": "03/10/2026 10:06"
     },
-    "1002": {
+    "mp_tok_roberto_adm": {
+      "token": "mp_tok_roberto_adm",
       "nome": "Roberto Silva",
-      "username": "@roberto_almx",
       "role": "administracao",
-      "pin": "1002",
-      "data_autorizacao": "28/08/2026 20:15:00"
+      "whatsapp": "",
+      "created_at": "03/10/2026 10:00",
+      "status": "active"
     },
-    "1003": {
+    "mp_tok_marcos_campo": {
+      "token": "mp_tok_marcos_campo",
       "nome": "Marcos Souza",
-      "username": "@marcos_mestre",
       "role": "campo",
-      "pin": "1003",
-      "data_autorizacao": "28/08/2026 20:20:00"
+      "whatsapp": "",
+      "created_at": "03/10/2026 10:00",
+      "status": "active"
     }
   },
-  "pending_requests": {},
-  "invites": {
-    "mp_inv_3e937852d4f7": {
-      "created_at": "02/10/2026 18:28",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_d567b423c5f9": {
-      "created_at": "02/10/2026 18:29",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_10aac777a0c8": {
-      "created_at": "02/10/2026 18:29",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_01901e560b65": {
-      "created_at": "02/10/2026 19:06",
-      "role_sugerido": "engenharia",
-      "status": "active"
-    },
-    "mp_inv_6c585222a07d": {
-      "created_at": "02/10/2026 19:06",
-      "role_sugerido": "engenharia",
-      "status": "active"
+  "users": {
+    "paulo_master": {
+      "nome": "Paulo Lôbo (Admin Master)",
+      "role": "admin",
+      "pin": "admpgi1204",
+      "is_master": true
     }
   }
 }
