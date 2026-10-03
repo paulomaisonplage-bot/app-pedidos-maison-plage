@@ -325,15 +325,42 @@ const app = {
       return;
     }
 
-    // Abertura instantânea (0ms) com transição suave e esqueleto de carregamento
+    // Abertura instantânea (0ms) com dados conhecidos do cartão
+    const knownCard = (this.currentCards || []).find(c => String(c.pc) === String(pc));
     document.getElementById("mOrderNum").innerText = `PC ${pc}`;
-    document.getElementById("mFornec").innerText = "Carregando fornecedor...";
-    document.getElementById("mOrderMeta").innerHTML = `
-      <div style="color:#94a3b8;padding:6px 0;font-size:11.5px;">⏳ Buscando dados de entrega, contatos e financeiro...</div>
-    `;
-    document.getElementById("mItemsList").innerHTML = `
-      <div style="padding:14px;text-align:center;color:#94a3b8;font-size:11.5px;">Carregando itens do pedido...</div>
-    `;
+    
+    if (knownCard) {
+      document.getElementById("mFornec").innerText = knownCard.fornecedor || "Carregando...";
+      document.getElementById("mOrderMeta").innerHTML = `
+        <div>🚚 <b>Entrega Prevista:</b> ${knownCard.data_entrega || "A Confirmar"}</div>
+        <div>📅 <b>Emissão:</b> ${knownCard.data_emissao || "-"}</div>
+        ${knownCard.valor_total_formatado ? `<div>💰 <b>Valor Total:</b> <span style="color:#10b981;font-weight:800">${knownCard.valor_total_formatado}</span></div>` : ''}
+      `;
+      if (knownCard.itens_resumo && knownCard.itens_resumo.length) {
+        document.getElementById("mItemsList").innerHTML = knownCard.itens_resumo.map(it => `
+          <div class="item-box-row">
+            <div>
+              <div style="font-weight:700">${it}</div>
+            </div>
+          </div>
+        `).join("") + '<div style="padding:10px;text-align:center;color:#94a3b8;font-size:11.5px;">⏳ Buscando itens completos e contatos...</div>';
+      } else {
+        document.getElementById("mItemsList").innerHTML = `
+          <div style="padding:14px;text-align:center;color:#94a3b8;font-size:11.5px;">⏳ Carregando itens do pedido...</div>
+        `;
+      }
+    } else {
+      document.getElementById("mFornec").innerText = "Carregando fornecedor...";
+      document.getElementById("mOrderMeta").innerHTML = `
+        <div style="color:#94a3b8;padding:6px 0;font-size:11.5px;">⏳ Buscando dados do pedido...</div>
+      `;
+      document.getElementById("mItemsList").innerHTML = `
+        <div style="padding:14px;text-align:center;color:#94a3b8;font-size:11.5px;">Carregando itens do pedido...</div>
+      `;
+    }
+
+    const contactSec = document.getElementById("mContactSection");
+    if (contactSec) contactSec.innerHTML = "";
     document.getElementById("mModalActions").innerHTML = "";
     document.getElementById("orderModal").classList.add("show");
     document.body.style.overflow = "hidden";
@@ -364,6 +391,7 @@ const app = {
       if (hasVendor || hasCompany) {
         contactHtml = `
           <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:11.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Contatos do Fornecedor</div>
             ${hasVendor ? `
               <div class="contact-sub-box">
                 <div class="contact-box-header">👤 <b>Vendedor:</b> ${v.nome || 'Atendimento'}</div>
@@ -396,7 +424,6 @@ const app = {
       <div>📅 <b>Emissão:</b> ${data.data_emissao}</div>
       ${data.condicao_pagamento ? `<div>💳 <b>Pagamento:</b> ${data.condicao_pagamento}</div>` : ''}
       ${data.valor_total_formatado ? `<div>💰 <b>Valor Total:</b> <span style="color:#10b981;font-weight:800">${data.valor_total_formatado}</span></div>` : ''}
-      ${contactHtml}
     `;
 
     document.getElementById("mItemsList").innerHTML = data.itens.map(it => `
@@ -408,6 +435,11 @@ const app = {
         ${it.valor_total ? `<div style="font-weight:800;color:#10b981">${it.valor_total}</div>` : ''}
       </div>
     `).join("");
+
+    const contactSec = document.getElementById("mContactSection");
+    if (contactSec) {
+      contactSec.innerHTML = contactHtml;
+    }
 
     if (data.can_pdf) {
       document.getElementById("mModalActions").innerHTML = `
@@ -428,7 +460,11 @@ const app = {
   },
 
   closeModal() {
-    document.getElementById("orderModal").classList.remove("show"); document.body.style.overflow = "";
+    document.getElementById("orderModal").classList.remove("show");
+    const matOpen = document.getElementById("matOrdersModal") && document.getElementById("matOrdersModal").classList.contains("show");
+    if (!matOpen) {
+      document.body.style.overflow = "";
+    }
   },
 
   currentLetter: "TODOS",
