@@ -21,13 +21,13 @@ if BASE_DIR not in sys.path:
 
 try:
     from src.query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
-    from src.excel_manager import calculate_installments_for_item, parse_date
+    from src.excel_manager import calculate_installments_for_item, parse_date, NOMES_MESES
     from src.auth_service import AuthService
     from src.pdf_storage import PdfStorage
     from src.order_repository import OrderRepository
 except ImportError:
     from query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
-    from excel_manager import calculate_installments_for_item, parse_date
+    from excel_manager import calculate_installments_for_item, parse_date, NOMES_MESES
     from auth_service import AuthService
     from pdf_storage import PdfStorage
     from order_repository import OrderRepository
@@ -637,16 +637,57 @@ async def api_deliveries_week(offset: int = 0, role: str = "campo"):
     return {"offset": offset, "periodo": periodo_str, "cards": cards}
 
 # 2. ENTREGAS DO MÊS
-@app.get("/api/deliveries/month")
-async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo"):
+@app.get("/api/deliveries/months")
+async def api_deliveries_months(role: str = "campo"):
     hide_fin = not can_view_monetary(role)
-    msg, pcs = query_service.get_delivery_summary_for_month(mes=mes, ano=ano, hide_financials=hide_fin, item_offset=0, page_size=100)
+    overview = query_service.get_delivery_months_overview(from_previous_month_only=False)
+    res = []
+    hoje = date.today()
+    for o in overview:
+        mes = o["mes"]
+        ano = o["ano"]
+        nome_mes = NOMES_MESES[mes] if 1 <= mes < len(NOMES_MESES) else f"Mês {mes}"
+        nome_curto = nome_mes[:3].capitalize()
+        label = f"{nome_curto}/{str(ano)[2:]}"
+        is_current = (mes == hoje.month and ano == hoje.year)
+        res.append({
+            "mes": mes,
+            "ano": ano,
+            "label": label,
+            "nome_completo": f"{nome_mes}/{ano}",
+            "pedidos_count": o["pedidos_count"],
+            "itens_count": o["itens_count"],
+            "valor_total_formatado": format_currency_brl(o["total_val"]) if not hide_fin else None,
+            "is_current": is_current
+        })
+    return {"months": res}
+
+@app.get("/api/deliveries/month")
+async def api_deliveries_month(mes: Optional[int] = None, ano: int = 2026, role: str = "campo"):
+    if mes is None:
+        mes = date.today().month
+    hide_fin = not can_view_monetary(role)
+    msg, pcs = query_service.get_delivery_summary_for_month(mes=mes, ano=ano, hide_financials=hide_fin, item_offset=0, page_size=200)
     cards = []
+    total_mes_val = 0.0
+    orders_map = order_repo.get_orders_by_pc()
     for pc in pcs:
-        c = build_order_card_data(pc, role)
+        items = orders_map.get(pc)
+        if items:
+            total_mes_val += sum(float(str(x.get("preco_total_item", 0.0) or 0.0)) for x in items)
+        c = build_order_card_data(pc, role, items=items)
         if c:
             cards.append(c)
-    return {"mes": mes, "ano": ano, "cards": cards}
+
+    nome_mes = NOMES_MESES[mes] if 1 <= mes < len(NOMES_MESES) else f"Mês {mes}"
+    return {
+        "mes": mes,
+        "ano": ano,
+        "nome_mes": f"{nome_mes}/{ano}",
+        "total_pedidos": len(cards),
+        "valor_total_formatado": format_currency_brl(total_mes_val) if not hide_fin else None,
+        "cards": cards
+    }
 
 def get_cached_catalog_materials():
     return order_repo.get_catalog_materials().get("insumos", [])
