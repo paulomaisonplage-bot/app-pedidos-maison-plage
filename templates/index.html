@@ -97,17 +97,6 @@
         <button class="pin-btn pin-action" onclick="app.submitPin()">➔</button>
       </div>
 
-      <!-- SIMULADOR DE TESTES DOS 4 PERFIS -->
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
-        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center;">🧪 Simulador de Perfis (Testes Rápidos):</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <button class="btn-profile-test" onclick="app.quickLogin('admin')">👑 Admin Master</button>
-          <button class="btn-profile-test" onclick="app.quickLogin('engenharia')">🏗️ Engenharia</button>
-          <button class="btn-profile-test" onclick="app.quickLogin('administracao')">📦 Administração</button>
-          <button class="btn-profile-test" onclick="app.quickLogin('campo')">👷 Campo</button>
-        </div>
-      </div>
-
       </div>
     </div>
   </div>
@@ -304,6 +293,9 @@
       <h3 class="items-head">📦 Itens Solicitados:</h3>
       <div class="items-list-box" id="mItemsList"></div>
 
+      <!-- CONTATOS DO FORNECEDOR (APÓS OS ITENS PARA EVITAR SOBREPOSIÇÃO) -->
+      <div id="mContactSection" style="margin-bottom:12px;"></div>
+
       <div class="modal-actions" id="mModalActions"></div>
     </div>
   </div>
@@ -404,20 +396,6 @@
   </div>
 
 
-  <!-- MODAL DE PEDIDOS DO INSUMO SELECIONADO -->
-  <div class="modal-backdrop" id="matOrdersModal" onclick="app.closeMatOrdersModal(event)">
-    <div class="modal-sheet" onclick="event.stopPropagation()">
-      <div class="sheet-handle"></div>
-      <div class="modal-head">
-        <div>
-          <h2 class="order-number" id="matModalTitle" style="font-size:16px;">Insumo</h2>
-          <p class="order-fornec" id="matModalSub">Pedidos de Compra Vinculados</p>
-        </div>
-        <button class="btn-close" onclick="app.closeMatOrdersModal()">✕</button>
-      </div>
-      <div class="cards-list" id="matOrdersCards" style="margin-top:10px;"></div>
-    </div>
-  </div>
 
 
   <!-- MODAL DE LINK DE CONVITE GERADO -->
