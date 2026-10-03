@@ -23,15 +23,18 @@ try:
     from src.query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
     from src.excel_manager import calculate_installments_for_item, parse_date
     from src.auth_service import AuthService
+    from src.pdf_storage import PdfStorage
 except ImportError:
     from query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
     from excel_manager import calculate_installments_for_item, parse_date
     from auth_service import AuthService
+    from pdf_storage import PdfStorage
 
 EXCEL_PATH = os.getenv("EXCEL_PATH", os.path.join(BASE_DIR, "data", "pedidos_compra_consolidado.xlsx"))
 USERS_FILE = os.path.join(BASE_DIR, "data", "usuarios_autorizados.json")
 query_service = OrderQueryService(EXCEL_PATH)
 auth_service = AuthService(USERS_FILE)
+pdf_storage = PdfStorage(BASE_DIR)
 
 # ==========================================
 # FAST IN-MEMORY CACHE ENGINE (RESPOSTA < 2ms)
@@ -178,24 +181,7 @@ def build_order_card_data(pc: str, role: str, items: Optional[List[dict]] = None
 
 
 def find_file_id_for_order(pc_num: str) -> Optional[str]:
-    possible_paths = [
-        os.path.join(BASE_DIR, "data", "pdf_links.json"),
-        "data/pdf_links.json",
-        "../data/pdf_links.json"
-    ]
-    pdf_links_path = next((p for p in possible_paths if os.path.exists(p)), None)
-    if pdf_links_path:
-        try:
-            with open(pdf_links_path, "r", encoding="utf-8") as f:
-                cache = json.load(f)
-            pc_clean = str(pc_num).strip().lstrip("0")
-            pat = re.compile(rf"PedidoCompra0*{pc_clean}[_.]|PC_?0*{pc_clean}[_.]", re.IGNORECASE)
-            for k, fid in cache.items():
-                if pat.search(k):
-                    return fid
-        except Exception:
-            pass
-    return None
+    return pdf_storage.find_file_id(pc_num)
 
 def find_supplier_contact(f_nome: str, f_cnpj: str = ""):
 
@@ -1168,25 +1154,15 @@ async def api_order_pdf(pc_num: str, role: str = "campo"):
     if not can_download_files(role):
         raise HTTPException(status_code=403, detail="Visualização de PDF reservada para Engenharia e Administração.")
     
-    import glob
-    local_candidates = glob.glob(f"pedidos_pdf/PedidoCompra*{pc_num}*.pdf") + glob.glob(f"data/pdfs/*{pc_num}*.pdf")
-    if local_candidates and os.path.exists(local_candidates[0]):
-        return FileResponse(local_candidates[0], filename=f"PC_{pc_num}.pdf", media_type="application/pdf")
-    
-    fid = find_file_id_for_order(pc_num)
-    if fid:
-        token = "8847996417:AAGItLPuNaHN0girA46486IaESdPZ8w7bzA"
-        r = requests.get(f"https://api.telegram.org/bot{token}/getFile?file_id={fid}").json()
-        if r.get("ok"):
-            fpath = r["result"]["file_path"]
-            pdf_bytes = requests.get(f"https://api.telegram.org/file/bot{token}/{fpath}").content
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f"inline; filename=PC_{pc_num}.pdf"}
-            )
-            
-    raise HTTPException(status_code=404, detail="PDF deste pedido não localizado no momento.")
+    doc = pdf_storage.get_pdf(pc_num)
+    if not doc:
+        raise HTTPException(status_code=404, detail="PDF deste pedido não localizado no momento.")
+
+    return Response(
+        content=doc.content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename={doc.filename}"}
+    )
 
 if __name__ == "__main__":
     import uvicorn
