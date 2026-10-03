@@ -8,7 +8,8 @@ const app = {
   clientTabCache: { loaded: {} },
   orderDetailCache: {},
   weekOffset: 0,
-  currentMonth: 8,
+  currentMonth: new Date().getMonth() + 1,
+  monthListLoaded: false,
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -252,12 +253,51 @@ const app = {
     this.loadWeek();
   },
 
+  async loadMonthsBar() {
+    const bar = document.getElementById("monthsBar");
+    if (!bar) return;
+    try {
+      const res = await fetch(`/api/deliveries/months?role=${this.currentUser.role}`);
+      const data = await res.json();
+      const months = data.months || [];
+      if (months.length === 0) return;
+
+      const hasSelected = months.some(m => m.mes === this.currentMonth && m.ano === 2026);
+      if (!hasSelected) {
+        const currMonthItem = months.find(m => m.is_current) || months[months.length - 1];
+        this.currentMonth = currMonthItem.mes;
+      }
+
+      bar.innerHTML = months.map(m => {
+        const isActive = (m.mes === this.currentMonth);
+        return `<button class="month-pill ${isActive ? 'active' : ''}" onclick="app.selectMonth(${m.mes})">${m.label} (${m.pedidos_count})</button>`;
+      }).join("");
+      this.monthListLoaded = true;
+    } catch(e) {
+      console.warn("Erro ao carregar lista de meses:", e);
+    }
+  },
+
   async loadMonth() {
+    await this.loadMonthsBar();
     const list = document.getElementById("monthCards");
+    const summaryBox = document.getElementById("monthHeaderSummary");
+    const summaryTitle = document.getElementById("monthHeaderTitle");
+    const summaryTotal = document.getElementById("monthHeaderTotal");
+
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando entregas do mês...</div>';
     try {
       const res = await fetch(`/api/deliveries/month?mes=${this.currentMonth}&ano=2026&role=${this.currentUser.role}`);
       const data = await res.json();
+
+      if (summaryBox && summaryTitle) {
+        summaryBox.style.display = "flex";
+        summaryTitle.innerText = `📅 ${data.nome_mes || 'Mês'}: ${data.total_pedidos || 0} Pedidos Previstos`;
+        if (summaryTotal) {
+          summaryTotal.innerText = data.valor_total_formatado ? `Total: ${data.valor_total_formatado}` : '';
+        }
+      }
+
       if (!data.cards || data.cards.length === 0) {
         list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido previsto para este mês.</div>';
         return;
