@@ -328,85 +328,216 @@ async def api_verify_otp(req: VerifyOtpRequest):
     }
     return {"success": True, "user": user_info}
 
-# AUTENTICAÇÃO
+# AUTENTICAÇÃO COM CHAVE MESTRA E TOKENS DE COLABORADORES
+class CreateCollaboratorRequest(BaseModel):
+    nome: str
+    role: str = "campo"
+    whatsapp: Optional[str] = ""
+
+class RevokeCollaboratorRequest(BaseModel):
+    token: str
+
+class UpdateCollaboratorRoleRequest(BaseModel):
+    token: str
+    role: str
+
 @app.post("/api/auth/login")
 async def api_login(req: LoginRequest):
-    users = auth_service._data.get("users", {})
+    pin_input = req.pin.strip()
+    
+    # 1. Validação da Chave Mestra do Administrador (Paulo Lôbo)
+    if pin_input == "admpgi1204":
+        return {
+            "success": True,
+            "user": {
+                "id": "paulo_master",
+                "nome": "Paulo Lôbo (Admin Master)",
+                "role": "admin",
+                "is_master": True,
+                "is_admin": True
+            }
+        }
+        
+    # 2. Validação se foi digitado um token direto de colaborador
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    tokens = data.get("collaborator_tokens", {})
+    if pin_input in tokens:
+        c = tokens[pin_input]
+        if c.get("status") != "active":
+            raise HTTPException(status_code=403, detail="Este acesso foi revogado pelo Administrador.")
+        return {
+            "success": True,
+            "user": {
+                "id": c["token"],
+                "nome": c["nome"],
+                "role": c["role"],
+                "is_master": False,
+                "is_admin": (c["role"] == "admin")
+            }
+        }
+
+    # 3. Fallback para base de usuários legada
+    users = data.get("users", {})
     for uid, udata in users.items():
-        if str(udata.get("pin", "")).strip() == req.pin.strip():
+        if str(udata.get("pin", "")).strip() == pin_input:
+            is_m = udata.get("is_master", False) or (pin_input == "admpgi1204")
             return {
                 "success": True,
                 "user": {
                     "id": str(uid),
                     "nome": udata.get("nome"),
                     "role": udata.get("role"),
+                    "is_master": is_m,
                     "is_admin": (udata.get("role") == "admin")
                 }
             }
-    raise HTTPException(status_code=401, detail="PIN de acesso incorreto.")
+            
+    raise HTTPException(status_code=401, detail="Chave de acesso incorreta.")
 
-# GESTÃO DE EQUIPE
-@app.get("/api/users")
-async def api_get_users(role: str = "campo"):
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    users = auth_service._data.get("users", {})
-    user_list = []
-    for uid, udata in users.items():
-        user_list.append({
-            "id": str(uid),
-            "nome": udata.get("nome"),
-            "role": udata.get("role"),
-            "pin": udata.get("pin", "****"),
-            "data_autorizacao": udata.get("data_autorizacao", "-")
-        })
-    return {"users": user_list}
-
-@app.post("/api/users/add")
-async def api_add_user(req: UserCreateRequest, role: str = "campo"):
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    new_id = str(int(datetime.now().timestamp()))
-    auth_service._data.setdefault("users", {})[new_id] = {
-        "nome": req.nome.strip(),
-        "pin": req.pin.strip(),
-        "role": req.role,
-        "username": f"@{req.nome.lower().replace(' ', '_')}",
-        "data_autorizacao": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+@app.get("/api/auth/token_login")
+async def api_token_login(token: str):
+    tok = token.strip()
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    tokens = data.get("collaborator_tokens", {})
+    c = tokens.get(tok)
+    if not c:
+        raise HTTPException(status_code=404, detail="Link de acesso não encontrado ou inválido.")
+        
+    if c.get("status") != "active":
+        raise HTTPException(status_code=403, detail="Este acesso foi revogado pelo Administrador.")
+        
+    c["last_login"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        
+    return {
+        "success": True,
+        "user": {
+            "id": c["token"],
+            "nome": c["nome"],
+            "role": c["role"],
+            "is_master": False,
+            "is_admin": (c["role"] == "admin")
+        }
     }
-    auth_service._save_data()
-    return {"success": True, "user_id": new_id}
-
-@app.post("/api/users/update_role")
-async def api_update_user_role(req: UserUpdateRequest, role: str = "campo"):
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    users = auth_service._data.get("users", {})
-    if req.user_id in users:
-        users[req.user_id]["role"] = req.role
-        auth_service._save_data()
-        return {"success": True}
-    raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-
-@app.delete("/api/users/{user_id}")
-async def api_delete_user(user_id: str, role: str = "campo"):
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    users = auth_service._data.get("users", {})
-    if user_id in users:
-        if str(user_id) in [str(a) for a in auth_service._data.get("admin_ids", [])]:
-            raise HTTPException(status_code=400, detail="Não é permitido excluir o Admin Master.")
-        del users[user_id]
-        auth_service._save_data()
-        return {"success": True}
-    raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
 # ==========================================
-# GESTÃO DE CONVITES DE USO ÚNICO E APROVAÇÃO
+# GESTÃO EXCLUSIVA DE COLABORADORES PELO ADMIN MASTER
 # ==========================================
 
-class GenerateInviteRequest(BaseModel):
-    role_sugerido: Optional[str] = "engenharia"
+@app.get("/api/collaborators")
+async def api_get_collaborators(role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
+        
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    tokens = data.get("collaborator_tokens", {})
+    collab_list = []
+    for tok, c in tokens.items():
+        collab_list.append({
+            "token": tok,
+            "nome": c.get("nome", "Colaborador"),
+            "role": c.get("role", "campo"),
+            "whatsapp": c.get("whatsapp", ""),
+            "created_at": c.get("created_at", "-"),
+            "last_login": c.get("last_login", "Nunca"),
+            "status": c.get("status", "active"),
+            "link": f"https://app-pedidos-maison-plage.vercel.app/?acesso={tok}"
+        })
+    return {"collaborators": collab_list}
+
+@app.post("/api/collaborators/create")
+async def api_create_collaborator(req: CreateCollaboratorRequest, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
+        
+    clean_name = req.nome.strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Nome do colaborador é obrigatório.")
+        
+    tok = f"mp_sec_{secrets.token_hex(6)}"
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    if "collaborator_tokens" not in data:
+        data["collaborator_tokens"] = {}
+        
+    data["collaborator_tokens"][tok] = {
+        "token": tok,
+        "nome": clean_name,
+        "role": req.role.strip().lower(),
+        "whatsapp": req.whatsapp.strip() if req.whatsapp else "",
+        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "status": "active"
+    }
+    
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        
+    direct_link = f"https://app-pedidos-maison-plage.vercel.app/?acesso={tok}"
+    
+    role_pt = "Engenharia" if req.role == "engenharia" else ("Administração" if req.role == "administracao" else "Campo")
+    msg = f"Olá {clean_name}, seu acesso ({role_pt}) ao App de Pedidos da obra Residencial Maison Plage está pronto!\n\nClique no link abaixo para entrar direto no seu celular:\n{direct_link}"
+    
+    clean_phone = re.sub(r'[^0-9]', '', req.whatsapp or '')
+    if clean_phone and not clean_phone.startswith("55"):
+        clean_phone = f"55{clean_phone}"
+    whatsapp_url = f"https://wa.me/{clean_phone}?text={requests.utils.quote(msg)}" if clean_phone else None
+    
+    return {
+        "success": True,
+        "token": tok,
+        "nome": clean_name,
+        "role": req.role,
+        "link": direct_link,
+        "message": msg,
+        "whatsapp_url": whatsapp_url
+    }
+
+@app.post("/api/collaborators/revoke")
+async def api_revoke_collaborator(req: RevokeCollaboratorRequest, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if req.token in data.get("collaborator_tokens", {}):
+        data["collaborator_tokens"][req.token]["status"] = "revoked"
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return {"success": True}
+    raise HTTPException(status_code=404, detail="Colaborador não encontrado.")
+
+@app.delete("/api/collaborators/{token}")
+async def api_delete_collaborator(token: str, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if token in data.get("collaborator_tokens", {}):
+        del data["collaborator_tokens"][token]
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return {"success": True}
+    raise HTTPException(status_code=404, detail="Colaborador não encontrado.")
+
+@app.post("/api/collaborators/update_role")
+async def api_update_collab_role(req: UpdateCollaboratorRoleRequest, role: str = "campo"):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if req.token in data.get("collaborator_tokens", {}):
+        data["collaborator_tokens"][req.token]["role"] = req.role.strip().lower()
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return {"success": True}
+    raise HTTPException(status_code=404, detail="Colaborador não encontrado.")
 
 class RegisterInviteRequest(BaseModel):
     token: str
@@ -420,29 +551,6 @@ class ApproveUserRequest(BaseModel):
 
 class RejectUserRequest(BaseModel):
     req_id: str
-
-@app.post("/api/invites/generate")
-async def api_generate_invite(req: GenerateInviteRequest, role: str = "campo"):
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="Apenas o Administrador pode gerar links de convite.")
-    
-    token = f"mp_inv_{secrets.token_hex(6)}"
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        
-    if "invites" not in data:
-        data["invites"] = {}
-        
-    data["invites"][token] = {
-        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "role_sugerido": req.role_sugerido,
-        "status": "active" # "active" ou "used"
-    }
-    
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        
-    return {"token": token, "link": f"https://app-pedidos-maison-plage.onrender.com/?convite={token}"}
 
 @app.get("/api/invites/validate")
 async def api_validate_invite(token: str):
