@@ -24,94 +24,31 @@ try:
     from src.excel_manager import calculate_installments_for_item, parse_date
     from src.auth_service import AuthService
     from src.pdf_storage import PdfStorage
+    from src.order_repository import OrderRepository
 except ImportError:
     from query_service import OrderQueryService, load_all_suppliers_contacts, SINONIMOS_OBRA
     from excel_manager import calculate_installments_for_item, parse_date
     from auth_service import AuthService
     from pdf_storage import PdfStorage
+    from order_repository import OrderRepository
 
 EXCEL_PATH = os.getenv("EXCEL_PATH", os.path.join(BASE_DIR, "data", "pedidos_compra_consolidado.xlsx"))
 USERS_FILE = os.path.join(BASE_DIR, "data", "usuarios_autorizados.json")
 query_service = OrderQueryService(EXCEL_PATH)
 auth_service = AuthService(USERS_FILE)
 pdf_storage = PdfStorage(BASE_DIR)
-
-# ==========================================
-# FAST IN-MEMORY CACHE ENGINE (RESPOSTA < 2ms)
-# ==========================================
-CACHE_STORE = {
-    "last_load": 0,
-    "last_mtime": 0,
-    "raw_records": {},
-    "orders_by_pc": {},
-    "recent_cards": None,
-    "financial_summary": None,
-    "catalog_materials": None
-}
+order_repo = OrderRepository(BASE_DIR, EXCEL_PATH)
 
 def get_cached_raw_records(force_reload: bool = False):
-    now = time.time()
-    cache_json_path = os.path.join(BASE_DIR, "data", "pedidos_cache.json")
-    try:
-        current_mtime = os.path.getmtime(cache_json_path) if os.path.exists(cache_json_path) else (
-            os.path.getmtime(EXCEL_PATH) if os.path.exists(EXCEL_PATH) else 0
-        )
-    except OSError:
-        current_mtime = 0
-
-    mtime_changed = current_mtime > CACHE_STORE["last_mtime"]
-
-    if force_reload or mtime_changed or (now - CACHE_STORE["last_load"] > 180) or not CACHE_STORE["raw_records"]:
-        # Tenta carregar do cache JSON ultra-rápido (< 30ms vs > 3500ms do Excel)
-        if os.path.exists(cache_json_path):
-            try:
-                with open(cache_json_path, "r", encoding="utf-8") as f:
-                    cached_data = json.load(f)
-                by_pc = cached_data.get("orders_by_pc", {})
-                raw = {}
-                for pc, it_list in by_pc.items():
-                    for idx, it in enumerate(it_list):
-                        item_id = str(it.get("codigo_insumo") or idx)
-                        raw[(str(pc), item_id, idx)] = it
-                CACHE_STORE["raw_records"] = raw
-                CACHE_STORE["orders_by_pc"] = by_pc
-                CACHE_STORE["last_mtime"] = current_mtime
-                CACHE_STORE["last_load"] = now
-                CACHE_STORE["recent_cards"] = None
-                CACHE_STORE["financial_summary"] = None
-                CACHE_STORE["catalog_materials"] = None
-                return CACHE_STORE["raw_records"], CACHE_STORE["orders_by_pc"]
-            except Exception as e:
-                print(f"[CACHE] Falha ao ler pedidos_cache.json: {e}. Fallback para Excel.")
-
-        raw = query_service.manager.load_existing_records()
-        CACHE_STORE["raw_records"] = raw
-        CACHE_STORE["last_mtime"] = current_mtime
-        
-        # Indexa pedidos por PC
-        by_pc = {}
-        for r in raw.values():
-            pc = str(r.get("numero_pedido", "")).strip()
-            if pc:
-                if pc not in by_pc:
-                    by_pc[pc] = []
-                by_pc[pc].append(r)
-        CACHE_STORE["orders_by_pc"] = by_pc
-        CACHE_STORE["last_load"] = now
-        CACHE_STORE["recent_cards"] = None
-        CACHE_STORE["financial_summary"] = None
-        CACHE_STORE["catalog_materials"] = None
-        
-    return CACHE_STORE["raw_records"], CACHE_STORE["orders_by_pc"]
-
-
+    """Adaptador de compatibilidade retroativa para acesso aos registros."""
+    return order_repo.get_raw_records(force_reload), order_repo.get_orders_by_pc(force_reload)
 
 app = FastAPI(title="Maison Plage • App de Pedidos", version="2.2.20260829172549")
 
 @app.on_event("startup")
 async def startup_event():
-    # Pré-aquece o cache na inicialização do servidor
-    get_cached_raw_records(force_reload=True)
+    # Pré-aquece o repositório na inicialização do servidor
+    order_repo.get_orders_by_pc(force_reload=True)
 
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
@@ -150,7 +87,7 @@ def can_download_files(role: str) -> bool:
 def build_order_card_data(pc: str, role: str, items: Optional[List[dict]] = None) -> Optional[dict]:
     hide_fin = not can_view_monetary(role)
     if items is None:
-        items = query_service.get_order_by_number(pc)
+        items = order_repo.get_order(pc) or query_service.get_order_by_number(pc)
     if not items:
         return None
     it0 = items[0]
@@ -712,93 +649,18 @@ async def api_deliveries_month(mes: int = 8, ano: int = 2026, role: str = "campo
     return {"mes": mes, "ano": ano, "cards": cards}
 
 def get_cached_catalog_materials():
-    get_cached_raw_records()
-    if CACHE_STORE["catalog_materials"] is None:
-        raw = CACHE_STORE["raw_records"]
-        cutoff = get_previous_month_cutoff_date()
-        insumos_map = {}
-        for r in raw.values():
-            dt_ent = (parse_date(r.get("data_entrega_prevista")).date() if parse_date(r.get("data_entrega_prevista")) else None) or (parse_date(r.get("data_pedido")).date() if parse_date(r.get("data_pedido")) else None)
-            if not dt_ent or dt_ent < cutoff:
-                continue
-                
-            desc = str(r.get("descricao_material", "") or "").strip()
-            cod = str(r.get("codigo_insumo", "") or "").strip()
-            fam = str(r.get("familia_insumo", "04 DIVERSOS") or "04 DIVERSOS").strip()
-            pc = str(r.get("numero_pedido", "")).strip()
-            qtd = float(r.get("quantidade", 0) or 0.0)
-            unid = str(r.get("unidade", "UN") or "UN").strip()
-            
-            if not desc and not cod:
-                continue
-                
-            key = desc.upper() if desc else f"COD_{cod}"
-            if key not in insumos_map:
-                insumos_map[key] = {
-                    "nome": desc if desc else f"Insumo Cód. {cod}",
-                    "codigo": cod,
-                    "familia": fam,
-                    "unidade": unid,
-                    "qtd_total": 0.0,
-                    "pedidos": set()
-                }
-                
-            insumos_map[key]["qtd_total"] += qtd
-            if pc:
-                insumos_map[key]["pedidos"].add(pc)
-
-        sorted_items = sorted(insumos_map.values(), key=lambda x: x["nome"].upper())
-        formatted_catalog = []
-        for it in sorted_items:
-            qtd_fmt = f"{it['qtd_total']:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".").rstrip('0').rstrip(',')
-            formatted_catalog.append({
-                "nome": it["nome"],
-                "codigo": it["codigo"],
-                "familia": it["familia"],
-                "unidade": it["unidade"],
-                "qtd_formatada": f"{qtd_fmt} {it['unidade'].lower()}",
-                "pedidos_count": len(it["pedidos"]),
-                "pedidos": sorted(list(it["pedidos"]), reverse=True)
-            })
-        CACHE_STORE["catalog_materials"] = formatted_catalog
-    return CACHE_STORE["catalog_materials"]
+    return order_repo.get_catalog_materials().get("insumos", [])
 
 # 3. BUSCA DIRETA DE INSUMOS & PEDIDOS
 @app.get("/api/materials/search")
 async def api_materials_search(q: str = "", role: str = "campo"):
-    hide_fin = not can_view_monetary(role)
     cutoff = get_previous_month_cutoff_date()
-    raw_dict, pc_items_map = get_cached_raw_records()
+    matching_pcs = order_repo.search_orders(q, cutoff_date=cutoff)
+    orders_map = order_repo.get_orders_by_pc()
     
-    q_clean = q.lower().strip()
-    if not q_clean:
-        return {"query": q, "total_pedidos": 0, "cards": []}
-        
-    tokens = q_clean.split()
-    tokens_exp = set(tokens)
-    for t in tokens:
-        if t in SINONIMOS_OBRA:
-            tokens_exp.update(SINONIMOS_OBRA[t])
-            
-    matching_pcs = set()
-    for pc, items in pc_items_map.items():
-        it0 = items[0] if items else {}
-        dt_ent = (parse_date(it0.get("data_entrega_prevista")).date() if parse_date(it0.get("data_entrega_prevista")) else None) or (parse_date(it0.get("data_pedido")).date() if parse_date(it0.get("data_pedido")) else None)
-        if dt_ent and dt_ent < cutoff:
-            continue
-            
-        for it in items:
-            desc = str(it.get("descricao_material", "") or "").lower()
-            cod = str(it.get("codigo_insumo", "") or "").lower()
-            fam = str(it.get("familia_insumo", "") or "").lower()
-            
-            if any(t in desc or t in cod or t in fam for t in tokens_exp):
-                matching_pcs.add(pc)
-                break
-                
     cards = []
-    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
-        c = build_order_card_data(pc, role, items=pc_items_map[pc])
+    for pc in matching_pcs:
+        c = build_order_card_data(pc, role, items=orders_map.get(pc))
         if c:
             cards.append(c)
         
@@ -806,42 +668,17 @@ async def api_materials_search(q: str = "", role: str = "campo"):
 
 @app.get("/api/materials/catalog")
 async def api_materials_catalog(q: Optional[str] = None, letter: Optional[str] = None):
-    all_materials = get_cached_catalog_materials()
-    filtered = all_materials
-
-    if letter and letter.upper() != "TODOS":
-        l_upper = letter.upper()
-        filtered = [i for i in filtered if i["nome"].upper().startswith(l_upper)]
-
-    if q:
-        q_l = q.lower().strip()
-        filtered = [i for i in filtered if q_l in i["nome"].lower() or q_l in i["codigo"].lower() or q_l in i["familia"].lower()]
-
-    return {
-        "total_cadastrados": len(all_materials),
-        "total_filtrados": len(filtered),
-        "insumos": filtered[:300]
-    }
+    return order_repo.get_catalog_materials(letter=letter, query=q)
 
 @app.get("/api/materials/orders")
 async def api_material_orders(nome: str, role: str = "campo"):
-    hide_fin = not can_view_monetary(role)
     cutoff = get_previous_month_cutoff_date()
-    raw_dict, pc_items_map = get_cached_raw_records()
-    mat_upper = nome.upper().strip()
+    matching_pcs = order_repo.get_orders_by_material(nome, cutoff_date=cutoff)
+    orders_map = order_repo.get_orders_by_pc()
     
-    matching_pcs = []
-    for pc, items in pc_items_map.items():
-        it0 = items[0] if items else {}
-        dt_ent = (parse_date(it0.get("data_entrega_prevista")).date() if parse_date(it0.get("data_entrega_prevista")) else None) or (parse_date(it0.get("data_pedido")).date() if parse_date(it0.get("data_pedido")) else None)
-        if dt_ent and dt_ent < cutoff:
-            continue
-        if any(mat_upper == str(i.get("descricao_material", "") or "").strip().upper() for i in items):
-            matching_pcs.append(pc)
-            
     cards = []
-    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
-        c = build_order_card_data(pc, role, items=pc_items_map.get(pc))
+    for pc in matching_pcs:
+        c = build_order_card_data(pc, role, items=orders_map.get(pc))
         if c:
             cards.append(c)
         
@@ -855,18 +692,12 @@ async def api_groups():
 
 @app.get("/api/groups/orders")
 async def api_group_orders(familia: str, role: str = "campo"):
-    hide_fin = not can_view_monetary(role)
-    raw_dict, pc_items_map = get_cached_raw_records()
-    fam_upper = familia.upper().strip()
+    matching_pcs = order_repo.get_orders_by_family(familia)
+    orders_map = order_repo.get_orders_by_pc()
     
-    matching_pcs = []
-    for pc, items in pc_items_map.items():
-        if any(fam_upper in str(i.get("familia_insumo", "") or "").upper() for i in items):
-            matching_pcs.append(pc)
-            
     cards = []
-    for pc in sorted(matching_pcs, key=lambda x: int(x) if x.isdigit() else 0, reverse=True):
-        c = build_order_card_data(pc, role, items=pc_items_map.get(pc))
+    for pc in matching_pcs:
+        c = build_order_card_data(pc, role, items=orders_map.get(pc))
         if c:
             cards.append(c)
         
@@ -1108,9 +939,7 @@ async def api_export_excel(tipo: str = "geral", role: str = "campo"):
 @app.get("/api/order/{pc_num}")
 async def api_order_detail(pc_num: str, role: str = "campo"):
     hide_fin = not can_view_monetary(role)
-    _, orders_by_pc = get_cached_raw_records()
-    
-    items = orders_by_pc.get(str(pc_num).strip(), [])
+    items = order_repo.get_order(pc_num)
     if not items:
         # Tenta na lista filtrada caso ainda nao esteja no cache
         items = query_service.get_order_by_number(pc_num)
