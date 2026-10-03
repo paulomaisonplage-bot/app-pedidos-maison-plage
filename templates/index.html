@@ -73,30 +73,39 @@
           <img src="/static/img/logo_maison_plage.png" alt="Maison Plage" style="max-width:230px;height:auto;object-fit:contain;display:inline-block;">
         </div>
       </div>
-      <p class="login-sub">Acesse via PIN ou Código enviado por E-mail:</p>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px;width:100%;">
+        <!-- ACESSO ADMIN MASTER -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">👑 Acesso Administrador Master</div>
+          <div style="display:flex;gap:8px;">
+            <input type="password" id="loginAdminKey" placeholder="Digite a chave mestra..." 
+                   style="flex:1;background:var(--bg);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;outline:none;"
+                   onkeydown="if(event.key==='Enter') app.submitAdminKey()">
+            <button onclick="app.submitAdminKey()" class="btn-primary" style="padding:0 18px;border-radius:10px;font-weight:700;font-size:13px;border:none;cursor:pointer;background:linear-gradient(135deg, #2563eb, #1d4ed8);box-shadow:0 4px 15px rgba(37,99,235,0.3);">
+              Entrar
+            </button>
+          </div>
+          <div id="loginErrorMsg" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;font-weight:600;"></div>
+        </div>
 
-      <div class="pin-display">
-        <span class="pin-dot" id="dot1"></span>
-        <span class="pin-dot" id="dot2"></span>
-        <span class="pin-dot" id="dot3"></span>
-        <span class="pin-dot" id="dot4"></span>
-      </div>
+        <!-- DIVISOR -->
+        <div style="display:flex;align-items:center;gap:10px;margin:2px 0;">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+          <span style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;">ou</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+        </div>
 
-      <div class="pin-pad">
-        <button class="pin-btn" onclick="app.pressPin('1')">1</button>
-        <button class="pin-btn" onclick="app.pressPin('2')">2</button>
-        <button class="pin-btn" onclick="app.pressPin('3')">3</button>
-        <button class="pin-btn" onclick="app.pressPin('4')">4</button>
-        <button class="pin-btn" onclick="app.pressPin('5')">5</button>
-        <button class="pin-btn" onclick="app.pressPin('6')">6</button>
-        <button class="pin-btn" onclick="app.pressPin('7')">7</button>
-        <button class="pin-btn" onclick="app.pressPin('8')">8</button>
-        <button class="pin-btn" onclick="app.pressPin('9')">9</button>
-        <button class="pin-btn pin-action" onclick="app.clearPin()">✕</button>
-        <button class="pin-btn" onclick="app.pressPin('0')">0</button>
-        <button class="pin-btn pin-action" onclick="app.submitPin()">➔</button>
-      </div>
+        <!-- PEDIR ACESSO VIA WHATSAPP -->
+        <a href="https://wa.me/5582996657442?text=Ol%C3%A1%20Paulo%2C%20gostaria%20de%20solicitar%20meu%20link%20de%20acesso%20ao%20App%20de%20Pedidos%20do%20Residencial%20Maison%20Plage." 
+           target="_blank" 
+           style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #10b981, #059669);color:#fff;padding:13px 16px;border-radius:12px;font-weight:700;font-size:13.5px;text-decoration:none;box-shadow:0 4px 15px rgba(16,185,129,0.3);transition:transform 0.15s;">
+          <span style="font-size:16px;">💬</span>
+          <span>Pedir Acesso via WhatsApp</span>
+        </a>
 
+        <div style="font-size:11.5px;color:#64748b;text-align:center;line-height:1.4;margin-top:4px;">
+          Colaboradores e engenheiros: utilizem o link exclusivo enviado pelo Administrador no WhatsApp para entrar direto sem senha.
+        </div>
       </div>
     </div>
   </div>
@@ -210,29 +219,23 @@
         <div class="financial-box" id="financialBox"></div>
       </section>
 
-      <!-- MÓDULO 8: USUÁRIOS & CONVITES -->
+      <!-- MÓDULO 8: CONTROLE EXCLUSIVO DE ACESSOS (ADMIN MASTER) -->
       <section id="modTeam" class="module-section">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <h2>👥 Gestão de Usuários</h2>
-          <button class="btn-pdf-action" onclick="app.openGenerateInviteModal()" style="margin-top:0;padding:8px 12px;font-size:11px;border:none;cursor:pointer;background:linear-gradient(135deg, #2563eb, #1d4ed8);">
-            🔗 Gerar Link de Convite
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <h2 style="font-size:16px;font-weight:800;color:#fff;">👑 Gestão de Acessos</h2>
+            <div style="font-size:11px;color:#94a3b8;">Controle exclusivo do Administrador Master</div>
+          </div>
+          <button class="btn-pdf-action" onclick="app.openNewCollaboratorModal()" style="margin-top:0;padding:9px 14px;font-size:12px;border:none;cursor:pointer;background:linear-gradient(135deg, #10b981, #059669);box-shadow:0 4px 15px rgba(16,185,129,0.3);">
+            ➕ Gerar Acesso WhatsApp
           </button>
         </div>
 
-        <!-- SEÇÃO DE SOLICITAÇÕES PENDENTES -->
-        <div id="pendingRequestsContainer" style="display:none;margin-bottom:16px;">
-          <div style="font-size:12px;font-weight:800;color:#fbbf24;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
-            🔔 Solicitações Pendentes de Aprovação:
-          </div>
-          <div id="pendingRequestsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+          👥 Colaboradores com Acesso Ativo:
         </div>
-
-        <!-- LISTA DE USUÁRIOS ATIVOS -->
-        <div style="font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
-          👥 Membros com Acesso Autorizado:
-        </div>
-        <div class="team-list" id="teamList">
-          <div style="padding:20px;text-align:center;color:#94a3b8">Carregando usuários...</div>
+        <div class="team-list" id="collaboratorsList">
+          <div style="padding:20px;text-align:center;color:#94a3b8">Carregando acessos...</div>
         </div>
       </section>
 
@@ -398,28 +401,59 @@
 
 
 
-  <!-- MODAL DE LINK DE CONVITE GERADO -->
-  <div class="modal-backdrop" id="inviteGeneratedModal" onclick="app.closeInviteModal(event)">
+  <!-- MODAL DE GERAR NOVO ACESSO DE COLABORADOR (WHATSAPP) -->
+  <div class="modal-backdrop" id="collaboratorModal" onclick="app.closeCollaboratorModal(event)">
     <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:85vh;">
       <div class="sheet-handle"></div>
       <div class="modal-head">
         <div>
-          <h2 class="order-number" style="font-size:16px;">🔗 Link de Convite Único</h2>
-          <p class="order-fornec">Válido para 1 único cadastro de novo membro</p>
+          <h2 class="order-number" style="font-size:16px;">📲 Novo Acesso de Colaborador</h2>
+          <p class="order-fornec">Link direto permanente para entrar sem senha</p>
         </div>
-        <button class="btn-close" onclick="app.closeInviteModal()">✕</button>
+        <button class="btn-close" onclick="app.closeCollaboratorModal()">✕</button>
       </div>
       
-      <div style="padding:14px 0;">
-        <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">Envie este link para o novo usuário instalar e solicitar acesso:</div>
-        <input type="text" id="generatedInviteLinkInput" class="search-input" readonly style="color:#60a5fa;font-weight:700;font-size:12px;background:rgba(0,0,0,0.3);margin-bottom:12px;" onclick="this.select()">
-        
+      <div id="collabFormSection" style="padding:14px 0;display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="font-size:11.5px;color:#94a3b8;font-weight:700;display:block;margin-bottom:5px;">NOME DO COLABORADOR:</label>
+          <input type="text" id="collabNameInput" placeholder="Ex: Carlos Eduardo (Engenheiro)" class="search-input" style="font-size:13px;color:#fff;">
+        </div>
+
+        <div>
+          <label style="font-size:11.5px;color:#94a3b8;font-weight:700;display:block;margin-bottom:5px;">PERFIL DE ACESSO:</label>
+          <select id="collabRoleSelect" class="search-input" style="font-size:13px;color:#fff;background:var(--surface);">
+            <option value="engenharia">🏗️ Engenharia (Total: Materiais, Prazos, R$, Contatos e PDFs)</option>
+            <option value="administracao">📦 Administração (Materiais, Prazos, Contatos e PDFs)</option>
+            <option value="campo">👷 Campo / Obra (Entregas e Insumos - Sem Valores R$)</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:11.5px;color:#94a3b8;font-weight:700;display:block;margin-bottom:5px;">WHATSAPP DO COLABORADOR (OPCIONAL):</label>
+          <input type="tel" id="collabPhoneInput" placeholder="Ex: 82999998888" class="search-input" style="font-size:13px;color:#fff;">
+        </div>
+
+        <button class="btn-pdf-action" onclick="app.submitNewCollaborator()" style="border:none;cursor:pointer;margin-top:6px;background:linear-gradient(135deg, #2563eb, #1d4ed8);">
+          ⚡ Gerar Link de Acesso Exclusivo
+        </button>
+      </div>
+
+      <!-- SEÇÃO DO RESULTADO GERADO -->
+      <div id="collabResultSection" style="display:none;padding:14px 0;">
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px;margin-bottom:12px;">
+          <div style="color:#10b981;font-weight:700;font-size:13px;margin-bottom:4px;">✅ Acesso Gerado com Sucesso!</div>
+          <div id="collabResultDesc" style="color:#e2e8f0;font-size:11.5px;"></div>
+        </div>
+
+        <label style="font-size:11px;color:#94a3b8;font-weight:700;display:block;margin-bottom:4px;">LINK DIRETO:</label>
+        <input type="text" id="collabGeneratedLink" class="search-input" readonly style="color:#60a5fa;font-weight:700;font-size:11.5px;background:rgba(0,0,0,0.3);margin-bottom:12px;" onclick="this.select()">
+
         <div style="display:flex;gap:8px;">
-          <button class="btn-pdf-action" onclick="app.copyInviteLink()" style="flex:1;border:none;cursor:pointer;">
+          <a id="collabWhatsAppBtn" href="#" target="_blank" class="btn-pdf-action" style="flex:1;background:linear-gradient(135deg, #10b981, #059669);text-decoration:none;margin-top:0;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <span>💬</span> Enviar no WhatsApp
+          </a>
+          <button class="btn-pdf-action" onclick="app.copyCollabLink()" style="flex:1;background:#334155;border:none;cursor:pointer;margin-top:0;">
             📋 Copiar Link
-          </button>
-          <button class="btn-pdf-action" onclick="app.shareInviteLink()" style="flex:1;background:linear-gradient(135deg, #10b981, #059669);border:none;cursor:pointer;">
-            💬 Enviar WhatsApp
           </button>
         </div>
       </div>
