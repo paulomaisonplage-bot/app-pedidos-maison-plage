@@ -73,38 +73,43 @@
           <img src="/static/img/logo_maison_plage.png" alt="Maison Plage" style="max-width:230px;height:auto;object-fit:contain;display:inline-block;">
         </div>
       </div>
-      <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px;width:100%;">
-        <!-- ACESSO ADMIN MASTER -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;">
-          <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">👑 Acesso Administrador Master</div>
-          <div style="display:flex;gap:8px;">
-            <input type="password" id="loginAdminKey" placeholder="Digite a chave mestra..." 
-                   style="flex:1;background:var(--bg);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;outline:none;"
-                   onkeydown="if(event.key==='Enter') app.submitAdminKey()">
-            <button onclick="app.submitAdminKey()" class="btn-primary" style="padding:0 18px;border-radius:10px;font-weight:700;font-size:13px;border:none;cursor:pointer;background:linear-gradient(135deg, #2563eb, #1d4ed8);box-shadow:0 4px 15px rgba(37,99,235,0.3);">
-              Entrar
-            </button>
-          </div>
-          <div id="loginErrorMsg" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;font-weight:600;"></div>
-        </div>
-
-        <!-- DIVISOR -->
-        <div style="display:flex;align-items:center;gap:10px;margin:2px 0;">
-          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
-          <span style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;">ou</span>
-          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
-        </div>
-
-        <!-- PEDIR ACESSO VIA WHATSAPP -->
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:14px;width:100%;">
+        <!-- BOTÃO PRINCIPAL: PEDIR ACESSO VIA WHATSAPP -->
         <a href="https://wa.me/5582996657442?text=Ol%C3%A1%20Paulo%2C%20gostaria%20de%20solicitar%20meu%20link%20de%20acesso%20ao%20App%20de%20Pedidos%20do%20Residencial%20Maison%20Plage." 
            target="_blank" 
-           style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #10b981, #059669);color:#fff;padding:13px 16px;border-radius:12px;font-weight:700;font-size:13.5px;text-decoration:none;box-shadow:0 4px 15px rgba(16,185,129,0.3);transition:transform 0.15s;">
-          <span style="font-size:16px;">💬</span>
+           style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #10b981, #059669);color:#fff;padding:14px 18px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 4px 15px rgba(16,185,129,0.3);transition:transform 0.15s;">
+          <span style="font-size:18px;">💬</span>
           <span>Pedir Acesso via WhatsApp</span>
         </a>
 
-        <div style="font-size:11.5px;color:#64748b;text-align:center;line-height:1.4;margin-top:4px;">
-          Colaboradores e engenheiros: utilizem o link exclusivo enviado pelo Administrador no WhatsApp para entrar direto sem senha.
+        <div style="font-size:11.5px;color:#64748b;text-align:center;line-height:1.4;">
+          Colaboradores e engenheiros: utilizem o link exclusivo enviado pelo Administrador no WhatsApp para entrar direto no celular sem senha.
+        </div>
+
+        <!-- DIVISOR DISCRETO -->
+        <div style="height:1px;background:rgba(255,255,255,0.06);margin:8px 0 2px;"></div>
+
+        <!-- LINK DISCRETO PARA O ADMINISTRADOR MASTER -->
+        <div style="text-align:center;">
+          <button id="btnToggleAdminLogin" onclick="app.toggleAdminLoginBox()" 
+                  style="background:none;border:none;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;transition:all 0.2s;">
+            <span>🔒</span>
+            <span>Acesso do Administrador</span>
+          </button>
+        </div>
+
+        <!-- CAIXA EXPANSÍVEL DO ADMIN MASTER -->
+        <div id="adminLoginRevealBox" style="display:none;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-top:2px;">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Chave Mestra de Acesso:</div>
+          <div style="display:flex;gap:8px;">
+            <input type="password" id="loginAdminKey" placeholder="Digite a chave..." 
+                   style="flex:1;background:var(--bg);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;outline:none;"
+                   onkeydown="if(event.key==='Enter') app.submitAdminKey()">
+            <button onclick="app.submitAdminKey()" class="btn-primary" style="padding:0 16px;border-radius:8px;font-weight:700;font-size:12.5px;border:none;cursor:pointer;background:linear-gradient(135deg, #2563eb, #1d4ed8);">
+              Entrar
+            </button>
+          </div>
+          <div id="loginErrorMsg" style="color:#ef4444;font-size:11.5px;margin-top:8px;display:none;font-weight:600;"></div>
         </div>
       </div>
     </div>
