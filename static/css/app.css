@@ -145,6 +145,13 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
   pointer-events: auto;
 }
 
+/* HIERARQUIA DE STACKING CONTEXT: MODAIS SOBREPOSTOS */
+#matOrdersModal { z-index: 1000; }
+#orderModal { z-index: 1150; }
+#pdfViewerModal { z-index: 1250; }
+#callModal { z-index: 1350; }
+#addUserModal, #inviteGeneratedModal { z-index: 1350; }
+
 .modal-sheet { 
   background: #151e2e; 
   width: 100%; 
