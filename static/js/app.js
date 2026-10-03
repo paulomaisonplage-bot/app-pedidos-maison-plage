@@ -10,24 +10,23 @@ const app = {
   weekOffset: 0,
   currentMonth: 8,
 
-  init() {
+  async init() {
     const urlParams = new URLSearchParams(window.location.search);
-    const inviteToken = urlParams.get('convite') || urlParams.get('invite');
-    if (inviteToken) {
-      this.handleInviteEntry(inviteToken);
-      return;
-    }
-    
-    const savedReq = localStorage.getItem("mp_pending_req_id");
-    if (savedReq && !saved) {
-      this.showPendingInviteScreen(savedReq);
+    const token = urlParams.get('acesso') || urlParams.get('token') || urlParams.get('convite');
+    if (token) {
+      await this.handleTokenLogin(token);
       return;
     }
 
     const saved = localStorage.getItem("mp_auth_user");
     if (saved) {
-      this.currentUser = JSON.parse(saved);
-      this.showApp();
+      try {
+        this.currentUser = JSON.parse(saved);
+        this.showApp();
+      } catch(e) {
+        localStorage.removeItem("mp_auth_user");
+        this.showLogin();
+      }
     } else {
       this.showLogin();
     }
@@ -37,99 +36,75 @@ const app = {
     }
   },
 
-  pressPin(n) {
-    if (this.currentPin.length < 4) {
-      this.currentPin += n;
-      this.updatePinDots();
-      if (this.currentPin.length === 4) {
-        setTimeout(() => this.submitPin(), 100);
-      }
-    }
-  },
-
-  clearPin() {
-    this.currentPin = "";
-    this.updatePinDots();
-  },
-
-  updatePinDots() {
-    for (let i = 1; i <= 4; i++) {
-      const el = document.getElementById(`dot${i}`);
-      if (i <= this.currentPin.length) el.classList.add("filled");
-      else el.classList.remove("filled");
-    }
-  },
-
-  quickLogin(role) {
-    const pins = {
-      admin: "8459",
-      engenharia: "7722",
-      administracao: "4411",
-      campo: "1003"
-    };
-    this.currentPin = pins[role] || "8459";
-    this.submitPin();
-  },
-
-  async promptEmailLogin() {
-    const email = prompt("Digite seu e-mail cadastrado para receber o código de acesso:");
-    if (!email) return;
+  async handleTokenLogin(token) {
     try {
-      const res = await fetch('/api/auth/send_otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
-      });
+      const res = await fetch(`/api/auth/token_login?token=${encodeURIComponent(token.trim())}`);
       const data = await res.json();
-      if (data.success) {
-        const code = prompt(`Digite o código de 6 dígitos enviado para ${email}:
-(Código de teste: ${data.dev_code})`);
-        if (!code) return;
-        const vRes = await fetch('/api/auth/verify_otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, code: code })
-        });
-        const vData = await vRes.json();
-        if (vData.success) {
-          this.currentUser = vData.user;
-          localStorage.setItem("mp_auth_user", JSON.stringify(vData.user));
-          this.showApp();
-        } else {
-          alert("Código inválido.");
+      if (res.ok && data.success) {
+        this.currentUser = data.user;
+        localStorage.setItem("mp_auth_user", JSON.stringify(data.user));
+        // Remove o token da URL da barra do navegador para discrição
+        window.history.replaceState({}, document.title, window.location.pathname);
+        this.showApp();
+      } else {
+        this.showLogin();
+        const err = document.getElementById("loginErrorMsg");
+        if (err) {
+          err.innerText = data.detail || "Link de acesso inválido ou revogado.";
+          err.style.display = "block";
         }
       }
     } catch(e) {
-      alert("Erro ao processar autenticação por e-mail.");
+      this.showLogin();
+      const err = document.getElementById("loginErrorMsg");
+      if (err) {
+        err.innerText = "Erro ao validar link de acesso. Verifique sua conexão.";
+        err.style.display = "block";
+      }
     }
   },
 
-  async submitPin() {
+  async submitAdminKey() {
+    const input = document.getElementById("loginAdminKey");
+    const key = (input ? input.value : "").trim();
+    const err = document.getElementById("loginErrorMsg");
+    if (err) err.style.display = "none";
+
+    if (!key) {
+      if (err) { err.innerText = "Digite a chave mestra de acesso."; err.style.display = "block"; }
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: this.currentPin })
+        body: JSON.stringify({ pin: key })
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         this.currentUser = data.user;
         localStorage.setItem("mp_auth_user", JSON.stringify(data.user));
         this.showApp();
       } else {
-        alert(data.detail || "PIN incorreto.");
-        this.clearPin();
+        if (err) {
+          err.innerText = data.detail || "Chave mestra incorreta.";
+          err.style.display = "block";
+        }
       }
     } catch(e) {
-      alert("Erro ao validar PIN.");
-      this.clearPin();
+      if (err) {
+        err.innerText = "Erro de conexão com o servidor.";
+        err.style.display = "block";
+      }
     }
   },
 
   logout() {
     localStorage.removeItem("mp_auth_user");
     this.currentUser = null;
-    this.clearPin();
+    const input = document.getElementById("loginAdminKey");
+    if (input) input.value = "";
     this.showLogin();
   },
 
@@ -180,12 +155,15 @@ const app = {
     document.getElementById("tabSuppliers").style.display = this.isMonetaryAllowed() ? "block" : "none";
     document.getElementById("tabFinancial").style.display = this.isFinancialAllowed() ? "block" : "none";
     document.getElementById("tabExport").style.display = this.isFinancialAllowed() ? "block" : "none";
-    document.getElementById("tabTeam").style.display = this.isAdmin() ? "block" : "none";
+    document.getElementById("tabTeam").style.display = (this.currentUser && this.currentUser.is_master) ? "block" : "none";
 
     this.setModule("week");
   },
 
   setModule(mod) {
+    if (mod === "team" && (!this.currentUser || !this.currentUser.is_master)) {
+      mod = "week";
+    }
     this.activeModule = mod;
     document.querySelectorAll(".module-tab").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".module-section").forEach(s => s.classList.remove("active"));
@@ -1082,281 +1060,211 @@ const app = {
     }
   },
 
-  currentInviteToken: "",
-
-  async handleInviteEntry(token) {
-    this.currentInviteToken = token;
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appContainer").style.display = "none";
-    document.getElementById("inviteScreen").style.display = "flex";
-
-    try {
-      const res = await fetch(`/api/invites/validate?token=${token}`);
-      const data = await res.json();
-      if (data.valid) {
-        document.getElementById("inviteValidBox").style.display = "block";
-        document.getElementById("inviteExpiredBox").style.display = "none";
-        document.getElementById("invitePendingBox").style.display = "none";
-      } else {
-        document.getElementById("inviteValidBox").style.display = "none";
-        document.getElementById("inviteExpiredBox").style.display = "block";
-        document.getElementById("invitePendingBox").style.display = "none";
-      }
-    } catch(e) {
-      alert("Erro ao validar link de convite.");
-    }
-  },
-
-  async submitInviteRegistration() {
-    const nome = document.getElementById("invNomeInput").value.trim();
-    const contato = document.getElementById("invContatoInput").value.trim();
-
-    if (!nome || !contato) {
-      alert("Por favor, preencha seu Nome Completo e Contato.");
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/invites/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: this.currentInviteToken, nome: nome, contato: contato })
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem("mp_pending_req_id", data.req_id);
-        document.getElementById("inviteValidBox").style.display = "none";
-        document.getElementById("invitePendingBox").style.display = "block";
-      } else {
-        alert(data.detail || "Erro ao enviar solicitação.");
-      }
-    } catch(e) {
-      alert("Falha ao registrar convite.");
-    }
-  },
-
-  showPendingInviteScreen(reqId) {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appContainer").style.display = "none";
-    document.getElementById("inviteScreen").style.display = "flex";
-    document.getElementById("inviteValidBox").style.display = "none";
-    document.getElementById("inviteExpiredBox").style.display = "none";
-    document.getElementById("invitePendingBox").style.display = "block";
-  },
-
-  async checkPendingStatus() {
-    const reqId = localStorage.getItem("mp_pending_req_id");
-    if (!reqId) {
-      window.location.href = "/";
-      return;
-    }
-    try {
-      const res = await fetch(`/api/users/check_status?req_id=${reqId}`);
-      const data = await res.json();
-      if (data.status === "approved") {
-        alert(`🎉 Parabéns! Seu acesso foi aprovado pelo Administrador.
-
-Seu PIN de entrada é: ${data.pin}
-
-Faça login agora!`);
-        localStorage.removeItem("mp_pending_req_id");
-        window.location.href = "/";
-      } else if (data.status === "rejected") {
-        alert("Sua solicitação de acesso não foi aprovada pelo Administrador.");
-        localStorage.removeItem("mp_pending_req_id");
-        window.location.href = "/";
-      } else {
-        alert("Sua solicitação ainda está em análise pelo Administrador Paulo. Aguarde.");
-      }
-    } catch(e) {
-      alert("Erro ao verificar status.");
-    }
-  },
-
-  async openGenerateInviteModal() {
-    try {
-      const res = await fetch(`/api/invites/generate?role=${this.currentUser.role}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role_sugerido: "engenharia" })
-      });
-      const data = await res.json();
-      document.getElementById("generatedInviteLinkInput").value = data.link;
-      document.getElementById("inviteGeneratedModal").classList.add("show");
-    } catch(e) {
-      alert("Erro ao gerar link de convite.");
-    }
-  },
-
-  closeInviteModal(e) {
-    if (e && e.target && e.target.id !== "inviteGeneratedModal" && !e.target.classList.contains("btn-close")) return;
-    document.getElementById("inviteGeneratedModal").classList.remove("show");
-  },
-
-  copyInviteLink() {
-    const input = document.getElementById("generatedInviteLinkInput");
-    input.select();
-    input.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(input.value);
-    alert("✅ Link copiado para a área de transferência!");
-  },
-
-  shareInviteLink() {
-    const link = document.getElementById("generatedInviteLinkInput").value;
-    const txt = `Olá! Segue o link de acesso exclusivo para instalar e entrar no App de Pedidos da obra Residencial Maison Plage:
-
-${link}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
-  },
-
   async loadTeam() {
-    const list = document.getElementById("teamList") || document.getElementById("teamCards");
-    if (list) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Carregando membros da equipe...</div>';
-    }
-
-    this.loadPendingRequests();
+    const list = document.getElementById("collaboratorsList") || document.getElementById("teamList");
+    if (!list) return;
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando acessos ativos...</div>';
 
     try {
-      const res = await fetch(`/api/users?role=${this.currentUser.role}`);
+      const res = await fetch(`/api/collaborators?role=${this.currentUser.role}`);
       const data = await res.json();
-      const users = data.users || [];
+      const collabs = data.collaborators || [];
 
-      if (list) {
-        if (users.length === 0) {
-          list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum usuário cadastrado.</div>';
-          return;
-        }
-
-        list.innerHTML = users.map(u => `
-          <div class="user-card">
-            <div>
-              <div class="user-meta-name">${u.nome}</div>
-              <div class="user-meta-role">PIN: <b>${u.pin}</b> • Cadastrado em: ${u.data_autorizacao}</div>
-            </div>
-            <div class="user-actions">
-              <select class="role-select" onchange="app.updateUserRole('${u.id}', this.value)">
-                <option value="campo" ${u.role==='campo'?'selected':''}>👷 Campo (Sem R$)</option>
-                <option value="administracao" ${u.role==='administracao'?'selected':''}>📦 Administração</option>
-                <option value="engenharia" ${u.role==='engenharia'?'selected':''}>🏗️ Engenharia</option>
-                <option value="admin" ${u.role==='admin'?'selected':''}>👑 Admin Master</option>
-              </select>
-              ${u.role !== 'admin' ? `<button class="btn-del-user" onclick="app.deleteUser('${u.id}')">✕</button>` : ''}
-            </div>
-          </div>
-        `).join("");
-      }
-    } catch(e) {
-      if (list) {
-        list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar equipe.</div>';
-      }
-    }
-  },
-
-  async loadPendingRequests() {
-    const container = document.getElementById("pendingRequestsContainer");
-    const list = document.getElementById("pendingRequestsList");
-    if (!container || !list) return;
-
-    try {
-      const res = await fetch(`/api/users/pending?role=${this.currentUser.role}`);
-      const data = await res.json();
-      const pend = data.pending || [];
-      if (pend.length === 0) {
-        container.style.display = "none";
+      if (collabs.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum colaborador com acesso no momento.<br><br>Clique em <b>"➕ Gerar Acesso WhatsApp"</b> acima para enviar o primeiro link.</div>';
         return;
       }
-      container.style.display = "block";
-      list.innerHTML = pend.map(p => `
-        <div class="user-card" style="border-left:4px solid #fbbf24;background:rgba(251,191,36,0.08);padding:10px;">
-          <div>
-            <div class="user-meta-name" style="color:#fbbf24;">🔔 ${p.nome}</div>
-            <div class="user-meta-role">Contato: <b>${p.contato}</b> • Solicitado em: ${p.requested_at}</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Cargo sugerido: <b>${p.role_sugerido}</b></div>
+
+      list.innerHTML = collabs.map(c => {
+        const isRevoked = c.status === "revoked";
+        const roleLabel = {
+          'engenharia': '🏗️ Engenharia',
+          'administracao': '📦 Administração',
+          'campo': '👷 Campo'
+        }[c.role] || c.role;
+
+        const roleColor = {
+          'engenharia': '#60a5fa',
+          'administracao': '#c084fc',
+          'campo': '#fbbf24'
+        }[c.role] || '#94a3b8';
+
+        const waText = encodeURIComponent(`Olá ${c.nome}, seu link de acesso exclusivo ao App de Pedidos da obra Maison Plage está ativo:\n${c.link}`);
+
+        return `
+          <div class="user-card" style="${isRevoked ? 'opacity:0.55;border-left:4px solid #ef4444;' : 'border-left:4px solid ' + roleColor + ';'}">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span class="user-meta-name" style="font-size:13.5px;color:#fff;">${c.nome}</span>
+                <span style="font-size:10px;font-weight:800;color:${roleColor};background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">
+                  ${roleLabel}
+                </span>
+                ${isRevoked ? '<span style="font-size:10px;font-weight:800;color:#ef4444;background:rgba(239,68,68,0.15);padding:2px 6px;border-radius:4px;">Revogado</span>' : ''}
+              </div>
+              <div class="user-meta-role" style="font-size:11px;margin-top:3px;color:#94a3b8;">
+                Criado em: ${c.created_at} • Último login: <b>${c.last_login}</b>
+              </div>
+            </div>
+
+            <div class="user-actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+              <select class="role-select" style="font-size:11px;padding:4px 6px;border-radius:6px;background:var(--surface);" onchange="app.updateCollabRole('${c.token}', this.value)" ${isRevoked ? 'disabled' : ''}>
+                <option value="engenharia" ${c.role==='engenharia'?'selected':''}>🏗️ Eng</option>
+                <option value="administracao" ${c.role==='administracao'?'selected':''}>📦 Adm</option>
+                <option value="campo" ${c.role==='campo'?'selected':''}>👷 Campo</option>
+              </select>
+
+              <button class="btn-pdf-action" onclick="app.copyText('${c.link}')" style="margin-top:0;padding:5px 9px;font-size:11px;background:#334155;border:none;cursor:pointer;border-radius:6px;" title="Copiar link">
+                📋 Copiar
+              </button>
+
+              <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-pdf-action" style="margin-top:0;padding:5px 9px;font-size:11px;background:#10b981;text-decoration:none;border-radius:6px;" title="Enviar no WhatsApp">
+                💬 WhatsApp
+              </a>
+
+              ${!isRevoked ? `
+                <button class="btn-del-user" onclick="app.revokeCollab('${c.token}')" style="padding:5px 9px;font-size:11px;border-radius:6px;" title="Revogar Acesso">
+                  ✕ Revogar
+                </button>
+              ` : `
+                <button class="btn-del-user" onclick="app.deleteCollab('${c.token}')" style="padding:5px 9px;font-size:11px;background:#b91c1c;border-radius:6px;" title="Excluir Definitivamente">
+                  🗑️ Excluir
+                </button>
+              `}
+            </div>
           </div>
-          <div class="user-actions" style="margin-top:8px;gap:6px;flex-wrap:wrap;">
-            <select id="role_p_${p.id}" class="role-select" style="font-size:11px;padding:4px 6px;">
-              <option value="engenharia" ${p.role_sugerido==='engenharia'?'selected':''}>🏗️ Engenharia</option>
-              <option value="administracao" ${p.role_sugerido==='administracao'?'selected':''}>📦 Administração</option>
-              <option value="campo" ${p.role_sugerido==='campo'?'selected':''}>👷 Campo</option>
-            </select>
-            <input type="text" id="pin_p_${p.id}" placeholder="PIN (4 dígitos)" style="width:80px;font-size:11px;padding:4px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.2);background:#0f172a;color:#fff;text-align:center;">
-            <button onclick="app.approvePending('${p.id}')" class="btn-pdf-action" style="padding:4px 8px;font-size:11px;background:#10b981;border:none;cursor:pointer;">✅ Aprovar</button>
-            <button onclick="app.rejectPending('${p.id}')" class="btn-del-user" style="padding:4px 8px;font-size:11px;">✕</button>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
+
     } catch(e) {
-      container.style.display = "none";
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar colaboradores.</div>';
     }
   },
 
-  async approvePending(reqId) {
-    const roleElem = document.getElementById(`role_p_${reqId}`);
-    const pinElem = document.getElementById(`pin_p_${reqId}`);
-    const role = roleElem ? roleElem.value : "engenharia";
-    const pin = pinElem ? pinElem.value.trim() : "";
-    if (!pin) {
-      alert("Por favor, digite um PIN de acesso para o usuário.");
+  openNewCollaboratorModal() {
+    document.getElementById("collabFormSection").style.display = "flex";
+    document.getElementById("collabResultSection").style.display = "none";
+    document.getElementById("collabNameInput").value = "";
+    document.getElementById("collabPhoneInput").value = "";
+    document.getElementById("collaboratorModal").classList.add("show");
+    document.body.style.overflow = "hidden";
+  },
+
+  closeCollaboratorModal(e) {
+    if (e && e.target && e.target.id !== "collaboratorModal" && !e.target.classList.contains("btn-close")) return;
+    document.getElementById("collaboratorModal").classList.remove("show");
+    document.body.style.overflow = "";
+  },
+
+  async submitNewCollaborator() {
+    const nome = document.getElementById("collabNameInput").value.trim();
+    const role = document.getElementById("collabRoleSelect").value;
+    const phone = document.getElementById("collabPhoneInput").value.trim();
+
+    if (!nome) {
+      alert("Por favor, digite o nome do colaborador.");
       return;
     }
+
     try {
-      const res = await fetch(`/api/users/approve?role=${this.currentUser.role}`, {
+      const res = await fetch(`/api/collaborators/create?role=${this.currentUser.role}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ req_id: reqId, role: role, pin: pin })
+        body: JSON.stringify({ nome: nome, role: role, whatsapp: phone })
       });
       const data = await res.json();
-      alert(data.message || "Usuário aprovado com sucesso!");
-      this.loadTeam();
-    } catch(e) {
-      alert("Erro ao aprovar usuário.");
-    }
-  },
+      if (res.ok && data.success) {
+        document.getElementById("collabFormSection").style.display = "none";
+        document.getElementById("collabResultSection").style.display = "block";
+        document.getElementById("collabResultDesc").innerText = `Acesso permanente liberado para ${data.nome} (${data.role.toUpperCase()}).`;
+        document.getElementById("collabGeneratedLink").value = data.link;
 
-  async rejectPending(reqId) {
-    if (!confirm("Deseja recusar esta solicitação de acesso?")) return;
-    try {
-      await fetch(`/api/users/reject?role=${this.currentUser.role}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ req_id: reqId })
-      });
-      this.loadTeam();
-    } catch(e) {
-      alert("Erro ao recusar solicitação.");
-    }
-  },
+        const waBtn = document.getElementById("collabWhatsAppBtn");
+        if (data.whatsapp_url) {
+          waBtn.href = data.whatsapp_url;
+        } else {
+          waBtn.href = `https://wa.me/?text=${encodeURIComponent(data.message)}`;
+        }
 
-  async updateUserRole(userId, newRole) {
-    try {
-      const res = await fetch(`/api/users/update_role?role=${this.currentUser.role}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, role: newRole })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ Cargo atualizado com sucesso!");
+        this.loadTeam();
+      } else {
+        alert(data.detail || "Erro ao criar colaborador.");
       }
     } catch(e) {
-      alert("Erro ao atualizar cargo do usuário.");
+      alert("Erro ao conectar com o servidor.");
     }
   },
 
-  async deleteUser(userId) {
-    if (!confirm("Deseja revogar o acesso deste usuário?")) return;
+  copyCollabLink() {
+    const input = document.getElementById("collabGeneratedLink");
+    if (!input) return;
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+      alert("📋 Link de acesso copiado com sucesso!");
+    }).catch(() => {
+      document.execCommand("copy");
+      alert("📋 Link de acesso copiado!");
+    });
+  },
+
+  copyText(txt) {
+    navigator.clipboard.writeText(txt).then(() => {
+      alert("📋 Link copiado com sucesso!");
+    }).catch(() => {
+      alert("Link: " + txt);
+    });
+  },
+
+  async updateCollabRole(token, newRole) {
     try {
-      const res = await fetch(`/api/users/${userId}?role=${this.currentUser.role}`, {
+      const res = await fetch(`/api/collaborators/update_role?role=${this.currentUser.role}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token, role: newRole })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        this.loadTeam();
+      } else {
+        alert(data.detail || "Erro ao atualizar perfil.");
+      }
+    } catch(e) {
+      alert("Erro ao atualizar perfil.");
+    }
+  },
+
+  async revokeCollab(token) {
+    if (!confirm("Tem certeza que deseja revogar o acesso deste colaborador? Ele não conseguirá mais abrir o app.")) return;
+    try {
+      const res = await fetch(`/api/collaborators/revoke?role=${this.currentUser.role}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        this.loadTeam();
+      } else {
+        alert(data.detail || "Erro ao revogar acesso.");
+      }
+    } catch(e) {
+      alert("Erro ao revogar acesso.");
+    }
+  },
+
+  async deleteCollab(token) {
+    if (!confirm("Excluir definitivamente este registro da lista?")) return;
+    try {
+      const res = await fetch(`/api/collaborators/${token}?role=${this.currentUser.role}`, {
         method: 'DELETE'
       });
       const data = await res.json();
-      if (data.success) {
-        alert("✅ Usuário removido!");
+      if (res.ok && data.success) {
         this.loadTeam();
+      } else {
+        alert(data.detail || "Erro ao excluir.");
       }
     } catch(e) {
-      alert("Erro ao remover usuário.");
+      alert("Erro ao excluir.");
     }
   }
 };
