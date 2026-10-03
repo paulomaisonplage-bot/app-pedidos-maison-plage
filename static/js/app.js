@@ -64,6 +64,19 @@ const app = {
     }
   },
 
+  toggleAdminLoginBox() {
+    const box = document.getElementById("adminLoginRevealBox");
+    if (!box) return;
+    const isHidden = (box.style.display === "none" || !box.style.display);
+    box.style.display = isHidden ? "block" : "none";
+    if (isHidden) {
+      const input = document.getElementById("loginAdminKey");
+      if (input) {
+        setTimeout(() => input.focus(), 100);
+      }
+    }
+  },
+
   async submitAdminKey() {
     const input = document.getElementById("loginAdminKey");
     const key = (input ? input.value : "").trim();
