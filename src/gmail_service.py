@@ -7,9 +7,11 @@ enviados por Josivan Pajau / Sienge e baixa os relatórios em PDF automaticament
 
 import os
 import sys
+import re
 import json
 import imaplib
 import email
+from datetime import datetime
 from email.header import decode_header
 from typing import List, Dict, Any, Optional
 
