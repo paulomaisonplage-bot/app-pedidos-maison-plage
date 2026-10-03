@@ -267,14 +267,98 @@ body { background: var(--bg); color: var(--text-main); min-height: 100vh; overfl
 .btn-pdf-action { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; text-decoration: none; padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 12.5px; margin-top: 10px; box-shadow: 0 4px 15px rgba(37,99,235,0.4); }
 .btn-pdf-action:active { transform: scale(0.98); }
 
-/* MACRO GRUPOS */
-.macro-group-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; grid-column: span 2; }
-.macro-group-card:active { transform: scale(0.99); }
-.macro-title { font-size: 15px; font-weight: 800; color: #fff; }
-.macro-badge { background: rgba(37,99,235,0.2); color: #60a5fa; font-weight: 800; font-size: 11px; padding: 3px 8px; border-radius: 8px; }
-.macro-sub-info { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-.macro-sub-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-.macro-sub-item:active { background: rgba(37,99,235,0.3); }
+/* MACRO GRUPOS COMPACTOS COM EXPANSÃO SUAVE */
+.groups-grid { display: flex; flex-direction: column; gap: 8px; }
+.macro-group-card { 
+  background: var(--surface); 
+  border: 1px solid var(--surface-border); 
+  border-radius: var(--radius); 
+  padding: 11px 13px; 
+  margin-bottom: 0; 
+  cursor: pointer; 
+  transition: background 0.2s, border-color 0.2s, transform 0.15s; 
+  user-select: none;
+}
+.macro-group-card:active { transform: scale(0.995); }
+.macro-group-card.expanded { 
+  border-color: rgba(96, 165, 250, 0.45); 
+  background: rgba(30, 41, 59, 0.85); 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+}
+.macro-card-head { display: flex; justify-content: space-between; align-items: center; }
+.macro-title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.macro-icon { font-size: 16px; flex-shrink: 0; }
+.macro-title { font-size: 13.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.macro-right-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.macro-badge { 
+  background: rgba(59, 130, 246, 0.15); 
+  color: #93c5fd; 
+  font-weight: 700; 
+  font-size: 11px; 
+  padding: 2.5px 8px; 
+  border-radius: 6px; 
+  border: 1px solid rgba(96,165,250,0.2);
+}
+.macro-chevron { 
+  color: #94a3b8; 
+  font-size: 12px; 
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+  display: inline-block; 
+}
+.macro-group-card.expanded .macro-chevron { 
+  transform: rotate(180deg); 
+  color: #60a5fa; 
+}
+.macro-sub-summary { 
+  font-size: 11px; 
+  color: var(--text-muted); 
+  margin-top: 3px; 
+  padding-left: 24px; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+}
+.macro-subs-wrapper { 
+  max-height: 0; 
+  opacity: 0; 
+  overflow: hidden; 
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin 0.2s ease; 
+  margin-top: 0; 
+}
+.macro-group-card.expanded .macro-subs-wrapper { 
+  max-height: 1200px; 
+  opacity: 1; 
+  margin-top: 9px; 
+  border-top: 1px solid rgba(255, 255, 255, 0.08); 
+  padding-top: 8px; 
+}
+.macro-subs-grid { display: flex; flex-direction: column; gap: 5px; }
+.macro-sub-item { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  background: rgba(15, 23, 42, 0.6); 
+  border: 1px solid rgba(255, 255, 255, 0.04); 
+  padding: 7px 11px; 
+  border-radius: 6px; 
+  font-size: 11.5px; 
+  font-weight: 600; 
+  color: #e2e8f0; 
+  cursor: pointer; 
+  transition: background 0.15s, border-color 0.15s; 
+}
+.macro-sub-item:active { 
+  background: rgba(59, 130, 246, 0.25); 
+  border-color: rgba(96, 165, 250, 0.3);
+}
+.macro-sub-item-badge { 
+  font-size: 10.5px; 
+  font-weight: 700; 
+  color: #60a5fa; 
+  background: rgba(96, 165, 250, 0.12); 
+  padding: 1.5px 6px; 
+  border-radius: 4px; 
+}
 
 /* CONTATOS NO MODAL DO PEDIDO */
 .modal-fornec-actions { display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; }
