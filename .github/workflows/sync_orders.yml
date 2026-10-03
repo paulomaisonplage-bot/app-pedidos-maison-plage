@@ -1,0 +1,48 @@
+name: Sincronizacao Automatica de Pedidos (Gmail -> Excel)
+
+on:
+  schedule:
+    # A cada 2 horas, das 07h às 17h (Horário de Brasília), de segunda a sábado:
+    - cron: '0 10,12,14,16,18,20 * * 1-6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sincronizar Pedidos Sienge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Dependencias
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt pdfplumber
+
+      - name: Executar Sincronizacao do Gmail
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          python scripts/cloud_sync.py
+
+      - name: Comitar e Publicar Alteracoes
+        run: |
+          git config --global user.name "Maison Plage Bot"
+          git config --global user.email "bot@maisonplage.com.br"
+          git add data/pedidos_compra_consolidado.xlsx webapp_maison_plage/data/pedidos_compra_consolidado.xlsx data/gmail_historico.json pedidos_pdf/
+          if git diff --staged --quiet; then
+            echo "Nenhuma alteracao detectada. Base ja estava atualizada."
+          else
+            git commit -m "data(auto-sync): sincronizacao automatica de pedidos [skip ci]"
+            git push origin main
+            echo "Novos pedidos comitados e enviados. Vercel atualizara automaticamente!"
+          fi
