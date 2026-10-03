@@ -613,62 +613,94 @@ const app = {
 
   async loadGroups() {
     const grid = document.getElementById("groupsGrid");
-    grid.innerHTML = '<div style="grid-column:span 2;padding:20px;text-align:center;color:#94a3b8">⏳ Carregando Macro-Grupos da obra...</div>';
+    grid.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">⏳ Carregando Macro-Grupos da obra...</div>';
     try {
       const res = await fetch('/api/groups');
       const data = await res.json();
       
-      const macroMap = {
-        "🏗️ Obra Grossa & Estrutura": ["BLOCOS", "PRODUTOS METÁLICOS", "AGREGADOS", "ARGAMASSAS", "MADEIRAS", "PRÉ-MOLDADOS", "ESTRUTURA"],
-        "⚡ Instalações Prediais": ["ELÉTRICAS", "HIDRÁULICAS", "INCÊNDIO", "GÁS", "TUBOS", "CONEXÕES", "FIAÇÃO"],
-        "🛡️ Acabamentos & Pintura": ["IMPERMEABILIZANTES", "TINTAS", "VERNIZES", "LOUÇAS", "METAIS", "PAVIMENTAÇÃO", "DRENAGEM"],
-        "🦺 Segurança, EPIs & Apoio": ["EPI", "EPC", "FERRAMENTAS", "EQUIPAMENTOS", "AUXILIARES", "LIMPEZA", "EXPEDIENTE"],
-        "🚜 Serviços & Esquadrias": ["ESQUADRIAS", "VIDROS", "SERVIÇOS", "LOCAÇÃO", "MÁQUINAS", "EMPREITADOS", "DIVERSOS"]
-      };
+      const macroMap = [
+        { title: "Obra Grossa & Estrutura", icon: "🏗️", keywords: ["BLOCO", "PRODUTOS METÁLICOS", "AGREGADO", "ARGAMASSA", "MADEIRA", "PRÉ-MOLDADO", "ESTRUTURA", "AÇO"] },
+        { title: "Instalações Prediais", icon: "⚡", keywords: ["ELÉTRICA", "HIDRÁULICA", "INCÊNDIO", "GÁS", "TUBO", "CONEX", "FIAÇÃO", "PVC"] },
+        { title: "Acabamentos & Pintura", icon: "🛡️", keywords: ["IMPERMEABILIZ", "TINTA", "VERNIZ", "LOUÇA", "METAL", "PAVIMENTA", "DRENAGEM", "REVESTIMENTO", "PISO"] },
+        { title: "Segurança, EPIs & Apoio", icon: "🦺", keywords: ["EPI", "EPC", "FERRAMENTA", "EQUIPAMENTO", "AUXILIAR", "LIMPEZA", "EXPEDIENTE", "ALIMENTA"] },
+        { title: "Serviços & Esquadrias", icon: "🚜", keywords: ["ESQUADRIA", "VIDRO", "SERVIÇO", "LOCAÇÃO", "MÁQUINA", "EMPREITADO", "PAISAGISMO"] }
+      ];
 
       const groups = data.groups || [];
+      const assigned = new Set();
       const macroCards = [];
 
-      for (const [macroName, keywords] of Object.entries(macroMap)) {
-        const subList = groups.filter(g => keywords.some(k => g.familia.toUpperCase().includes(k)));
-        const totOrders = subList.reduce((acc, curr) => acc + (curr.orders_count || 0), 0);
-        const totItems = subList.reduce((acc, curr) => acc + (curr.items_count || 0), 0);
+      for (const m of macroMap) {
+        const subList = groups.filter(g => {
+          const match = m.keywords.some(k => g.familia.toUpperCase().includes(k));
+          if (match) assigned.add(g.familia);
+          return match;
+        });
+        if (subList.length > 0) {
+          const totOrders = subList.reduce((acc, curr) => acc + (curr.orders_count || 0), 0);
+          const totItems = subList.reduce((acc, curr) => acc + (curr.items_count || 0), 0);
+          macroCards.push({
+            title: m.title,
+            icon: m.icon,
+            orders: totOrders,
+            items: totItems,
+            subs: subList
+          });
+        }
+      }
 
+      const remaining = groups.filter(g => !assigned.has(g.familia));
+      if (remaining.length > 0) {
+        const totOrders = remaining.reduce((acc, curr) => acc + (curr.orders_count || 0), 0);
+        const totItems = remaining.reduce((acc, curr) => acc + (curr.items_count || 0), 0);
         macroCards.push({
-          title: macroName,
+          title: "Outros Suprimentos & Diversos",
+          icon: "📦",
           orders: totOrders,
           items: totItems,
-          subs: subList
+          subs: remaining
         });
       }
 
       grid.innerHTML = macroCards.map((m, idx) => `
-        <div class="macro-group-card" onclick="app.toggleMacro(${idx})">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div class="macro-title">${m.title}</div>
-            <div class="macro-badge">${m.orders} pedidos</div>
+        <div class="macro-group-card" id="macroCard_${idx}" onclick="app.toggleMacro(${idx})">
+          <div class="macro-card-head">
+            <div class="macro-title-row">
+              <span class="macro-icon">${m.icon}</span>
+              <div class="macro-title">${m.title}</div>
+            </div>
+            <div class="macro-right-meta">
+              <span class="macro-badge">${m.orders} pedidos</span>
+              <span class="macro-chevron">▼</span>
+            </div>
           </div>
-          <div class="macro-sub-info">📦 ${m.items} itens cadastrados • ${m.subs.length} subfamílias</div>
-          <div id="macroSubs_${idx}" class="macro-subs-container" style="display:none;margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;">
-            ${m.subs.map(s => `
-              <div class="macro-sub-item" onclick="event.stopPropagation(); app.openGroupOrders('${s.familia}')">
-                <span>📁 ${s.familia}</span>
-                <span style="color:#60a5fa;font-weight:700">${s.orders_count} peds</span>
-              </div>
-            `).join("")}
+          <div class="macro-sub-summary">
+            <span>📦 ${m.items} itens</span>
+            <span>•</span>
+            <span>📁 ${m.subs.length} subgrupos</span>
+          </div>
+          <div class="macro-subs-wrapper">
+            <div class="macro-subs-grid">
+              ${m.subs.map(s => `
+                <div class="macro-sub-item" onclick="event.stopPropagation(); app.openGroupOrders('${s.familia}')">
+                  <span>📁 ${s.familia}</span>
+                  <span class="macro-sub-item-badge">${s.orders_count} peds</span>
+                </div>
+              `).join("")}
+            </div>
           </div>
         </div>
       `).join("");
 
     } catch(e) {
-      grid.innerHTML = '<div style="grid-column:span 2;padding:20px;text-align:center;color:#ef4444">Erro ao carregar grupos.</div>';
+      grid.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar grupos.</div>';
     }
   },
 
   toggleMacro(idx) {
-    const el = document.getElementById(`macroSubs_${idx}`);
-    if (el) {
-      el.style.display = (el.style.display === "none") ? "block" : "none";
+    const card = document.getElementById(`macroCard_${idx}`);
+    if (card) {
+      card.classList.toggle("expanded");
     }
   },
 
