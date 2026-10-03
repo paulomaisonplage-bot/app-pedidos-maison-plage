@@ -120,13 +120,29 @@ def main():
         sender_filter="sienge"
     )
     
+    # Garante que os caminhos esperados pelo GitHub Actions existam sempre
+    src_excel = os.path.join(BASE_DIR, "data", "pedidos_compra_consolidado.xlsx")
+    dst_excel = os.path.join(BASE_DIR, "webapp_maison_plage", "data", "pedidos_compra_consolidado.xlsx")
+    if os.path.exists(src_excel) and not os.path.exists(dst_excel):
+        os.makedirs(os.path.dirname(dst_excel), exist_ok=True)
+        shutil.copy(src_excel, dst_excel)
+
+    historico_json = os.path.join(BASE_DIR, "data", "gmail_historico.json")
+    if not os.path.exists(historico_json):
+        with open(historico_json, "w", encoding="utf-8") as f:
+            json.dump([], f)
+
+    # Configura remote com token autenticado se rodando em CI
+    sync_pat = os.getenv("SYNC_PAT")
+    if sync_pat:
+        repo = os.getenv("GITHUB_REPOSITORY", "paulomaisonplage-bot/app-pedidos-maison-plage")
+        os.system(f"git remote set-url origin https://x-access-token:{sync_pat}@github.com/{repo}.git")
+
     if files:
         print(f"[+] {len(files)} novos PDFs baixados. Consolidando base Excel...", flush=True)
         process_all_orders()
         
         # Garante cópia para a pasta do webapp onde o Vercel executa
-        src_excel = os.path.join(BASE_DIR, "data", "pedidos_compra_consolidado.xlsx")
-        dst_excel = os.path.join(BASE_DIR, "webapp_maison_plage", "data", "pedidos_compra_consolidado.xlsx")
         if os.path.exists(src_excel):
             os.makedirs(os.path.dirname(dst_excel), exist_ok=True)
             shutil.copy(src_excel, dst_excel)
@@ -137,6 +153,11 @@ def main():
         generate_json_cache()
         print("[OK] Base de dados, PDFs e Cache atualizados com sucesso!", flush=True)
     else:
+        # Mesmo sem novos arquivos, garante que o cache e a cópia existam
+        generate_json_cache()
+        if os.path.exists(src_excel):
+            os.makedirs(os.path.dirname(dst_excel), exist_ok=True)
+            shutil.copy(src_excel, dst_excel)
         print("[OK] Base já está 100% atualizada. Nenhum novo pedido pendente.", flush=True)
 
 
