@@ -48,14 +48,39 @@ CACHE_STORE = {
 
 def get_cached_raw_records(force_reload: bool = False):
     now = time.time()
+    cache_json_path = os.path.join(BASE_DIR, "data", "pedidos_cache.json")
     try:
-        current_mtime = os.path.getmtime(EXCEL_PATH) if os.path.exists(EXCEL_PATH) else 0
+        current_mtime = os.path.getmtime(cache_json_path) if os.path.exists(cache_json_path) else (
+            os.path.getmtime(EXCEL_PATH) if os.path.exists(EXCEL_PATH) else 0
+        )
     except OSError:
         current_mtime = 0
 
     mtime_changed = current_mtime > CACHE_STORE["last_mtime"]
 
     if force_reload or mtime_changed or (now - CACHE_STORE["last_load"] > 180) or not CACHE_STORE["raw_records"]:
+        # Tenta carregar do cache JSON ultra-rápido (< 30ms vs > 3500ms do Excel)
+        if os.path.exists(cache_json_path):
+            try:
+                with open(cache_json_path, "r", encoding="utf-8") as f:
+                    cached_data = json.load(f)
+                by_pc = cached_data.get("orders_by_pc", {})
+                raw = {}
+                for pc, it_list in by_pc.items():
+                    for idx, it in enumerate(it_list):
+                        item_id = str(it.get("codigo_insumo") or idx)
+                        raw[(str(pc), item_id, idx)] = it
+                CACHE_STORE["raw_records"] = raw
+                CACHE_STORE["orders_by_pc"] = by_pc
+                CACHE_STORE["last_mtime"] = current_mtime
+                CACHE_STORE["last_load"] = now
+                CACHE_STORE["recent_cards"] = None
+                CACHE_STORE["financial_summary"] = None
+                CACHE_STORE["catalog_materials"] = None
+                return CACHE_STORE["raw_records"], CACHE_STORE["orders_by_pc"]
+            except Exception as e:
+                print(f"[CACHE] Falha ao ler pedidos_cache.json: {e}. Fallback para Excel.")
+
         raw = query_service.manager.load_existing_records()
         CACHE_STORE["raw_records"] = raw
         CACHE_STORE["last_mtime"] = current_mtime
@@ -153,18 +178,20 @@ def build_order_card_data(pc: str, role: str, items: Optional[List[dict]] = None
 
 
 def find_file_id_for_order(pc_num: str) -> Optional[str]:
-    pdf_links_path = "data/pdf_links.json"
-    if not os.path.exists(pdf_links_path) and os.path.exists("../data/pdf_links.json"):
-        pdf_links_path = "../data/pdf_links.json"
-    if os.path.exists(pdf_links_path):
+    possible_paths = [
+        os.path.join(BASE_DIR, "data", "pdf_links.json"),
+        "data/pdf_links.json",
+        "../data/pdf_links.json"
+    ]
+    pdf_links_path = next((p for p in possible_paths if os.path.exists(p)), None)
+    if pdf_links_path:
         try:
             with open(pdf_links_path, "r", encoding="utf-8") as f:
                 cache = json.load(f)
+            pc_clean = str(pc_num).strip().lstrip("0")
+            pat = re.compile(rf"PedidoCompra0*{pc_clean}[_.]|PC_?0*{pc_clean}[_.]", re.IGNORECASE)
             for k, fid in cache.items():
-                if f"PedidoCompra{pc_num}_" in k or f"PedidoCompra{pc_num}." in k or f"PC_{pc_num}" in k:
-                    return fid
-            for k, fid in cache.items():
-                if str(pc_num) in k:
+                if pat.search(k):
                     return fid
         except Exception:
             pass
@@ -999,9 +1026,10 @@ async def api_order_pdf(pc_num: str, role: str = "campo"):
     if not can_download_files(role):
         raise HTTPException(status_code=403, detail="Visualização de PDF reservada para Engenharia e Administração.")
     
-    local_pdf = f"data/pdfs/PC_{pc_num}.pdf"
-    if os.path.exists(local_pdf):
-        return FileResponse(local_pdf, filename=f"PC_{pc_num}.pdf", media_type="application/pdf")
+    import glob
+    local_candidates = glob.glob(f"pedidos_pdf/PedidoCompra*{pc_num}*.pdf") + glob.glob(f"data/pdfs/*{pc_num}*.pdf")
+    if local_candidates and os.path.exists(local_candidates[0]):
+        return FileResponse(local_candidates[0], filename=f"PC_{pc_num}.pdf", media_type="application/pdf")
     
     fid = find_file_id_for_order(pc_num)
     if fid:
