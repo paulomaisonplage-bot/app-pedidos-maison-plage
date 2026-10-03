@@ -341,12 +341,61 @@ class UpdateCollaboratorRoleRequest(BaseModel):
     token: str
     role: str
 
+# ==========================================
+# GESTÃO RESILIENTE DE USUÁRIOS E TOKENS (VERCEL COMPATÍVEL)
+# ==========================================
+MEM_USERS_DATA = None
+
+def load_users_data() -> dict:
+    global MEM_USERS_DATA
+    if MEM_USERS_DATA is not None:
+        return MEM_USERS_DATA
+        
+    tmp_path = "/tmp/usuarios_autorizados.json"
+    if os.path.exists(tmp_path):
+        try:
+            with open(tmp_path, "r", encoding="utf-8") as f:
+                MEM_USERS_DATA = json.load(f)
+                return MEM_USERS_DATA
+        except Exception:
+            pass
+            
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
+                MEM_USERS_DATA = json.load(f)
+                return MEM_USERS_DATA
+        except Exception:
+            pass
+            
+    MEM_USERS_DATA = {
+        "master_pin": "admpgi1204",
+        "collaborator_tokens": {},
+        "users": {}
+    }
+    return MEM_USERS_DATA
+
+def save_users_data(data: dict):
+    global MEM_USERS_DATA
+    MEM_USERS_DATA = data
+    try:
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except OSError:
+        pass
+    try:
+        with open("/tmp/usuarios_autorizados.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
 @app.post("/api/auth/login")
 async def api_login(req: LoginRequest):
     pin_input = req.pin.strip()
+    data = load_users_data()
     
     # 1. Validação da Chave Mestra do Administrador (Paulo Lôbo)
-    if pin_input == "admpgi1204":
+    if pin_input == "admpgi1204" or pin_input == data.get("master_pin"):
         return {
             "success": True,
             "user": {
@@ -359,9 +408,6 @@ async def api_login(req: LoginRequest):
         }
         
     # 2. Validação se foi digitado um token direto de colaborador
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        
     tokens = data.get("collaborator_tokens", {})
     if pin_input in tokens:
         c = tokens[pin_input]
@@ -399,8 +445,7 @@ async def api_login(req: LoginRequest):
 @app.get("/api/auth/token_login")
 async def api_token_login(token: str):
     tok = token.strip()
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_users_data()
         
     tokens = data.get("collaborator_tokens", {})
     c = tokens.get(tok)
@@ -411,8 +456,7 @@ async def api_token_login(token: str):
         raise HTTPException(status_code=403, detail="Este acesso foi revogado pelo Administrador.")
         
     c["last_login"] = datetime.now().strftime("%d/%m/%Y %H:%M")
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    save_users_data(data)
         
     return {
         "success": True,
@@ -434,9 +478,7 @@ async def api_get_collaborators(role: str = "campo"):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
         
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        
+    data = load_users_data()
     tokens = data.get("collaborator_tokens", {})
     collab_list = []
     for tok, c in tokens.items():
@@ -462,8 +504,7 @@ async def api_create_collaborator(req: CreateCollaboratorRequest, role: str = "c
         raise HTTPException(status_code=400, detail="Nome do colaborador é obrigatório.")
         
     tok = f"mp_sec_{secrets.token_hex(6)}"
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_users_data()
         
     if "collaborator_tokens" not in data:
         data["collaborator_tokens"] = {}
@@ -477,8 +518,7 @@ async def api_create_collaborator(req: CreateCollaboratorRequest, role: str = "c
         "status": "active"
     }
     
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    save_users_data(data)
         
     direct_link = f"https://app-pedidos-maison-plage.vercel.app/?acesso={tok}"
     
@@ -504,12 +544,10 @@ async def api_create_collaborator(req: CreateCollaboratorRequest, role: str = "c
 async def api_revoke_collaborator(req: RevokeCollaboratorRequest, role: str = "campo"):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_users_data()
     if req.token in data.get("collaborator_tokens", {}):
         data["collaborator_tokens"][req.token]["status"] = "revoked"
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        save_users_data(data)
         return {"success": True}
     raise HTTPException(status_code=404, detail="Colaborador não encontrado.")
 
@@ -517,12 +555,10 @@ async def api_revoke_collaborator(req: RevokeCollaboratorRequest, role: str = "c
 async def api_delete_collaborator(token: str, role: str = "campo"):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_users_data()
     if token in data.get("collaborator_tokens", {}):
         del data["collaborator_tokens"][token]
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        save_users_data(data)
         return {"success": True}
     raise HTTPException(status_code=404, detail="Colaborador não encontrado.")
 
@@ -530,12 +566,10 @@ async def api_delete_collaborator(token: str, role: str = "campo"):
 async def api_update_collab_role(req: UpdateCollaboratorRoleRequest, role: str = "campo"):
     if role != "admin":
         raise HTTPException(status_code=403, detail="Exclusivo para o Administrador Master.")
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_users_data()
     if req.token in data.get("collaborator_tokens", {}):
         data["collaborator_tokens"][req.token]["role"] = req.role.strip().lower()
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        save_users_data(data)
         return {"success": True}
     raise HTTPException(status_code=404, detail="Colaborador não encontrado.")
 
