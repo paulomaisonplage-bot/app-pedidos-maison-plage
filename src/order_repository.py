@@ -31,6 +31,53 @@ def get_default_cutoff_date() -> date:
     return date(hoje.year, hoje.month - 1, 1)
 
 
+TERMOS_CONTRATOS_INDIRETOS = [
+    # Comida / Alimentação
+    "refeicao", "refeição", "refeicoes", "refeições", "alimentacao", "alimentação",
+    "almoço", "almoco", "lanche", "marmita", "quentinha", "quentinhas", "café da manhã",
+    # Taxa de Administração
+    "taxa de administracao", "taxa de administração", "taxa adm", "administracao de obra",
+    "taxa de gerenciamento", "honorarios", "honorários",
+    # Balanças / Balancins
+    "aluguel de balança", "aluguel de balancas", "aluguel de balanças", "balancim", "balancins",
+    "locacao de balanca", "locação de balança", "locação de balanças",
+    # Fretes / Transporte
+    "frete", "transporte", "carreto"
+]
+
+
+def is_contract_or_indirect_order(items: List[Dict[str, Any]]) -> bool:
+    """Verifica se o pedido corresponde a pagamentos indiretos / contratos (comida, taxa adm, balanças, frete)."""
+    if not items:
+        return False
+    for it in items:
+        desc = (str(it.get("descricao_material", "") or it.get("descricao_completa", "") or "")).lower()
+        fam = str(it.get("familia_insumo", "") or "").lower()
+        fornec = str(it.get("fornecedor_nome", "") or it.get("fornecedor", "") or "").lower()
+        full_text = f"{desc} {fam} {fornec}"
+        if any(term in full_text for term in TERMOS_CONTRATOS_INDIRETOS):
+            return True
+    return False
+
+
+def is_order_overdue(items: List[Dict[str, Any]], ref_date: Optional[date] = None) -> bool:
+    """Verifica se a data de entrega prevista do pedido já venceu (pendente de baixa)."""
+    if not items:
+        return False
+    if ref_date is None:
+        ref_date = date.today()
+    it0 = items[0]
+    dt_str = it0.get("data_entrega_prevista")
+    dt = parse_date(dt_str).date() if parse_date(dt_str) else None
+    if not dt:
+        dt_ped = parse_date(it0.get("data_pedido")).date() if parse_date(it0.get("data_pedido")) else None
+        if dt_ped:
+            dt = dt_ped
+    if dt and dt < ref_date:
+        return True
+    return False
+
+
 class OrderRepository:
     def __init__(
         self,
