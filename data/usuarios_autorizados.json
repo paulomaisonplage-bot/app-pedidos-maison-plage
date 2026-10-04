@@ -31,6 +31,14 @@
       "whatsapp": "",
       "created_at": "03/10/2026 10:00",
       "status": "active"
+    },
+    "mp_sec_09271bb54956": {
+      "token": "mp_sec_09271bb54956",
+      "nome": "Engenheiro Teste QA",
+      "role": "engenharia",
+      "whatsapp": "82999998888",
+      "created_at": "04/10/2026 15:19",
+      "status": "active"
     }
   },
   "users": {
