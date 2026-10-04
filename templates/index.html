@@ -164,6 +164,21 @@
     <!-- ÁREA DE CONTEÚDO DINÂMICO -->
     <main class="app-body">
 
+      <!-- BARRA DE FILTROS GERAIS: INSUMOS VS CONTRATOS & ATENÇÃO A ATRASOS -->
+      <div class="global-filter-bar" id="globalFilterBar">
+        <div class="filter-type-switch">
+          <button class="type-pill active" id="pillTypeMaterial" onclick="app.setCategoryFilter('material')">
+            🧱 Insumos & Materiais
+          </button>
+          <button class="type-pill" id="pillTypeContract" onclick="app.setCategoryFilter('contrato')">
+            📄 Contratos & Indiretos
+          </button>
+        </div>
+        <button class="overdue-toggle-btn" id="btnToggleOverdue" onclick="app.toggleOverdueFilter()">
+          ⏳ Ocultar Atrasados
+        </button>
+      </div>
+
       <!-- MÓDULO 1: ENTREGAS DA SEMANA -->
       <section id="modWeek" class="module-section active">
         <div class="section-toolbar">
