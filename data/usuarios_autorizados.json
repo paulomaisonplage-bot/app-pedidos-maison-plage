@@ -39,15 +39,6 @@
       "whatsapp": "82999998888",
       "created_at": "04/10/2026 15:19",
       "status": "active"
-    },
-    "mp_sec_c8f1819f5bdb": {
-      "token": "mp_sec_c8f1819f5bdb",
-      "nome": "Engenheiro Teste QA",
-      "role": "engenharia",
-      "whatsapp": "82999998888",
-      "created_at": "04/10/2026 15:20",
-      "status": "active",
-      "last_login": "04/10/2026 15:20"
     }
   },
   "users": {
