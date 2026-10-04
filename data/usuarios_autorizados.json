@@ -46,7 +46,8 @@
       "role": "engenharia",
       "whatsapp": "82999998888",
       "created_at": "04/10/2026 15:20",
-      "status": "active"
+      "status": "active",
+      "last_login": "04/10/2026 15:20"
     }
   },
   "users": {
