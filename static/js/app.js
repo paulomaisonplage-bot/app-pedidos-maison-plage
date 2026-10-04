@@ -10,6 +10,8 @@ const app = {
   weekOffset: 0,
   currentMonth: new Date().getMonth() + 1,
   monthListLoaded: false,
+  categoryFilter: "material",
+  hideOverdue: false,
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -236,14 +238,59 @@ const app = {
         document.getElementById("weekTitle").innerHTML = `${prefix}<br><span style="font-size:11px;color:#94a3b8">${data.periodo}</span>`;
       }
 
-      if (!data.cards || data.cards.length === 0) {
-        list.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Nenhuma entrega prevista para este período.<br><br><button class="nav-arrow" onclick="app.shiftWeek(-' + this.weekOffset + ')">Voltar para Esta Semana</button></div>';
+      const rawCards = data.cards || [];
+      const filtered = this.filterCards(rawCards);
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="padding:24px;text-align:center;color:#94a3b8">Nenhum pedido de ${this.categoryFilter === 'contrato' ? 'contrato/indireto' : 'material'} previsto para este período.<br><br><button class="nav-arrow" onclick="app.shiftWeek(-${this.weekOffset})">Voltar para Esta Semana</button></div>`;
         return;
       }
-      list.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
+      list.innerHTML = filtered.map(c => this.renderOrderCard(c)).join("");
     } catch(e) {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar entregas.</div>';
     }
+  },
+
+  setCategoryFilter(type) {
+    this.categoryFilter = type;
+    document.querySelectorAll(".type-pill").forEach(p => p.classList.remove("active"));
+    if (type === "material") {
+      document.getElementById("pillTypeMaterial")?.classList.add("active");
+    } else {
+      document.getElementById("pillTypeContract")?.classList.add("active");
+    }
+    this.refreshActiveModule();
+  },
+
+  toggleOverdueFilter() {
+    this.hideOverdue = !this.hideOverdue;
+    const btn = document.getElementById("btnToggleOverdue");
+    if (btn) {
+      if (this.hideOverdue) {
+        btn.classList.add("active");
+        btn.innerText = "✓ Ocultando Atrasados";
+      } else {
+        btn.classList.remove("active");
+        btn.innerText = "⏳ Ocultar Atrasados";
+      }
+    }
+    this.refreshActiveModule();
+  },
+
+  refreshActiveModule() {
+    if (this.activeModule === "week") this.loadWeek();
+    else if (this.activeModule === "month") this.loadMonth();
+    else if (this.activeModule === "recent") this.loadRecent();
+  },
+
+  filterCards(cards) {
+    if (!cards) return [];
+    return cards.filter(c => {
+      if (this.categoryFilter === "material" && c.is_indirect) return false;
+      if (this.categoryFilter === "contrato" && !c.is_indirect) return false;
+      if (this.hideOverdue && c.is_overdue) return false;
+      return true;
+    });
   },
 
   shiftWeek(d) {
@@ -289,20 +336,31 @@ const app = {
     try {
       const res = await fetch(`/api/deliveries/month?mes=${this.currentMonth}&ano=2026&role=${this.currentUser.role}`);
       const data = await res.json();
+      const allCards = data.cards || [];
+      const filtered = this.filterCards(allCards);
 
       if (summaryBox && summaryTitle) {
         summaryBox.style.display = "flex";
-        summaryTitle.innerText = `📅 ${data.nome_mes || 'Mês'}: ${data.total_pedidos || 0} Pedidos Previstos`;
+        const catLabel = this.categoryFilter === 'contrato' ? 'Contratos/Indiretos' : 'Insumos';
+        summaryTitle.innerText = `📅 ${data.nome_mes || 'Mês'}: ${filtered.length} ${catLabel} Exibidos`;
+
+        let filteredSum = 0;
+        for (const c of filtered) {
+          if (c.valor_total_formatado) {
+            const raw = parseFloat(c.valor_total_formatado.replace("R$", "").replace(/\./g, "").replace(",", ".")) || 0;
+            filteredSum += raw;
+          }
+        }
         if (summaryTotal) {
-          summaryTotal.innerText = data.valor_total_formatado ? `Total: ${data.valor_total_formatado}` : '';
+          summaryTotal.innerText = filteredSum > 0 ? `Total: R$ ${filteredSum.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '';
         }
       }
 
-      if (!data.cards || data.cards.length === 0) {
-        list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido previsto para este mês.</div>';
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum pedido de ${this.categoryFilter === 'contrato' ? 'contrato/indireto' : 'material'} previsto para este mês.</div>`;
         return;
       }
-      list.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
+      list.innerHTML = filtered.map(c => this.renderOrderCard(c)).join("");
     } catch(e) {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar pedidos do mês.</div>';
     }
@@ -334,12 +392,23 @@ const app = {
       itemsListHtml = `<div class="card-summary-desc">${c.descricao_resumo || 'Diversos'}</div>`;
     }
 
+    let badgesHtml = "";
+    if (c.is_overdue || c.is_indirect) {
+      badgesHtml = `
+        <div class="card-badges-row">
+          ${c.is_overdue ? `<span class="badge-overdue">⚠️ Entrega Vencida (Pendente de Baixa)</span>` : ''}
+          ${c.is_indirect ? `<span class="badge-contract">📄 Contrato / Despesa Indireta</span>` : ''}
+        </div>
+      `;
+    }
+
     return `
       <div class="item-card" onclick="app.openOrder('${c.pc}')">
         <div class="card-header-row">
           <span class="card-tag-pc">PC ${c.pc}</span>
           <span class="card-tag-date">🚚 ${c.data_entrega}</span>
         </div>
+        ${badgesHtml}
         <div class="card-supplier-name">${c.fornecedor}</div>
         ${itemsListHtml}
         <div class="card-footer-row">
@@ -763,11 +832,13 @@ const app = {
     try {
       const res = await fetch(`/api/recent_purchases?role=${this.currentUser.role}`);
       const data = await res.json();
-      if (!data.cards || data.cards.length === 0) {
-        list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8">Nenhuma compra recente encontrada.</div>';
+      this.currentCards = data.cards || [];
+      const filtered = this.filterCards(data.cards || []);
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8">Nenhuma compra recente de ${this.categoryFilter === 'contrato' ? 'contrato/indireto' : 'material'} encontrada.</div>`;
         return;
       }
-      list.innerHTML = data.cards.map(c => this.renderOrderCard(c)).join("");
+      list.innerHTML = filtered.map(c => this.renderOrderCard(c)).join("");
     } catch(e) {
       list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444">Erro ao carregar compras recentes.</div>';
     }
